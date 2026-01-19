@@ -30,7 +30,7 @@ export default function App() {
     background: "radial-gradient(circle at 50% 50%, rgba(255,255,255,0.35), transparent 55%)"
   });
 
-  const phrases = ["computer engineering @ u-m '28", "research assistant @ clasp", "hardware systems enthusiast"];
+  const phrases = ["computer engineering @ u-m '28", "research assistant @ clasp lab", "hardware systems enthusiast"];
     // --- Interactive Home console ---
   const [consoleInput, setConsoleInput] = useState("");
   const [consoleLines, setConsoleLines] = useState([
@@ -64,6 +64,11 @@ export default function App() {
 
     if (cmd === "info") {
       pushLine("sys", "hello. viola here.");
+      pushLine("sys", (
+  <>
+    named after an <span className="hl">instrument</span>, tuned for <span className="hl">systems</span>.
+  </>
+));
   pushLine("sys", "computer engineering major who likes building things")
    pushLine("sys", "that are fun, useful, and occasionally confusing (at first).")
       return;
@@ -558,38 +563,92 @@ export default function App() {
 )}
 
 
-              {activeTab === 'about' && (
-                <div>
-                  <span style={styles.tag}>// About</span>
+   {activeTab === 'about' && (
+  <div>
+    <span style={styles.tag}>// About</span>
 
-              
-                  <h4 style={styles.itemTitle}>Hi, I’m Viola.</h4>
-                  <p style={styles.itemDesc}>
-                    I’m a U-M computer engineering student who loves building things that are both logical and alive —
-                    circuits, embedded systems, and data that tells a story (especially space plasma + solar wind).
-                  </p>
 
-                  <div className="mini-grid">
-                    <div className="mini-card">
-                      <p className="mini-title">I like</p>
-                      <p className="mini-text">hardware debugging • clean architecture • CAD/design • making hard stuff feel simple</p>
-                    </div>
-                    <div className="mini-card">
-                      <p className="mini-title">I’m learning</p>
-                      <p className="mini-text">stronger systems thinking • clearer communication • better engineering taste</p>
-                    </div>
-                  </div>
+<div
+  style={{
+    display: "flex",
+    alignItems: "center",   // 👈 THIS centers the image vertically
+    gap: "16px",
+    marginTop: "18px",
+    textAlign: "left",
+  }}
+>
 
-                  <div style={{ marginTop: "36px" }}>
-                    <span style={styles.tag}>// Toolbox (more)</span>
-                    <p style={{...styles.itemDesc, marginTop: 0}}>
-                      Most days: Python + C++ + Git. When it gets spicy: Verilog + boards + timing + coffee.
-                    </p>
-                  </div>
-                </div>
+  <img
+    src="/potrait.jpeg"
+    alt="Portrait of Viola"
+    style={{
+      width: "350px",
+      height: "500px",
+      objectFit: "cover",
+      borderRadius: "10px",
+      flexShrink: 0,
+      marginTop: "4px",
+    }}
+  />
 
-                
-              )}
+  <div style={{ marginLeft: "16px" }}>
+    <h4 style={styles.itemTitle}>Hi, I’m Viola Charissa Diana Sembiring</h4>
+    <p style={styles.itemDesc}>
+      I’m a U-M computer engineering student who loves building things that are both
+      logical and alive — circuits, embedded systems, and data that tells a story
+      (especially space plasma + solar wind).
+    </p>
+  </div>
+</div>
+
+
+
+
+
+
+    <div className="mini-grid">
+      <div className="mini-card">
+        <p className="mini-title">I like</p>
+        <p className="mini-text">
+          hardware debugging • clean architecture • CAD/design • making hard stuff feel simple
+        </p>
+      </div>
+
+      <div className="mini-card">
+        <p className="mini-title">I’m learning</p>
+        <p className="mini-text">
+          stronger systems thinking • clearer communication • better engineering taste
+        </p>
+      </div>
+    </div>
+
+    {/* 🎧 Currently Listening */}
+    <div style={{ marginTop: "48px" }}>
+      <p
+        style={{
+          fontSize: "13px",
+          opacity: 0.6,
+          letterSpacing: "0.04em",
+          marginBottom: "12px",
+        }}
+      >
+        currently listening to
+      </p>
+
+      <iframe
+        data-testid="embed-iframe"
+        style={{ borderRadius: "12px", border: "none" }}
+        src="https://open.spotify.com/embed/playlist/1vHnZpoh3TbeXlvnFfp7Uf?utm_source=generator"
+        width="100%"
+        height="352"
+        allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+        allowFullScreen
+        loading="lazy"
+        title="Currently Listening Playlist"
+      />
+    </div>
+  </div>
+)}
 
               {activeTab === 'experiences' && (
                 <div>
