@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import avatar from './avatar.jpeg';
 
 export default function App() {
   const [hasEntered, setHasEntered] = useState(false);
@@ -141,7 +142,7 @@ export default function App() {
         <main style={styles.mainContainer}>
           <header className="fade-up delay-1" style={styles.header}>
             <div style={styles.headerLayout}>
-              <img src="/avatar.jpeg" style={styles.avatarImg} />
+              <img src={avatar} style={styles.avatarImg} />
               <div style={styles.textStack}>
                 <h1 style={styles.hugeTitle}>viola<br/>sembiring</h1>
                 <div style={styles.typeRow}>
