@@ -1,5 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
-import avatar from "./assets/avatar.jpeg";
+
+
+
+
+
 
 export default function App() {
   const [hasEntered, setHasEntered] = useState(false);
@@ -55,7 +59,6 @@ export default function App() {
 
     if (cmd === "help") {
       pushLine("sys", "commands: help | info | funfact | courses | now | clear");
-      pushLine("sys", "tip: try tuning the frequency slider.");
       return;
     }
 
@@ -95,7 +98,7 @@ export default function App() {
     pushLine("sys", "- born and raised in medan, indonesia");
     pushLine("sys", "- always looking for good fantasy manga/manhwa")
     pushLine("sys", "- i enjoy when hard things finally click");
-    pushLine("sys", "- i have a dog named brownie :)");
+    pushLine("sys", "- i'm a dog person");
     return;
   }
 
@@ -464,7 +467,7 @@ export default function App() {
                 onMouseMove={handleAvatarMove}
                 onMouseLeave={handleAvatarLeave}
               >
-                <img src={avatar} style={styles.avatarImg} className="avatar-img" />
+                <img src="/avatar.jpeg" style={styles.avatarImg} className="avatar-img" />
                 <div className="avatar-shine" style={shineStyle} />
                 <div className="avatar-border" />
               </div>
@@ -563,6 +566,8 @@ export default function App() {
               {activeTab === 'about' && (
                 <div>
                   <span style={styles.tag}>// About</span>
+
+              
                   <h4 style={styles.itemTitle}>Hi, I’m Viola.</h4>
                   <p style={styles.itemDesc}>
                     I’m a U-M computer engineering student who loves building things that are both logical and alive —
@@ -587,6 +592,8 @@ export default function App() {
                     </p>
                   </div>
                 </div>
+
+                
               )}
 
               {activeTab === 'experiences' && (
