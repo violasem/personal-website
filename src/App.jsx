@@ -64,11 +64,6 @@ export default function App() {
 
     if (cmd === "info") {
       pushLine("sys", "hello. viola here.");
-      pushLine("sys", (
-  <>
-    named after an <span className="hl">instrument</span>, tuned for <span className="hl">systems</span>.
-  </>
-));
   pushLine("sys", "computer engineering major who likes building things")
    pushLine("sys", "that are fun, useful, and occasionally confusing (at first).")
       return;
