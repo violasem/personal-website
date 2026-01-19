@@ -30,7 +30,7 @@ export default function App() {
     background: "radial-gradient(circle at 50% 50%, rgba(255,255,255,0.35), transparent 55%)"
   });
 
-  const phrases = ["computer engineering @ u-m '28", "research assistant @ clasp lab", "hardware systems enthusiast"];
+  const phrases = ["computer engineering @ u-m '28", "research assistant @ clasp", "hardware systems enthusiast"];
     // --- Interactive Home console ---
   const [consoleInput, setConsoleInput] = useState("");
   const [consoleLines, setConsoleLines] = useState([
