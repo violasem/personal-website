@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import avatar from "./assets/avatar.jpeg";
 
 export default function App() {
   const [hasEntered, setHasEntered] = useState(false);
@@ -463,7 +464,7 @@ export default function App() {
                 onMouseMove={handleAvatarMove}
                 onMouseLeave={handleAvatarLeave}
               >
-                <img src="/avatar.jpeg" style={styles.avatarImg} className="avatar-img" />
+                <img src={avatar} style={styles.avatarImg} className="avatar-img" />
                 <div className="avatar-shine" style={shineStyle} />
                 <div className="avatar-border" />
               </div>
