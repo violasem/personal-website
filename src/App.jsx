@@ -49,7 +49,7 @@ export default function App() {
     },
     {
       id: 2,
-      title: "Mathematics Tutor & U-M Math Dept",
+      title: "Mathematics Tutor @ U-M Math Dept",
       short: "Guiding students through Calculus I, II and Differential Equations.",
       details:
         "Facilitating weekly tutoring sessions and study groups for engineering students, helping break down challenging topics in vector calculus, linear algebra, and ordinary differential equations. I also offer drop-in tutoring for Calculus I, II, and III, focusing on helping students feel more confident with the material and approach problems more effectively."
