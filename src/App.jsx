@@ -42,17 +42,17 @@ export default function App() {
   const experiences = [
     {
       id: 1,
-      title: "Solar Wind Telemetry Pipeline",
+      title: "Research Assistant @ U-M CLASP",
       short: "Automation of plasma data processing for CLASP Lab streams.",
       details:
-        "Developing Python-based automated pipelines to process high-frequency plasma data from satellite streams. Focused on reducing latency in telemetry interpretation for space weather modeling.",
+        "Supporting Prof. Liang Zhao in research applying ML/AI methods to analyze and predict solar wind behavior. Processing and visualizing space plasma datasets using Python (data cleaning, feature extraction, and publication-ready plots).",
     },
     {
       id: 2,
-      title: "Mathematics Dept Tutor",
-      short: "Guiding students through Calculus and Differential Equations.",
+      title: "Mathematics Tutor & U-M Math Dept",
+      short: "Guiding students through Calculus I, II and Differential Equations.",
       details:
-        "Facilitating weekly sessions for engineering students. Explaining complex concepts in vector calculus, linear algebra, and ordinary differential equations.",
+        "Facilitating weekly tutoring sessions and study groups for engineering students, helping break down challenging topics in vector calculus, linear algebra, and ordinary differential equations. I also offer drop-in tutoring for Calculus I, II, and III, focusing on helping students feel more confident with the material and approach problems more effectively."
     },
   ];
 
@@ -65,33 +65,6 @@ export default function App() {
     { name: "Git", note: "version control" },
     { name: "Linux", note: "terminal + workflows" },
     { name: "React", note: "personal site UI" },
-  ];
-
-  // Out Loud posts (new tab open)
-  const posts = [
-    {
-      id: 1,
-      title: "Learning to build systems that don’t break quietly",
-      date: "Jan 2026",
-      tags: ["engineering", "systems", "learning"],
-      excerpt: "I used to think debugging was just fixing. Now it feels more like listening.",
-      bodyHtml: `
-        <p>I’m realizing the best engineers aren’t just fast — they’re patient in the right places.</p>
-        <p>Writing down what I tried and why has helped me debug with less panic.</p>
-        <p>More soon.</p>
-      `,
-    },
-    {
-      id: 2,
-      title: "Space plasma data is messy, which is kind of the point",
-      date: "Dec 2025",
-      tags: ["research", "space", "data"],
-      excerpt: "The mess isn’t noise to delete — it’s often where the physics lives.",
-      bodyHtml: `
-        <p>Preprocessing is interpretation. The choices you make shape the story the data tells.</p>
-        <p>I’m trying to document my assumptions more clearly so the “cleaning” doesn’t erase the physics.</p>
-      `,
-    },
   ];
 
   // --- console helpers ---
@@ -124,11 +97,11 @@ export default function App() {
     if (cmd === "courses") {
       pushLine("sys", "current relevant courses loaded:");
       pushLine("sys", "- programming & intro data structures");
-      pushLine("sys", "- intro to logic design");
+      pushLine("sys", "- logic design");
       pushLine("sys", "- discrete math");
       pushLine("sys", "- differential equation");
       pushLine("sys", "- computational linear algebra");
-      pushLine("sys", "- intro to electric circuit");
+      pushLine("sys", "- electric circuit");
       pushLine("sys", "etc :)");
       return;
     }
@@ -180,7 +153,7 @@ export default function App() {
 
     const timer = setTimeout(tick, typingSpeed);
     return () => clearTimeout(timer);
-  }, [displayText, isDeleting, loopNum, hasEntered, typingSpeed]);
+  }, [displayText, isDeleting, loopNum, hasEntered, typingSpeed, phrases]);
 
   // --- portal handlers ---
   const handlePortalMouseMove = (e) => {
@@ -219,7 +192,9 @@ export default function App() {
 
     setShineStyle({
       opacity: 1,
-      background: `radial-gradient(circle at ${Math.round(px * 100)}% ${Math.round(py * 100)}%, rgba(255,255,255,0.38), transparent 55%)`,
+      background: `radial-gradient(circle at ${Math.round(px * 100)}% ${Math.round(
+        py * 100
+      )}%, rgba(255,255,255,0.38), transparent 55%)`,
     });
   };
 
@@ -231,51 +206,6 @@ export default function App() {
       opacity: 0,
       background: "radial-gradient(circle at 50% 50%, rgba(255,255,255,0.35), transparent 55%)",
     });
-  };
-
-  // --- Out Loud: open new browser tab ---
-  const openPostInNewTab = (post) => {
-    const tags = post.tags.map((t) => `<span class="tag">${t}</span>`).join("");
-
-    const html = `<!doctype html>
-<html>
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>${post.title}</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;500;800&display=swap" rel="stylesheet">
-  <style>
-    body{ margin:0; background:#F2F0ED; color:#2A1B13; font-family:'Space Grotesk',sans-serif; }
-    .wrap{ max-width:760px; margin:0 auto; padding:56px 22px 80px; }
-    .date{ font-size:12px; letter-spacing:2px; text-transform:uppercase; opacity:.55; margin-bottom:12px; }
-    h1{ margin:0 0 18px 0; font-size:clamp(34px,4vw,44px); line-height:1.08; letter-spacing:-0.03em; }
-    .tags{ display:flex; flex-wrap:wrap; gap:8px; margin: 8px 0 22px; }
-    .tag{ border:1px solid rgba(42,27,19,.12); padding:6px 10px; border-radius:999px; font-size:11px; letter-spacing:1px; text-transform:uppercase; opacity:.75; }
-    .excerpt{ font-size:18px; line-height:1.6; opacity:.75; margin:0 0 22px; }
-    .body{ font-size:19px; line-height:1.8; opacity:.88; }
-    .body p{ margin:0 0 16px 0; }
-  </style>
-</head>
-<body>
-  <main class="wrap">
-    <div class="date">${post.date}</div>
-    <h1>${post.title}</h1>
-    <div class="tags">${tags}</div>
-    <p class="excerpt">${post.excerpt}</p>
-    <div class="body">${post.bodyHtml}</div>
-  </main>
-</body>
-</html>`;
-
-    const blob = new Blob([html], { type: "text/html" });
-    const url = URL.createObjectURL(blob);
-
-    const w = window.open(url, "_blank");
-    if (w) w.opener = null;
-
-    setTimeout(() => URL.revokeObjectURL(url), 60_000);
   };
 
   return (
@@ -420,68 +350,12 @@ export default function App() {
         }
         .hl{ color: #E63946; font-weight: 500; }
 
-        /* Out Loud blog cards */
-        .blog-list {
-          display: flex;
-          flex-direction: column;
-          gap: 18px;
-          margin-top: 12px;
-        }
-        .blog-card {
-          padding: 22px 24px;
-          border: 1px solid rgba(42, 27, 19, 0.12);
-          border-radius: 24px;
-          background: rgba(255,255,255,0.25);
-          cursor: pointer;
-          transition: transform 0.25s ease, box-shadow 0.25s ease;
-        }
-        .blog-card:hover {
-          transform: translateY(-4px);
-          box-shadow: 0 14px 30px rgba(42, 27, 19, 0.10);
-        }
-        .blog-meta {
-          font-size: 12px;
-          letter-spacing: 2px;
-          text-transform: uppercase;
-          opacity: 0.55;
-          margin-bottom: 10px;
-        }
-        .blog-title {
-          margin: 0 0 10px 0;
-          font-size: 22px;
-          font-weight: 800;
-          letter-spacing: -0.02em;
-        }
-
         .console-input{
-  color: #2A1B13;              /* text color */
-  caret-color: #2A1B13;        /* cursor color */
-}
-
-.console-input::placeholder{
-  color: rgba(42, 27, 19, 0.45);
-}
-
-        .blog-excerpt {
-          margin: 0;
-          opacity: 0.7;
-          font-size: 18px;
-          font-weight: 300;
-          line-height: 1.55;
+          color: #2A1B13;
+          caret-color: #2A1B13;
         }
-        .blog-tags {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 8px;
-          margin-top: 14px;
-        }
-        .blog-tag {
-          border: 1px solid rgba(42, 27, 19, 0.12);
-          padding: 6px 10px;
-          border-radius: 999px;
-          font-size: 11px;
-          text-transform: uppercase;
-          opacity: 0.7;
+        .console-input::placeholder{
+          color: rgba(42, 27, 19, 0.45);
         }
       `}</style>
 
@@ -587,7 +461,6 @@ export default function App() {
                         <div className="dot" />
                         <div className="dot" />
                       </div>
-                      <div className="console-title">telemetry console</div>
                     </div>
 
                     <div className="console-body">
@@ -639,21 +512,21 @@ export default function App() {
                 </div>
               )}
 
+              {/* ✅ ABOUT LEFT AS-IS (unchanged from your version) */}
               {activeTab === "about" && (
                 <div>
                   <span style={styles.tag}>// About</span>
 
                   <div
-  style={{
-    display: "flex",
-    alignItems: "center",
-    gap: "24px",
-    marginTop: "18px",
-    textAlign: "left",
-    flexWrap: "nowrap", // 🔑 prevents stacking
-  }}
->
-
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "24px",
+                      marginTop: "18px",
+                      textAlign: "left",
+                      flexWrap: "nowrap", // prevents stacking
+                    }}
+                  >
                     <img
                       src="/potrait.jpeg"
                       alt="Portrait of Viola"
@@ -666,7 +539,15 @@ export default function App() {
                       }}
                     />
 
-                    <div style={{ marginLeft: "16px" }}> <h4 style={styles.itemTitle}>Hi, I’m Viola Charissa Diana Sembiring</h4> <p style={styles.itemDesc}> I’m a U-M computer engineering student who loves building things that are both logical and alive — circuits, embedded systems, and data that tells a story (especially space plasma + solar wind). </p> </div> </div>
+                    <div style={{ marginLeft: "16px" }}>
+                      <h4 style={styles.itemTitle}>Hi, I’m Viola Charissa Diana Sembiring</h4>
+                      <p style={styles.itemDesc}>
+                        I’m a U-M computer engineering student who loves building things that are both
+                        logical and alive — circuits, embedded systems, and data that tells a story
+                        (especially space plasma + solar wind).
+                      </p>
+                    </div>
+                  </div>
 
                   <div className="mini-grid">
                     <div className="mini-card">
@@ -711,72 +592,50 @@ export default function App() {
                 </div>
               )}
 
-              {activeTab === "experiences" && (
-                <div>
-                  <span style={styles.tag}>// Work History</span>
-                  {experiences.map((exp) => (
-                    <div
-                      key={exp.id}
-                      className="exp-card"
-                      onClick={() => setExpandedExp(expandedExp === exp.id ? null : exp.id)}
-                    >
-                      <h4 style={styles.itemTitle}>{exp.title}</h4>
-                      <p style={styles.itemDesc}>{exp.short}</p>
-                      <div className={`exp-details ${expandedExp === exp.id ? "open" : ""}`}>
-                        <p style={{ ...styles.itemDesc, opacity: 0.8 }}>{exp.details}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
+             {activeTab === "experiences" && (
+  <div>
+    <p style={{ marginBottom: 8, opacity: 0.7, fontSize: 13 }}>
+  Click to expand each role for more details.
+</p>
 
+    <span style={styles.tag}>// Work History</span>
+
+    {experiences.map((exp) => (
+      <div
+        key={exp.id}
+        className="exp-card"
+        onClick={() => setExpandedExp(expandedExp === exp.id ? null : exp.id)}
+      >
+        <h4 style={styles.itemTitle}>{exp.title}</h4>
+        <p style={styles.itemDesc}>{exp.short}</p>
+        <div className={`exp-details ${expandedExp === exp.id ? "open" : ""}`}>
+          <p style={{ ...styles.itemDesc, opacity: 0.8 }}>{exp.details}</p>
+        </div>
+      </div>
+    ))}
+
+    <div style={{ marginTop: "42px" }}>
+      <span style={styles.tag}>// Projects</span>
+      <h4 style={styles.itemTitle}>coming soon</h4>
+      <p style={styles.itemDesc}>
+        I’m organizing a few builds + writeups — will drop them here soon.
+      </p>
+    </div>
+  </div>
+)}
+
+
+              {/* ✅ OUT LOUD NOW = ONLY NOTION EMBED */}
               {activeTab === "out loud" && (
-                
                 <div>
                   <span style={styles.tag}>// Out Loud</span>
                   <h4 style={styles.itemTitle}>notes & reflections</h4>
                   <p style={{ ...styles.itemDesc, marginBottom: "18px" }}>
-                    click a post to open a full reading page in a new tab.
+                    embedded from Notion.
                   </p>
 
-                  <iframe
-  src="https://lopsided-passbook-280.notion.site/Out-Loud-2ed826ec6ca8800ab28edaef165b6909"
-  style={{
-    width: "100%",
-    height: "750px",
-    border: "none",
-    borderRadius: "20px",
-    background: "white",
-  }}
-  allowFullScreen
-  loading="lazy"
-/>
+<iframe src="https://lopsided-passbook-280.notion.site/ebd//2ed826ec6ca8800ab28edaef165b6909" width="100%" height="600" frameborder="0" allowfullscreen />
 
-
-                  <div className="blog-list">
-                    {posts.map((p) => (
-                      <div
-                        key={p.id}
-                        className="blog-card"
-                        onClick={() => openPostInNewTab(p)}
-                        role="button"
-                        tabIndex={0}
-                        onKeyDown={(e) => e.key === "Enter" && openPostInNewTab(p)}
-                      >
-                        <div className="blog-meta">{p.date}</div>
-                        <h3 className="blog-title">{p.title}</h3>
-                        <p className="blog-excerpt">{p.excerpt}</p>
-
-                        <div className="blog-tags">
-                          {p.tags.map((t) => (
-                            <span key={t} className="blog-tag">
-                              {t}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
                 </div>
               )}
 
@@ -784,7 +643,6 @@ export default function App() {
                 <div>
                   <span style={styles.tag}>// Resume</span>
                   <h4 style={styles.itemTitle}>coming soon</h4>
-                  <p style={styles.itemDesc}>drop a PDF link here or embed a Google Drive view.</p>
                 </div>
               )}
             </section>
@@ -823,7 +681,12 @@ const styles = {
     color: "#2A1B13",
     textDecoration: "none",
   },
-  navBar: { display: "flex", gap: "40px", paddingBottom: "25px", borderBottom: "1px solid rgba(42, 27, 19, 0.15)" },
+  navBar: {
+    display: "flex",
+    gap: "40px",
+    paddingBottom: "25px",
+    borderBottom: "1px solid rgba(42, 27, 19, 0.15)",
+  },
   contentCard: { padding: "50px 0" },
   tag: {
     fontSize: "11px",
