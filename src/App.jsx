@@ -529,7 +529,6 @@ export default function App() {
                   >
                     <img
                       src="/potrait.jpeg"
-                      alt="Portrait of Viola"
                       style={{
                         width: "350px",
                         height: "450px",
