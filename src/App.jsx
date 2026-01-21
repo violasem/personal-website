@@ -16,10 +16,6 @@ export default function App() {
   const [loopNum, setLoopNum] = useState(0);
   const [typingSpeed, setTypingSpeed] = useState(60);
 
-  // portal cursor
-  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
-  const [isPerfectFit, setIsPerfectFit] = useState(false);
-
   // experiences expand
   const [expandedExp, setExpandedExp] = useState(null);
 
@@ -125,6 +121,21 @@ export default function App() {
 
     pushLine("err", `unknown command: '${raw.trim()}'. try 'help'.`);
   };
+useEffect(() => {
+  if (hasEntered) return;
+
+  // optional: a quick boot flash near the end
+  const bootOn = setTimeout(() => setIsBooting(true), 2200);
+  const enter = setTimeout(() => {
+    setHasEntered(true);
+    setIsBooting(false);
+  }, 3000);
+
+  return () => {
+    clearTimeout(bootOn);
+    clearTimeout(enter);
+  };
+}, [hasEntered]);
 
   // --- typewriter loop ---
   useEffect(() => {
@@ -155,24 +166,7 @@ export default function App() {
     return () => clearTimeout(timer);
   }, [displayText, isDeleting, loopNum, hasEntered, typingSpeed, phrases]);
 
-  // --- portal handlers ---
-  const handlePortalMouseMove = (e) => {
-    setMousePos({ x: e.clientX, y: e.clientY });
 
-    const centerX = window.innerWidth / 2;
-    const centerY = window.innerHeight / 2;
-    const distance = Math.sqrt((e.clientX - centerX) ** 2 + (e.clientY - centerY) ** 2);
-    setIsPerfectFit(distance < 15);
-  };
-
-  const handleEntry = () => {
-    if (!isPerfectFit) return;
-    setIsBooting(true);
-    setTimeout(() => {
-      setHasEntered(true);
-      setIsBooting(false);
-    }, 800);
-  };
 
   // --- avatar 3D hover handlers ---
   const handleAvatarMove = (e) => {
@@ -362,15 +356,23 @@ export default function App() {
       <div className={`boot-screen ${isBooting ? "active" : ""}`} />
 
       {!hasEntered ? (
-        <div className="portal-wrapper" onMouseMove={handlePortalMouseMove} onClick={handleEntry}>
-          <div className="cursor-heart" style={{ left: mousePos.x, top: mousePos.y }}>
-            <svg viewBox="0 0 32 32" width="100%" height="100%">
-              <path
-                className={`filled-path ${isPerfectFit ? "perfect" : ""}`}
-                d="M16 28.5L14.1 26.7C7.35 20.6 3 16.65 3 11.85C3 7.9 6.1 4.8 10.05 4.8C12.3 4.8 14.45 5.85 15.9 7.55C17.35 5.85 19.5 4.8 21.75 4.8C25.7 4.8 28.8 7.9 28.8 11.85C28.8 16.65 24.45 20.6 17.7 26.75L16 28.5Z"
-              />
-            </svg>
-          </div>
+        <div className="intro-wrapper">
+  <div className="intro-heart" aria-label="heart" role="img">❤</div>
+
+  <p
+    style={{
+      fontFamily: "Space Grotesk",
+      fontSize: "10px",
+      letterSpacing: "8px",
+      opacity: 0.3,
+      marginTop: "24px",
+      textTransform: "uppercase",
+    }}
+  >
+    entering…
+  </p>
+</div>
+
 
           <svg className="heart-svg" viewBox="0 0 32 32">
             <path
