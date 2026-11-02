@@ -1422,6 +1422,10 @@ button:focus-visible {
   margin-top: 8px;
 }
 
+.edu-scholarship {
+  margin-top: 20px;
+}
+
 .course-list {
   color: var(--ink-soft);
 }
@@ -1812,7 +1816,7 @@ button:focus-visible {
   }
 
   .desk-zone {
-    height: 480px;
+    height: 560px;
     margin-bottom: 8px;
   }
 

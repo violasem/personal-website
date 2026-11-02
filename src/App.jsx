@@ -1151,9 +1151,18 @@ const EducationSkills = () => (
       <p>{education.degree}</p>
       <p className="muted">{education.dates}</p>
       <p className="muted edu-note">{education.note}</p>
+      <h3 className="edu-school edu-scholarship">{education.scholarship}</h3>
+      <p>{education.scholarshipNote}</p>
+      <p className="muted">{education.scholarshipDates}</p>
       <h4>Relevant coursework</h4>
       <ul className="course-list">
         {education.coursework.map((c) => (
+          <li key={c}>{c}</li>
+        ))}
+      </ul>
+      <h4>Taking now</h4>
+      <ul className="course-list">
+        {education.courseworkNow.map((c) => (
           <li key={c}>{c}</li>
         ))}
       </ul>
