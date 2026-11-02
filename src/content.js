@@ -36,8 +36,8 @@ export const applications = ["Embedded systems", "Control systems", "Data and ma
 // Only real numbers go here. Leave a column empty ("") if it doesn't apply.
 export const specs = [
   { parameter: "GPA", conditions: "University of Michigan, to date", min: "", typ: "3.94", max: "4.00", unit: "points" },
-  { parameter: "Tutoring load", conditions: "Mathematics Learning Center", min: "20", typ: "", max: "30", unit: "students/week" },
-  { parameter: "Dataset dimensionality", conditions: "Space physics datasets, before reduction", min: "", typ: "7", max: "", unit: "parameters" },
+  { parameter: "Tutoring load", conditions: "Mathematics Learning Center", min: "20", typ: "", max: "30", unit: "students/wk" },
+  { parameter: "Dataset dimensions", conditions: "Space physics datasets, before reduction", min: "", typ: "7", max: "", unit: "parameters" },
   { parameter: "Graduation", conditions: "B.S.E. in Computer Engineering", min: "", typ: "May 2028", max: "", unit: "" },
 ];
 
