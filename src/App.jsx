@@ -485,7 +485,7 @@ const Desk = () => {
         >
           {item.kind === "photo" ? (
             <figure>
-              <img src={item.src} alt="" draggable="false" />
+              <img src={item.src} alt="" draggable="false" style={{ objectPosition: item.focus }} />
               <figcaption>{item.caption}</figcaption>
             </figure>
           ) : (

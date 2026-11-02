@@ -25,7 +25,7 @@ export const profile = {
 // The things on the banner's desk. x and y are 0 to 1 within the desk area; rot is the tilt in degrees.
 // phone sets a different spot on small screens, and phone: null hides the item there.
 export const deskItems = [
-  { id: "stadium", kind: "photo", src: "/potrait.jpeg", caption: "Michigan Stadium", alt: "Viola at Michigan Stadium with the marching band behind her", at: { x: 1, y: 0.02, rot: 4 }, phone: { x: 1, y: 0.05, rot: 4 } },
+  { id: "stadium", kind: "photo", src: "/potrait.jpeg", focus: "42% 30%", caption: "Michigan Stadium", alt: "Viola at Michigan Stadium with the marching band behind her", at: { x: 1, y: 0.02, rot: 4 }, phone: { x: 1, y: 0.05, rot: 4 } },
   { id: "me", kind: "photo", src: "/avatar.jpeg", caption: "me, with ears", alt: "Illustrated portrait of Viola with glasses and puppy ears", at: { x: 0.02, y: 0.1, rot: -5 }, phone: { x: 0, y: 0, rot: -4 } },
   { id: "dog", kind: "note", text: "Dog person", color: "#f0e3b8", at: { x: 0.02, y: 1, rot: 3 }, phone: { x: 0.04, y: 1, rot: 3 } },
   { id: "medan", kind: "note", text: "Born and raised in Medan", color: "#ebd4d6", at: { x: 0.42, y: 1, rot: -3 }, phone: { x: 0.92, y: 1, rot: -3 } },

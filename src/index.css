@@ -329,10 +329,6 @@ button:focus-visible {
   background: #f0f3fa;
 }
 
-.desk-item[class*="desk-photo"] img[src*="potrait"] {
-  object-position: 42% 62%;
-}
-
 .desk-photo figcaption {
   padding-top: 5px;
   font-family: "Caveat", cursive;
