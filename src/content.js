@@ -30,7 +30,7 @@ export const deskItems = [
   { id: "stadium", kind: "photo", src: "/potrait.jpeg", focus: "42% 30%", caption: "Michigan Stadium", alt: "Viola at Michigan Stadium with the marching band behind her", desc: "Game day at Michigan Stadium.", at: { x: 1, y: 0, rot: 4 }, phone: { x: 1, y: 0, rot: 4 } },
   { id: "me", kind: "photo", src: "/avatar.jpeg", caption: "me, with ears", alt: "Illustrated portrait of Viola with glasses and puppy ears", desc: "That’s me. Tap to boop my nose!", at: { x: 0, y: 0.03, rot: -5 }, phone: { x: 0, y: 0, rot: -4 } },
   { id: "pennant", kind: "object", art: "pennant", label: "A Go Blue pennant", desc: "Computer engineering at Michigan, class of 2028.", at: { x: 0, y: 0.66, rot: -8 }, phone: { x: 0, y: 0.58, rot: -7 } },
-  { id: "multimeter", kind: "object", art: "multimeter", label: "A digital multimeter", desc: "From the circuits lab. The screen shows my GPA.", at: { x: 0.33, y: 0.62, rot: -6 }, phone: { x: 0.5, y: 0.6, rot: 6 } },
+  { id: "multimeter", kind: "object", art: "multimeter", label: "A digital multimeter", desc: "Instructional Aide for EECS 215. I lead weekly lab sections of 20+ students, debugging circuits with tools like this.", at: { x: 0.33, y: 0.62, rot: -6 }, phone: { x: 0.5, y: 0.6, rot: 6 } },
   { id: "duck", kind: "object", art: "duck", label: "A rubber duck", desc: "Rubber duck debugging: explain your bug to the duck. Tap me!", at: { x: 0.47, y: 0.66, rot: 5 }, phone: { x: 0.8, y: 0.6, rot: 6 } },
   { id: "sticker", kind: "object", art: "sticker", label: "An EECS sticker", desc: "Electrical Engineering and Computer Science at U-M.", at: { x: 0.6, y: 0.6, rot: -10 }, phone: { x: 1, y: 0.73, rot: -10 } },
   { id: "resistor", kind: "object", art: "resistor", label: "A resistor", desc: "Brown, black, red, gold: 1 kΩ, ±5%.", at: { x: 0.71, y: 0.53, rot: 12 }, phone: null },
@@ -39,7 +39,7 @@ export const deskItems = [
   { id: "embedded", kind: "note", text: "Embedded systems", color: "#d6e0eb", desc: "Where I want to grow next.", at: { x: 0.425, y: 0.27, rot: 3 }, phone: { x: 0.5, y: 0.98, rot: -2 } },
   { id: "control", kind: "note", text: "Control systems", color: "#e4dcee", desc: "The other half of where I’m headed.", at: { x: 0.52, y: 1, rot: 4 }, phone: { x: 1, y: 1, rot: 3 } },
   { id: "research", kind: "note", text: "Solar wind and machine learning research", color: "#d7e3d8", desc: "Python pipelines on solar wind data, with Prof. Liang Zhao.", at: { x: 1, y: 0.56, rot: 5 }, phone: null },
-  { id: "eecs", kind: "note", text: "Teaching circuits in EECS 215", color: "#dfe7dc", desc: "Instructional aide for a lab section.", at: { x: 0.78, y: 1, rot: -4 }, phone: null },
+  { id: "eecs", kind: "note", text: "Teaching circuits in EECS 215", color: "#dfe7dc", desc: "Instructional aide, leading weekly lab sections.", at: { x: 0.78, y: 1, rot: -4 }, phone: null },
   { id: "dog", kind: "note", text: "Dog person", color: "#ebd4d6", desc: "Hence the dog at the bottom of your screen.", at: { x: 0.02, y: 1, rot: 3 }, phone: null },
   { id: "medan", kind: "note", text: "Born and raised in Medan", color: "#f3dfc9", desc: "Medan, Indonesia, and now Ann Arbor.", at: { x: 0.26, y: 1, rot: -3 }, phone: null },
 ];
@@ -60,17 +60,18 @@ export const log = [
     title: "Teaching circuits in the EECS 215 lab",
     type: "Teaching",
     dates: "Aug 2026 – present",
-    summary: "Course staff for a lab section, helping students turn circuit theory into working hardware.",
+    summary: "Lead weekly lab sections of 20+ students through circuit construction, measurement, and hardware debugging.",
     role: "Instructional Aide",
     where: "Electrical and Computer Engineering, University of Michigan",
-    overview: "I help students work through circuit concepts in EECS 215, Introduction to Electronic Circuits.",
+    overview: "I’m an instructional aide for EECS 215, Introduction to Electronic Circuits.",
     did: [
-      "Support a lab section as course staff.",
-      "Help students through labs on components and breadboarding, R-2R ladder DACs, MOSFET audio amplifiers, and op-amps.",
+      "Lead weekly lab sections of 20+ students, guiding circuit construction, measurement, and hardware debugging.",
+      "Grade weekly lab assignments, with detailed feedback on circuit analysis and experimental results.",
+      "Hold weekly office hours for the 370+ students in the course.",
     ],
     learned:
       "Explaining not just how a circuit works but why has pushed me to understand the material far more deeply. It also showed me how much I enjoy the moment when theory turns into a working physical system.",
-    tools: ["Circuit analysis", "Breadboarding", "Digital multimeter"],
+    tools: ["Oscilloscopes", "Function generators", "Multimeters"],
   },
   {
     slug: "permias-external-relations",
@@ -129,7 +130,7 @@ export const log = [
     where: "University of Michigan Climate and Space (on-site)",
     with: "Associate Professor Liang Zhao",
     overview:
-      "Research applying machine learning to analyze and predict solar wind behavior, using large-scale in-situ measurements from spacecraft including the Parker Solar Probe.",
+      "Research applying machine learning to analyze and predict solar wind behavior, using large-scale in-situ measurements from SWICS and the Parker Solar Probe.",
     did: [
       "Built a pipeline to filter and preprocess NASA space data.",
       "Built machine learning pipelines to predict and analyze patterns in solar wind behavior.",
@@ -195,7 +196,7 @@ export const skills = [
 export const contact = {
   email: "violasem@umich.edu",
   lead: "Email is the best way to reach me.",
-  // Add your resume PDF to the public folder and put its path here (like "/resume.pdf").
-  // The desk drawer will then offer it as a download.
-  resumeUrl: "",
+  // To update your resume, replace public/resume.pdf and public/resume.jpg (a picture of the page).
+  resumePdf: "/resume.pdf",
+  resumeImage: "/resume.jpg",
 };

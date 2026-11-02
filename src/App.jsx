@@ -362,7 +362,7 @@ const DeskObject = ({ art }) => {
         <rect x="3" y="3" width="90" height="144" rx="12" fill="#d8a94f" />
         <rect x="12" y="12" width="72" height="126" rx="7" fill="#2f3741" />
         <rect x="20" y="20" width="56" height="30" rx="3" fill="#bfcdb6" />
-        <text x="72" y="42" textAnchor="end" fontFamily="ui-monospace, Menlo, monospace" fontSize="19" fontWeight="600" fill="#2f3741">3.94</text>
+        <text x="72" y="42" textAnchor="end" fontFamily="ui-monospace, Menlo, monospace" fontSize="19" fontWeight="600" fill="#2f3741">215</text>
         <circle cx="48" cy="86" r="20" fill="#c9ced3" />
         <circle cx="48" cy="86" r="14" fill="#4b5560" />
         <rect x="46" y="72" width="4" height="15" rx="2" fill="#e8ebee" />
@@ -405,7 +405,7 @@ const Desk = () => {
       minX: -el.offsetWidth * 0.25,
       maxX: hero.clientWidth - el.offsetWidth * 0.75,
       minY: 0,
-      maxY: hero.clientHeight - 58 - el.offsetHeight * 0.75,
+      maxY: hero.clientHeight - el.offsetHeight * 0.75,
     };
   };
   const place = (id) => {
@@ -738,89 +738,69 @@ const Desk = () => {
   );
 };
 
-// A real little desk drawer. Opening it brings your resume up on a sheet of paper.
+// A little desk drawer. Pulling it open brings up the resume on a sheet of paper.
 const ResumeDrawer = () => {
   const [open, setOpen] = useState(false);
   const dialogRef = useRef(null);
 
   const openDrawer = () => {
     setOpen(true);
-    setTimeout(() => dialogRef.current?.showModal(), prefersReducedMotion() ? 0 : 320);
+    setTimeout(() => dialogRef.current?.showModal(), prefersReducedMotion() ? 0 : 340);
   };
   const close = () => dialogRef.current?.close();
 
+  // prints the real PDF; phones can't do that from inside a page, so it opens in their PDF viewer, which can
+  const printResume = () => {
+    const openPdf = () => window.open(contact.resumePdf, "_blank", "noopener");
+    if (window.matchMedia("(hover: none)").matches) {
+      openPdf();
+      return;
+    }
+    const old = document.getElementById("resume-print-frame");
+    if (old) old.remove();
+    const frame = document.createElement("iframe");
+    frame.id = "resume-print-frame";
+    frame.title = "Resume for printing";
+    frame.style.cssText = "position:fixed;width:0;height:0;border:0;right:0;bottom:0";
+    frame.src = contact.resumePdf;
+    frame.onload = () => {
+      try {
+        frame.contentWindow.focus();
+        frame.contentWindow.print();
+      } catch {
+        openPdf();
+      }
+    };
+    document.body.appendChild(frame);
+  };
+
   return (
-    <div className="desk-front">
-      <button type="button" className={open ? "drawer open" : "drawer"} onClick={openDrawer} aria-haspopup="dialog">
-        <span className="drawer-label">resume</span>
-        <span className="drawer-handle" aria-hidden="true" />
+    <div className="desk-drawer">
+      <button type="button" className={open ? "drawer open" : "drawer"} onClick={openDrawer} aria-haspopup="dialog" aria-label="Open the drawer to see my resume">
+        <span className="drawer-slot" aria-hidden="true" />
+        <span className="drawer-paper" aria-hidden="true" />
+        <span className="drawer-front" aria-hidden="true">
+          <span className="drawer-label">resume</span>
+          <span className="drawer-handle" />
+        </span>
       </button>
       {createPortal(
-      <dialog ref={dialogRef} className="resume" aria-label="Resume" onClose={() => setOpen(false)} onClick={(e) => e.target === dialogRef.current && close()}>
-        <div className="resume-actions">
-          {contact.resumeUrl ? (
-            <a className="button" href={contact.resumeUrl} download>
-              Download PDF
-            </a>
-          ) : (
-            <button type="button" className="button" onClick={() => window.print()}>
+        <dialog ref={dialogRef} className="resume" aria-label="Resume" onClose={() => setOpen(false)} onClick={(e) => e.target === dialogRef.current && close()}>
+          <div className="resume-actions">
+            <button type="button" className="button" onClick={printResume}>
               Print or save as PDF
             </button>
-          )}
-          <button type="button" className="resume-close" onClick={close} aria-label="Close resume">
-            <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
-              <path d="M3 3l10 10M13 3L3 13" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
-            </svg>
-          </button>
-        </div>
-        <article className="resume-paper">
-          <header>
-            <h2>{profile.name}</h2>
-            <p>
-              <a href={`mailto:${contact.email}`}>{contact.email}</a>
-              {profile.links.map((l) => (
-                <a key={l.name} href={l.url} target="_blank" rel="noopener noreferrer">
-                  {l.url.replace(/^https:\/\/(www\.)?/, "").replace(/\/$/, "")}
-                </a>
-              ))}
-            </p>
-          </header>
-          <section>
-            <h3>Education</h3>
-            <div className="resume-row">
-              <strong>{education.school}</strong>
-              <span>{education.dates}</span>
-            </div>
-            <p>{education.degree}</p>
-            <p>{education.note}</p>
-            <p>Relevant coursework: {education.coursework.join(", ")}</p>
-          </section>
-          <section>
-            <h3>Experience</h3>
-            {timeline.map((t) => {
-              const entry = log.find((e) => e.slug === t.log);
-              return (
-                <div key={t.role} className="resume-item">
-                  <div className="resume-row">
-                    <strong>{t.role}</strong>
-                    <span>{t.dates}</span>
-                  </div>
-                  <p className="resume-org">{t.org}</p>
-                  {entry && !timeline.slice(0, timeline.indexOf(t)).some((other) => other.log === t.log) && <p>{entry.summary}</p>}
-                </div>
-              );
-            })}
-          </section>
-          <section>
-            <h3>Skills</h3>
-            {skills.map((k) => (
-              <p key={k.group}>
-                <strong>{k.group}:</strong> {k.items}
-              </p>
-            ))}
-          </section>
-        </article>
-      </dialog>,
+            <a className="resume-download" href={contact.resumePdf} download="Viola-Sembiring-Resume.pdf">
+              Download
+            </a>
+            <button type="button" className="resume-close" onClick={close} aria-label="Close resume">
+              <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
+                <path d="M3 3l10 10M13 3L3 13" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+              </svg>
+            </button>
+          </div>
+          <img className="resume-page" src={contact.resumeImage} alt={`Resume of ${profile.name}`} loading="lazy" />
+        </dialog>,
         document.body
       )}
     </div>
@@ -840,10 +820,10 @@ const Hero = () => {
             </a>
             <ExternalLinks links={profile.links} />
           </div>
+          <ResumeDrawer />
         </div>
         <Desk />
       </div>
-      <ResumeDrawer />
     </section>
   );
 };

@@ -237,7 +237,7 @@ button:focus-visible {
   align-items: center;
   max-width: calc(var(--wrap) + var(--gutter) * 2);
   margin: 0 auto;
-  padding: clamp(28px, 3.5vw, 44px) var(--gutter) 34px;
+  padding: clamp(28px, 3.5vw, 44px) var(--gutter) 44px;
 }
 
 .hero-main {
@@ -398,73 +398,105 @@ button:focus-visible {
   transition: opacity 0.2s ease, scale 0.2s ease;
 }
 
-/* the front of the desk, with a real drawer */
-.desk-front {
-  position: relative;
-  z-index: 800;
-  display: flex;
-  justify-content: center;
-  height: 58px;
-  background: #b9a68e;
-  box-shadow: inset 0 3px 0 #cdbca6, inset 0 -2px 0 #a48f77;
+/* the desk drawer: a wooden frame, a dark slot, and a front that pulls out */
+.desk-drawer {
+  margin-top: 30px;
 }
 
 .drawer {
   position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  width: min(330px, 62vw);
-  height: 46px;
-  margin-top: 7px;
+  display: block;
+  width: min(290px, 100%);
+  height: 92px;
   padding: 0;
   border: 0;
-  border-radius: 3px;
-  background: #c8b69f;
-  box-shadow: 0 0 0 1px #9c8870, 0 2px 3px rgba(39, 48, 59, 0.2);
-  color: var(--ink);
-  font: inherit;
+  border-radius: 7px;
+  background: #a58c70;
+  box-shadow: inset 0 2px 0 #bda68b, inset 0 -2px 0 #8d755b, 0 5px 12px rgba(39, 48, 59, 0.2);
   cursor: pointer;
-  transition: transform 0.3s cubic-bezier(0.3, 0.8, 0.3, 1), box-shadow 0.3s ease, background-color 0.2s ease;
-}
-
-.drawer:hover {
-  background: #d0bfa9;
-  transform: translateY(2px);
-}
-
-.drawer.open {
-  box-shadow: 0 0 0 1px #9c8870, 0 14px 22px rgba(39, 48, 59, 0.34);
-  transform: translateY(6px) scale(1.07);
 }
 
 .drawer:focus-visible {
   outline: 2px solid var(--ink);
-  outline-offset: 2px;
+  outline-offset: 3px;
+}
+
+.drawer-slot {
+  position: absolute;
+  inset: 7px;
+  border-radius: 4px;
+  background: #3e3227;
+  box-shadow: inset 0 3px 7px rgba(0, 0, 0, 0.55);
+}
+
+.drawer-paper {
+  position: absolute;
+  top: 12px;
+  left: 50%;
+  width: 118px;
+  height: 66px;
+  margin-left: -59px;
+  border-radius: 2px;
+  background: linear-gradient(#fff, #f1f1ee);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  transition: transform 0.35s cubic-bezier(0.3, 0.8, 0.3, 1);
+}
+
+.drawer-front {
+  position: absolute;
+  inset: 7px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 7px;
+  padding-top: 11px;
+  border-radius: 4px;
+  background: linear-gradient(#d4c3ad, #c5b29a);
+  box-shadow: 0 0 0 1px #94806a, inset 0 1px 0 #e3d6c4;
+  transform-origin: 50% 100%;
+  transition: transform 0.35s cubic-bezier(0.3, 0.8, 0.3, 1), box-shadow 0.3s ease;
 }
 
 .drawer-label {
-  margin-top: 3px;
-  padding: 0 9px;
-  background: #f4efe6;
-  box-shadow: 0 0 0 1px #9c8870;
+  padding: 1px 11px;
+  border: 1px solid #8f7a62;
+  border-radius: 2px;
+  background: #f7f3ea;
+  color: var(--ink);
   font-family: "Caveat", cursive;
-  font-size: 18px;
-  line-height: 1.1;
+  font-size: 19px;
+  line-height: 1.05;
 }
 
 .drawer-handle {
-  width: 58px;
-  height: 7px;
-  margin-top: 6px;
-  border-radius: 4px;
-  background: #6f5d49;
-  box-shadow: inset 0 1px 0 #8e7a64, 0 2px 2px rgba(39, 48, 59, 0.26);
+  width: 62px;
+  height: 13px;
+  border-radius: 2px 2px 9px 9px;
+  background: linear-gradient(#8c7458, #5f4c39);
+  box-shadow: 0 2px 2px rgba(39, 48, 59, 0.3);
+}
+
+/* a sliver of paper peeks out when you point at it, and opening pulls the front toward you */
+.drawer:hover .drawer-paper {
+  transform: translateY(-20px);
+}
+
+.drawer:hover .drawer-front {
+  transform: translateY(2px) scale(1.02);
+}
+
+.drawer.open .drawer-paper {
+  transform: translateY(-44px);
+}
+
+.drawer.open .drawer-front {
+  box-shadow: 0 0 0 1px #94806a, inset 0 1px 0 #e3d6c4, 0 14px 20px rgba(0, 0, 0, 0.32);
+  transform: translateY(13px) scale(1.09);
 }
 
 /* the resume, rising up out of the drawer */
 .resume {
-  width: min(760px, calc(100vw - 24px));
+  width: min(780px, calc(100vw - 24px));
   max-height: calc(100dvh - 24px);
   margin: auto;
   padding: 0;
@@ -481,13 +513,13 @@ button:focus-visible {
 }
 
 .resume::backdrop {
-  background: rgba(39, 48, 59, 0.45);
+  background: rgba(39, 48, 59, 0.5);
 }
 
 @keyframes paperRise {
   from {
     opacity: 0;
-    transform: translateY(46vh) scale(0.72) rotate(-2deg);
+    transform: translateY(40vh) scale(0.7) rotate(-2deg);
   }
   to {
     opacity: 1;
@@ -501,9 +533,8 @@ button:focus-visible {
   z-index: 1;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 12px 16px;
+  gap: 14px;
+  padding: 10px 14px;
   background: #fff;
   border-bottom: 1px solid var(--rule);
 }
@@ -517,11 +548,20 @@ button:focus-visible {
   cursor: pointer;
 }
 
+.resume-download {
+  font-size: 15px;
+  font-weight: 500;
+  text-decoration-color: var(--rose);
+  text-underline-offset: 4px;
+}
+
 .resume-close {
   display: grid;
+  flex-shrink: 0;
   place-items: center;
   width: 40px;
   height: 40px;
+  margin-left: auto;
   border: 0;
   border-radius: 50%;
   background: #eef0f2;
@@ -529,91 +569,11 @@ button:focus-visible {
   cursor: pointer;
 }
 
-.resume-paper {
-  padding: clamp(22px, 5vw, 44px);
-  font-size: 15px;
-  line-height: 1.45;
-}
-
-.resume-paper h2 {
-  font-size: 30px;
-  line-height: 1.1;
-}
-
-.resume-paper header p {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 2px 16px;
-  margin-top: 6px;
-  color: var(--ink-soft);
-}
-
-.resume-paper header a {
-  overflow-wrap: anywhere;
-}
-
-.resume-paper section {
-  margin-top: 20px;
-}
-
-.resume-paper h3 {
-  margin-bottom: 7px;
-  padding-bottom: 4px;
-  border-bottom: 1px solid var(--ink);
-  font-size: 15px;
-  font-weight: 700;
-}
-
-.resume-row {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  gap: 0 16px;
-}
-
-.resume-row span,
-.resume-org {
-  color: var(--ink-soft);
-}
-
-.resume-item + .resume-item {
-  margin-top: 8px;
-}
-
-/* printing only the resume: the rest of the site is taken out of the page */
-@media print {
-  html,
-  body {
-    background: #fff;
-  }
-
-  body > :not(dialog) {
-    display: none;
-  }
-
-  .resume {
-    position: static;
-    width: 100%;
-    max-height: none;
-    margin: 0;
-    overflow: visible;
-    border-radius: 0;
-    box-shadow: none;
-    animation: none !important;
-  }
-
-  .resume-actions,
-  .resume::backdrop {
-    display: none;
-  }
-
-  .resume-paper {
-    padding: 0;
-  }
-
-  .resume-item {
-    break-inside: avoid;
-  }
+.resume-page {
+  display: block;
+  width: 100%;
+  height: auto;
+  min-height: 300px;
 }
 
 .object-art {
@@ -737,6 +697,10 @@ button:focus-visible {
 
 .hero-main > :nth-child(3) {
   animation-delay: 0.45s;
+}
+
+.hero-main > :nth-child(4) {
+  animation-delay: 0.55s;
 }
 
 .fact {
@@ -2138,5 +2102,20 @@ button:focus-visible {
 
   .contact-button:not(.primary):hover {
     background: transparent;
+  }
+}
+
+@media (hover: none) {
+  .drawer:hover .drawer-paper,
+  .drawer:hover .drawer-front {
+    transform: none;
+  }
+
+  .drawer.open .drawer-paper {
+    transform: translateY(-44px);
+  }
+
+  .drawer.open .drawer-front {
+    transform: translateY(13px) scale(1.09);
   }
 }
