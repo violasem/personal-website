@@ -1234,6 +1234,236 @@ const Home = () => (
   </>
 );
 
+// --- the research story on a project's full page ---
+const Segments = ({ options, value, onChange, label }) => (
+  <div className="segments" role="group" aria-label={label}>
+    {options.map((o) => (
+      <button key={o.id} type="button" aria-pressed={value === o.id} onClick={() => onChange(o.id)}>
+        {o.label}
+      </button>
+    ))}
+  </div>
+);
+
+const Figure = ({ figure, onZoom }) => (
+  <figure className="r-figure">
+    <button type="button" className="r-zoom" onClick={() => onZoom(figure)} aria-label={`Enlarge figure: ${figure.caption}`}>
+      <img src={figure.src} alt={figure.alt} loading="lazy" />
+    </button>
+    <figcaption>{figure.caption}</figcaption>
+  </figure>
+);
+
+const CycleComparison = ({ comparisons }) => {
+  const [id, setId] = useState(comparisons[0].id);
+  const c = comparisons.find((x) => x.id === id);
+  const [low, high] = [-1.2, -0.4];
+  const pos = (v) => ((v - low) / (high - low)) * 100;
+
+  return (
+    <div className="r-panel">
+      <Segments label="Choose a part of the solar cycle" options={comparisons} value={id} onChange={setId} />
+      <p className="r-verdict">{c.verdict}</p>
+      <div className="meanline" role="img" aria-label={`Mean log O7+/O6+: ${c.years[0]} ${c.means[0]}, ${c.years[1]} ${c.means[1]}`}>
+        <span className="meanline-track" />
+        {[low, -1, -0.8, -0.6, high].map((t) => (
+          <span key={t} className="meanline-tick" style={{ left: `${pos(t)}%` }}>
+            {t.toFixed(1)}
+          </span>
+        ))}
+        {c.means.map((m, i) => (
+          <span key={c.years[i]} className={`meandot ${i % 2 === Number(c.means[0] > c.means[1]) ? "below" : "above"}`} style={{ left: `${pos(m)}%` }} title={`${c.years[i]}: ${m}`}>
+            <span className="meanlabel">
+              <b>{c.years[i]}</b> {m}
+            </span>
+          </span>
+        ))}
+      </div>
+      <p className="r-axis-note">Mean of log O⁷⁺/O⁶⁺ in each year</p>
+      <p>{c.text}</p>
+      <dl className="r-stats">
+        <div>
+          <dt>t-statistic</dt>
+          <dd>{c.t}</dd>
+        </div>
+        <div>
+          <dt>t-test p-value</dt>
+          <dd>{c.tp}</dd>
+        </div>
+        <div>
+          <dt>Chi-square</dt>
+          <dd>{c.chi}</dd>
+        </div>
+        <div>
+          <dt>Chi-square p-value</dt>
+          <dd>{c.chip}</dd>
+        </div>
+        <div>
+          <dt>Degrees of freedom</dt>
+          <dd>{c.dof}</dd>
+        </div>
+      </dl>
+    </div>
+  );
+};
+
+const METRICS = [
+  { id: "rmse", label: "RMSE" },
+  { id: "sse", label: "SSE" },
+];
+
+const FitComparison = ({ psp }) => {
+  const [setId, setSetId] = useState(psp.sets[0].id);
+  const [metric, setMetric] = useState("rmse");
+  const [picked, setPicked] = useState(psp.best);
+  const set = psp.sets.find((x) => x.id === setId);
+  const max = Math.max(...set.rows.map((r) => r[metric]));
+
+  return (
+    <div className="r-panel">
+      <div className="r-controls">
+        <Segments label="Choose the data" options={psp.sets} value={setId} onChange={setSetId} />
+        <Segments label="Choose the error measure" options={METRICS} value={metric} onChange={setMetric} />
+      </div>
+      <p className="r-chart-title">{metric.toUpperCase()} for each exponent. Lower is a better fit.</p>
+      <div className="fit-bars">
+        {set.rows.map((r) => (
+          <button key={r.k} type="button" className={`fit-row${r.k === psp.best ? " best" : ""}${r.k === picked ? " picked" : ""}`} onClick={() => setPicked(r.k)} onPointerEnter={() => setPicked(r.k)} aria-pressed={r.k === picked}>
+            <span className="fit-k">k = {r.k}</span>
+            <span className="fit-track">
+              <span className="fit-bar" style={{ width: `${(r[metric] / max) * 100}%` }} />
+            </span>
+            <span className="fit-value">{r[metric].toLocaleString("en-US")}</span>
+          </button>
+        ))}
+      </div>
+      <p>{set.note}</p>
+      <div className="r-table-wrap">
+        <table className="r-table">
+          <thead>
+            <tr>
+              <th scope="col">k</th>
+              <th scope="col">χ²</th>
+              <th scope="col">dof</th>
+              <th scope="col">χ² p-value</th>
+              <th scope="col">t-test</th>
+              <th scope="col">t-test p-value</th>
+              <th scope="col">RMSE</th>
+              <th scope="col">SSE</th>
+            </tr>
+          </thead>
+          <tbody>
+            {set.rows.map((r) => (
+              <tr key={r.k} className={r.k === picked ? "picked" : ""}>
+                <th scope="row">{r.k}</th>
+                <td>{r.chi}</td>
+                <td>{r.dof}</td>
+                <td>{r.chip}</td>
+                <td>{r.t}</td>
+                <td>{r.tp}</td>
+                <td>{r.rmse}</td>
+                <td>{r.sse}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+};
+
+const ResearchStory = ({ research }) => {
+  const [tab, setTab] = useState("ace");
+  const [zoomed, setZoomed] = useState(null);
+  const dialogRef = useRef(null);
+  const zoom = (figure) => {
+    setZoomed(figure);
+    dialogRef.current?.showModal();
+  };
+  const tabs = [
+    { id: "ace", label: research.ace.label },
+    { id: "psp", label: research.psp.label },
+  ];
+  const f = research.figures;
+
+  return (
+    <div className="research">
+      <p className="r-poster-title">
+        From my poster: <cite>{research.posterTitle}</cite>
+      </p>
+      <section className="r-why">
+        <h2>Why it matters</h2>
+        <p>{research.why}</p>
+      </section>
+
+      <ol className="r-findings">
+        {research.findings.map((x, i) => (
+          <li key={x.value} style={{ "--i": i }}>
+            <strong>{x.value}</strong>
+            <span>{x.text}</span>
+          </li>
+        ))}
+      </ol>
+
+      <section className="r-data">
+        <h2>Explore the data</h2>
+        <div className="r-tabs">
+          <Segments label="Choose a dataset" options={tabs} value={tab} onChange={setTab} />
+        </div>
+        {tab === "ace" ? (
+          <div className="r-tab-body" key="ace">
+            <p className="r-method">{research.ace.method}</p>
+            <div className="r-split">
+              <CycleComparison comparisons={research.ace.comparisons} />
+              <Figure figure={f.cycles} onZoom={zoom} />
+            </div>
+            <h3>Working around a damaged instrument</h3>
+            <div className="r-split">
+              <p>{research.ace.instrument}</p>
+              <Figure figure={f.instrument} onZoom={zoom} />
+            </div>
+          </div>
+        ) : (
+          <div className="r-tab-body" key="psp">
+            <p className="r-method">{research.psp.method}</p>
+            <FitComparison psp={research.psp} />
+            <h3>{research.psp.transition}</h3>
+            <div className="r-pair">
+              <Figure figure={f.transition} onZoom={zoom} />
+              <Figure figure={f.scaling} onZoom={zoom} />
+            </div>
+          </div>
+        )}
+      </section>
+
+      <section className="r-next">
+        <h2>What’s next</h2>
+        <p>{research.next}</p>
+        <button type="button" className="button" onClick={() => zoom({ src: research.poster, alt: `Research poster: ${research.posterTitle}`, caption: "Full research poster." })}>
+          View the full poster
+        </button>
+      </section>
+
+      {createPortal(
+        <dialog ref={dialogRef} className="zoom" aria-label={zoomed?.caption || "Figure"} onClose={() => setZoomed(null)} onClick={(e) => e.target === dialogRef.current && dialogRef.current.close()}>
+          <button type="button" className="resume-close zoom-close" onClick={() => dialogRef.current?.close()} aria-label="Close">
+            <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
+              <path d="M3 3l10 10M13 3L3 13" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+            </svg>
+          </button>
+          {zoomed && (
+            <>
+              <img src={zoomed.src} alt={zoomed.alt} />
+              <p>{zoomed.caption}</p>
+            </>
+          )}
+        </dialog>,
+        document.body
+      )}
+    </div>
+  );
+};
+
 const LogDetail = ({ slug }) => {
   const fullPages = log.filter((e) => e.fullPage);
   const index = fullPages.findIndex((e) => e.slug === slug);
@@ -1267,6 +1497,8 @@ const LogDetail = ({ slug }) => {
       <TypeLabel type={entry.type} />
       <h1 className="detail-title">{entry.title}</h1>
       <p className="detail-overview">{entry.overview}</p>
+
+      {entry.research && <ResearchStory research={entry.research} />}
 
       <div className="detail-grid">
         <div className="detail-body">

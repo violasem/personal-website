@@ -121,6 +121,60 @@ export const log = [
   {
     slug: "solar-wind-ml-pipelines",
     fullPage: true,
+    research: {
+      posterTitle: "Unveiling Hidden Signatures in in-situ Solar Wind Measurements through Machine Learning and Artificial Intelligence",
+      poster: "/research/poster.jpg",
+      why: "The solar wind is a stream of charged particles from the Sun that shapes space weather and affects Earth’s magnetic environment. Its composition influences geomagnetic disturbances, so understanding how it varies matters. I looked at it through two spacecraft datasets: what the wind is made of, and how its magnetic field changes with distance from the Sun.",
+      findings: [
+        { value: "Cycle-dependent", text: "Solar wind composition differs significantly between solar maxima, but stays consistent between solar minima." },
+        { value: "Oct 23, 2011", text: "A space weather event degraded the ACE SWICS instrument, so later data had to be filtered before comparing." },
+        { value: "k ≈ 1.884", text: "Below about 0.2 AU, this exponent fits the Parker Solar Probe magnetic field data better than the expected k = 2." },
+      ],
+      ace: {
+        label: "ACE SWICS: composition",
+        method: "I preprocessed ACE SWICS time-series data in Python (filtering, cleaning, and parameter selection), then compared charge-state ratios (O⁷⁺/O⁶⁺ and C⁶⁺/C⁵⁺) between solar cycles using scatter plots, t-tests, and chi-square tests.",
+        comparisons: [
+          { id: "max", label: "Solar maximum", years: ["2000", "2012"], means: [-0.624, -0.762], t: "16.7724", tp: "0.0001", chi: "753.1978", chip: "0.0001", dof: "4443.321", verdict: "Statistically significant difference", text: "Solar maxima vary across cycles because of differences in coronal activity, with distinct means and greater variability." },
+          { id: "min", label: "Solar minimum", years: ["2009", "2020"], means: [-1.016, -1.013], t: "-0.6146", tp: "0.5388", chi: "571.0571", chip: "1", dof: "7948.375", verdict: "No statistically significant difference", text: "Solar minima stay consistent, with nearly identical means and reduced variability." },
+        ],
+        instrument: "O⁷⁺/O⁶⁺ and C⁶⁺/C⁵⁺ should be correlated, but the 2011 instrument degradation introduced a cutoff in post-2012 data. Filtering the affected data allowed a meaningful comparison of what remained.",
+      },
+      psp: {
+        label: "Parker Solar Probe: magnetic field",
+        method: "The radial magnetic field Bᵣ should fall off as r⁻², which keeps Bᵣ·R² roughly constant with distance. I cleaned PSP/FIELDS data, used piecewise linear fitting to find where it departs from that, then modeled the field as Bᵣ·Rᵏ and optimized k to capture near-Sun depletion.",
+        transition: "Piecewise analysis puts the transition in scaling behavior at about 0.2056 AU.",
+        best: "1.884",
+        sets: [
+          {
+            id: "bins",
+            label: "Grouped into 34 bins",
+            note: "Binning gives a sharper comparison. The t-test p-value is 0.7367 for k = 1.884, against 0.0085 for k = 2 and 0.0003 for k = 2.2.",
+            rows: [
+              { k: "1.884", chi: "0.0018", dof: "34", chip: "1", t: "-0.339", tp: "0.7367", rmse: 7.9448, sse: 2209.2 },
+              { k: "2", chi: "0.0042", dof: "34", chip: "1", t: "2.7921", tp: "0.0085", rmse: 12.1736, sse: 5186.9 },
+              { k: "2.2", chi: "0.0211", dof: "34", chip: "1", t: "4.0498", tp: "0.0003", rmse: 27.3282, sse: 26139 },
+            ],
+          },
+          {
+            id: "all",
+            label: "All data points",
+            note: "On the full dataset, both tests accept all three exponents, but k = 1.884 has the highest chi-square p-value and the lowest RMSE and SSE.",
+            rows: [
+              { k: "1.884", chi: "0.854", dof: "988", chip: "0.9997", t: "-0.362", tp: "0.717", rmse: 25.183, sse: 627195 },
+              { k: "2", chi: "0.8936", dof: "988", chip: "0.9926", t: "-0.485", tp: "0.628", rmse: 25.72, sse: 654396.88 },
+              { k: "2.2", chi: "0.985", dof: "988", chip: "0.6185", t: "-0.705", tp: "0.48", rmse: 26.93, sse: 717545.974 },
+            ],
+          },
+        ],
+      },
+      figures: {
+        cycles: { src: "/research/cycles.jpg", alt: "Log-transformed O7+/O6+ ratios for 2000, 2012, 2009, and 2020, placed around a plot of sunspot number since 1950", caption: "Log-transformed O⁷⁺/O⁶⁺ for each year, placed against the sunspot cycle." },
+        instrument: { src: "/research/instrument.jpg", alt: "Scatter plots of oxygen versus carbon charge-state ratios for 2002 and 2014", caption: "O⁷⁺/O⁶⁺ versus C⁶⁺/C⁵⁺ for 2002 and 2014. Blue points are the primary distribution used for slope analysis, and red points are lower-tail regions." },
+        transition: { src: "/research/transition.jpg", alt: "Parker Solar Probe magnetic field data with a piecewise fit along its upper edge", caption: "Piecewise linear fit of the upper edge, with the transition near 0.2056 AU." },
+        scaling: { src: "/research/scaling.jpg", alt: "Upper envelope of the scaled magnetic field for k of 1.884, 2, and 2.2 across 34 bins", caption: "Bᵣ·Rᵏ for k = 1.884, 2, and 2.2 using 34 bins. k = 1.884 shows the most consistent trend." },
+      },
+      next: "Next, I want to apply more advanced machine learning to space data to improve pattern recognition and give deeper insight into the underlying physics.",
+    },
     title: "Solar wind machine learning pipelines",
     type: "Research",
     dates: "Oct 2025 – May 2026",
@@ -129,14 +183,14 @@ export const log = [
     where: "University of Michigan Climate and Space (on-site)",
     with: "Associate Professor Liang Zhao",
     overview:
-      "Research applying machine learning to analyze and predict solar wind behavior, using large-scale in-situ measurements from SWICS and the Parker Solar Probe.",
+      "Research applying machine learning to analyze and predict solar wind behavior, using large-scale in-situ measurements from ACE SWICS and the Parker Solar Probe.",
     did: [
       "Built a pipeline to filter and preprocess NASA space data.",
       "Built machine learning pipelines to predict and analyze patterns in solar wind behavior.",
       "Cleaned the data, extracted features, and made publication-ready plots.",
       "Summarized the work in a research poster.",
     ],
-    tools: ["Python", "Machine learning", "Data cleaning", "Feature extraction", "Data visualization"],
+    tools: ["Python", "Matplotlib", "Seaborn", "Piecewise linear fitting", "t-tests and chi-square tests"],
   },
   {
     slug: "math-tutoring",
