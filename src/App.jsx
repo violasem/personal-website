@@ -1,5 +1,5 @@
 import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { about, education, log, logTypes, profile, skills, timeline } from "./content.js";
+import { about, deskItems, education, log, logTypes, profile, skills, timeline } from "./content.js";
 
 const NOTION_URL = "https://lopsided-passbook-280.notion.site/ebd//2ed826ec6ca8800ab28edaef165b6909";
 const SPOTIFY_URL = "https://open.spotify.com/embed/playlist/1vHnZpoh3TbeXlvnFfp7Uf?utm_source=generator";
@@ -243,195 +243,263 @@ const TopBar = ({ route, current }) => (
   </header>
 );
 
-// --- the banner's solar wind line: it draws itself in, bends around the cursor, and ripples on click ---
-const SolarWind = ({ heroRef }) => {
-  const canvasRef = useRef(null);
+// --- the banner is a desk: photos and notes you can pick up, throw, and tidy ---
+const Desk = () => {
+  const zoneRef = useRef(null);
+  const itemRefs = useRef({});
+  const state = useRef({});
+  const moved = useRef(new Set());
+  const topZ = useRef(deskItems.length + 2);
+  const [messy, setMessy] = useState(false);
 
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    const hero = heroRef.current;
-    if (!canvas || !hero) return;
-    const ctx = canvas.getContext("2d");
+  const heroEl = () => zoneRef.current.closest(".hero");
+  const isPhone = () => window.innerWidth <= 860;
+  const bounds = (el) => {
+    const hero = heroEl();
+    return {
+      minX: -el.offsetWidth * 0.25,
+      maxX: hero.clientWidth - el.offsetWidth * 0.75,
+      minY: 0,
+      maxY: hero.clientHeight - el.offsetHeight * 0.6,
+    };
+  };
+  const place = (id) => {
+    const p = state.current[id];
+    const el = itemRefs.current[id];
+    if (el) el.style.transform = `translate(${p.x}px, ${p.y}px) rotate(${p.rot}deg)`;
+  };
+  const homeOf = (item) => {
+    const el = itemRefs.current[item.id];
+    const spot = isPhone() ? item.phone : item.at;
+    if (!el || !spot) return null;
+    const hero = heroEl().getBoundingClientRect();
+    const zone = zoneRef.current.getBoundingClientRect();
+    return {
+      x: zone.left - hero.left + spot.x * (zone.width - el.offsetWidth),
+      y: zone.top - hero.top + spot.y * (zone.height - el.offsetHeight),
+      rot: spot.rot,
+    };
+  };
+
+  useLayoutEffect(() => {
     const reduced = prefersReducedMotion();
-    const HEIGHT = 170;
-    const BASE = 66;
-    let width = 0;
-    let frame;
-    let visible = true;
-    let pull = 0;
-    let pullTarget = 0;
-    let pointerX = 0;
-    const ripples = [];
-    const startedAt = performance.now();
-    const particles = Array.from({ length: 7 }, (_, i) => ({ at: i / 7, speed: 0.035 + (i % 3) * 0.012 }));
+    const hero = heroEl().getBoundingClientRect();
+    const zone = zoneRef.current.getBoundingClientRect();
+    const timers = [];
 
-    const resize = () => {
-      const ratio = Math.min(window.devicePixelRatio || 1, 2);
-      width = hero.clientWidth;
-      canvas.width = width * ratio;
-      canvas.height = HEIGHT * ratio;
-      canvas.style.height = `${HEIGHT}px`;
-      ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
-      if (reduced) draw(performance.now());
-    };
-
-    const waveAt = (x, t, layer) => {
-      const phase = layer * 1.7;
-      let y = BASE + layer * 17;
-      y += Math.sin(x * 0.0065 + t * 0.55 + phase) * (15 - layer * 2);
-      y += Math.sin(x * 0.0165 - t * 0.38 + phase * 2) * 6;
-      const near = x - pointerX;
-      y -= pull * (30 - layer * 8) * Math.exp(-(near * near) / (2 * 130 * 130));
-      for (const r of ripples) {
-        const age = t - r.t;
-        const d = Math.abs(x - r.x) - age * 420;
-        y -= 24 * Math.exp(-(d * d) / (2 * 55 * 55)) * Math.exp(-age * 1.5) * (1 - layer * 0.25);
+    deskItems.forEach((item, i) => {
+      const el = itemRefs.current[item.id];
+      const home = homeOf(item);
+      if (!home) return;
+      state.current[item.id] = { ...home, baseRot: home.rot, vx: 0, vy: 0 };
+      if (reduced) {
+        place(item.id);
+        el.classList.add("shown");
+        return;
       }
-      return y;
-    };
-
-    const strokeLayer = (t, layer, color, lineWidth, reach) => {
-      ctx.beginPath();
-      for (let x = 0; x <= reach; x += 6) {
-        const y = waveAt(x, t, layer);
-        if (x === 0) ctx.moveTo(x, y);
-        else ctx.lineTo(x, y);
-      }
-      ctx.strokeStyle = color;
-      ctx.lineWidth = lineWidth;
-      ctx.lineJoin = "round";
-      ctx.stroke();
-    };
-
-    function draw(now) {
-      const t = (now - startedAt) / 1000;
-      const progress = reduced ? 1 : Math.min(t / 1.4, 1);
-      const eased = 1 - Math.pow(1 - progress, 3);
-      const reach = width * eased;
-      pull += (pullTarget - pull) * 0.09;
-      while (ripples.length && t - ripples[0].t > 3) ripples.shift();
-
-      ctx.clearRect(0, 0, width, HEIGHT);
-
-      // everything under the front line is the page, so the portrait disappears behind it
-      ctx.beginPath();
-      ctx.moveTo(0, HEIGHT);
-      for (let x = 0; x <= width + 6; x += 6) ctx.lineTo(x, waveAt(x, t, 0));
-      ctx.lineTo(width, HEIGHT);
-      ctx.closePath();
-      ctx.fillStyle = "#f7f7f5";
-      ctx.fill();
-
-      strokeLayer(t, 2, "rgba(156, 90, 100, 0.34)", 1.5, reach);
-      strokeLayer(t, 1, "rgba(60, 75, 92, 0.34)", 1.5, reach);
-      strokeLayer(t, 0, "#27303b", 2.5, reach);
-
-      // particles riding the line
-      ctx.fillStyle = "#9c5a64";
-      for (const p of particles) {
-        if (!reduced) p.at = (p.at + p.speed / 60) % 1;
-        const x = p.at * width;
-        if (x > reach) continue;
-        ctx.beginPath();
-        ctx.arc(x, waveAt(x, t, 0), 3, 0, Math.PI * 2);
-        ctx.fill();
-      }
-
-      if (!reduced && visible) frame = requestAnimationFrame(draw);
-    }
-
-    const onMove = (e) => {
-      const r = hero.getBoundingClientRect();
-      pointerX = e.clientX - r.left;
-      pullTarget = e.pointerType === "mouse" ? 1 : 0;
-    };
-    const onLeave = () => {
-      pullTarget = 0;
-    };
-    const onDown = (e) => {
-      const r = hero.getBoundingClientRect();
-      ripples.push({ x: e.clientX - r.left, t: (performance.now() - startedAt) / 1000 });
-    };
-
-    resize();
-    window.addEventListener("resize", resize);
-    if (reduced) return () => window.removeEventListener("resize", resize);
-
-    hero.addEventListener("pointermove", onMove);
-    hero.addEventListener("pointerleave", onLeave);
-    hero.addEventListener("pointerdown", onDown);
-    const observer = new IntersectionObserver(([entry]) => {
-      const wasVisible = visible;
-      visible = entry.isIntersecting;
-      if (visible && !wasVisible) frame = requestAnimationFrame(draw);
+      // everything starts in one neat pile, then spreads out across the desk
+      el.style.transform = `translate(${zone.left - hero.left + (zone.width - el.offsetWidth) / 2}px, ${zone.top - hero.top + (zone.height - el.offsetHeight) / 2}px) rotate(0deg)`;
+      timers.push(
+        setTimeout(() => {
+          el.classList.add("settling", "shown");
+          place(item.id);
+        }, 180 + i * 90),
+        setTimeout(() => el.classList.remove("settling"), 1300 + i * 90)
+      );
     });
-    observer.observe(hero);
-    frame = requestAnimationFrame(draw);
 
+    const onResize = () => {
+      deskItems.forEach((item) => {
+        const el = itemRefs.current[item.id];
+        const home = homeOf(item);
+        if (!home || !el) return;
+        const p = state.current[item.id] || (state.current[item.id] = { ...home, baseRot: home.rot, vx: 0, vy: 0 });
+        if (moved.current.has(item.id)) {
+          const b = bounds(el);
+          p.x = Math.max(b.minX, Math.min(b.maxX, p.x));
+          p.y = Math.max(b.minY, Math.min(b.maxY, p.y));
+        } else {
+          Object.assign(p, home, { baseRot: home.rot });
+        }
+        el.classList.add("shown");
+        place(item.id);
+      });
+    };
+    window.addEventListener("resize", onResize);
+    document.fonts?.ready.then(onResize);
     return () => {
-      cancelAnimationFrame(frame);
-      observer.disconnect();
-      window.removeEventListener("resize", resize);
-      hero.removeEventListener("pointermove", onMove);
-      hero.removeEventListener("pointerleave", onLeave);
-      hero.removeEventListener("pointerdown", onDown);
+      timers.forEach(clearTimeout);
+      window.removeEventListener("resize", onResize);
+      Object.values(state.current).forEach((p) => cancelAnimationFrame(p.frame));
     };
-  }, [heroRef]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  return <canvas ref={canvasRef} className="solar-wind" aria-hidden="true" />;
-};
+  const startDrag = (e, item) => {
+    if (e.button !== undefined && e.button !== 0) return;
+    const el = itemRefs.current[item.id];
+    const p = state.current[item.id];
+    if (!p) return;
+    e.preventDefault();
+    cancelAnimationFrame(p.frame);
+    el.setPointerCapture?.(e.pointerId);
+    el.classList.remove("settling");
+    el.classList.add("dragging");
+    el.style.zIndex = ++topZ.current;
 
-const Sun = () => (
-  <svg className="sun" viewBox="0 0 100 100" aria-hidden="true">
-    <g className="sun-rays">
-      {Array.from({ length: 12 }, (_, i) => (
-        <line key={i} x1="50" y1="9" x2="50" y2={i % 2 ? "16" : "20"} transform={`rotate(${i * 30} 50 50)`} />
-      ))}
-    </g>
-    <circle cx="50" cy="50" r="22" />
-  </svg>
-);
+    const grabX = e.clientX - p.x;
+    const grabY = e.clientY - p.y;
+    const startX = e.clientX;
+    const startY = e.clientY;
+    let lastX = e.clientX;
+    let lastY = e.clientY;
+    let lastTime = performance.now();
+    let dragged = false;
 
-const Portrait = ({ heroRef }) => {
-  const [boops, setBoops] = useState(0);
-  const figureRef = useRef(null);
-
-  // the portrait leans slightly toward your cursor
-  useEffect(() => {
-    const hero = heroRef.current;
-    if (!hero || prefersReducedMotion()) return;
-    const onMove = (e) => {
-      if (e.pointerType !== "mouse" || !figureRef.current) return;
-      const r = hero.getBoundingClientRect();
-      const lean = ((e.clientX - r.left) / r.width - 0.5) * 4;
-      figureRef.current.style.setProperty("--lean", `${lean.toFixed(2)}deg`);
+    const onMove = (ev) => {
+      if (Math.hypot(ev.clientX - startX, ev.clientY - startY) > 5) dragged = true;
+      const b = bounds(el);
+      const now = performance.now();
+      const dt = Math.max(now - lastTime, 8);
+      p.vx = ((ev.clientX - lastX) / dt) * 16;
+      p.vy = ((ev.clientY - lastY) / dt) * 16;
+      lastX = ev.clientX;
+      lastY = ev.clientY;
+      lastTime = now;
+      p.x = Math.max(b.minX, Math.min(b.maxX, ev.clientX - grabX));
+      p.y = Math.max(b.minY, Math.min(b.maxY, ev.clientY - grabY));
+      p.rot = p.baseRot + Math.max(-9, Math.min(9, p.vx * 0.7));
+      place(item.id);
     };
-    hero.addEventListener("pointermove", onMove);
-    return () => hero.removeEventListener("pointermove", onMove);
-  }, [heroRef]);
+
+    const onUp = (ev) => {
+      el.removeEventListener("pointermove", onMove);
+      el.removeEventListener("pointerup", onUp);
+      el.removeEventListener("pointercancel", onUp);
+      el.classList.remove("dragging");
+
+      if (!dragged) {
+        tapItem(item, el, ev);
+        return;
+      }
+      moved.current.add(item.id);
+      setMessy(true);
+      if (prefersReducedMotion() || performance.now() - lastTime > 90) {
+        p.vx = 0;
+        p.vy = 0;
+      }
+      // let go and it slides a little, then settles flat
+      const glide = () => {
+        const b = bounds(el);
+        p.x += p.vx;
+        p.y += p.vy;
+        p.vx *= 0.91;
+        p.vy *= 0.91;
+        if (p.x < b.minX || p.x > b.maxX) {
+          p.x = Math.max(b.minX, Math.min(b.maxX, p.x));
+          p.vx *= -0.5;
+        }
+        if (p.y < b.minY || p.y > b.maxY) {
+          p.y = Math.max(b.minY, Math.min(b.maxY, p.y));
+          p.vy *= -0.5;
+        }
+        p.rot += (p.baseRot - p.rot) * 0.14;
+        place(item.id);
+        if (Math.hypot(p.vx, p.vy) > 0.15 || Math.abs(p.rot - p.baseRot) > 0.1) p.frame = requestAnimationFrame(glide);
+      };
+      p.frame = requestAnimationFrame(glide);
+    };
+
+    el.addEventListener("pointermove", onMove);
+    el.addEventListener("pointerup", onUp);
+    el.addEventListener("pointercancel", onUp);
+  };
+
+  const tapItem = (item, el, ev) => {
+    if (prefersReducedMotion()) return;
+    el.firstChild?.animate?.(
+      [{ transform: "scale(1)" }, { transform: "scale(1.04, 0.96)" }, { transform: "scale(0.98, 1.02)" }, { transform: "scale(1)" }],
+      { duration: 340, easing: "ease-out" }
+    );
+    if (item.id === "me") burstHearts(ev.clientX, ev.clientY, 5);
+  };
+
+  const nudge = (e, item) => {
+    const steps = { ArrowLeft: [-24, 0], ArrowRight: [24, 0], ArrowUp: [0, -24], ArrowDown: [0, 24] };
+    const step = steps[e.key];
+    if (!step) return;
+    e.preventDefault();
+    const el = itemRefs.current[item.id];
+    const p = state.current[item.id];
+    const b = bounds(el);
+    p.x = Math.max(b.minX, Math.min(b.maxX, p.x + step[0]));
+    p.y = Math.max(b.minY, Math.min(b.maxY, p.y + step[1]));
+    el.style.zIndex = ++topZ.current;
+    place(item.id);
+    moved.current.add(item.id);
+    setMessy(true);
+  };
+
+  const tidy = () => {
+    deskItems.forEach((item) => {
+      const el = itemRefs.current[item.id];
+      const home = homeOf(item);
+      const p = state.current[item.id];
+      if (!home || !p) return;
+      cancelAnimationFrame(p.frame);
+      Object.assign(p, home, { baseRot: home.rot, vx: 0, vy: 0 });
+      el.classList.add("settling");
+      setTimeout(() => el.classList.remove("settling"), 800);
+      place(item.id);
+    });
+    moved.current.clear();
+    setMessy(false);
+  };
 
   return (
-    <div className="hero-figure" ref={figureRef}>
-      <Sun />
-      <button
-        type="button"
-        className="avatar-button"
-        aria-label="Boop Viola's nose"
-        onClick={(e) => {
-          setBoops((n) => n + 1);
-          burstHearts(e.clientX || 300, e.clientY || 300, 5);
-        }}
-      >
-        <img key={boops} src="/avatar.jpeg" alt="" className={boops ? "hero-avatar booped" : "hero-avatar"} draggable="false" />
-      </button>
-    </div>
+    <>
+      <div className="desk-zone" ref={zoneRef} aria-hidden="false">
+        <p className="desk-hint">
+          {messy ? (
+            <button type="button" className="tidy" onClick={tidy}>
+              tidy up
+            </button>
+          ) : (
+            "go ahead, move things around"
+          )}
+        </p>
+      </div>
+      {deskItems.map((item, i) => (
+        <div
+          key={item.id}
+          ref={(el) => {
+            itemRefs.current[item.id] = el;
+          }}
+          className={`desk-item desk-${item.kind}${item.phone ? "" : " desk-no-phone"}`}
+          style={{ zIndex: i + 2 }}
+          tabIndex={0}
+          role="group"
+          aria-label={`${item.kind === "photo" ? item.alt : item.text}. Drag it, or move it with the arrow keys.`}
+          onPointerDown={(e) => startDrag(e, item)}
+          onKeyDown={(e) => nudge(e, item)}
+        >
+          {item.kind === "photo" ? (
+            <figure>
+              <img src={item.src} alt="" draggable="false" />
+              <figcaption>{item.caption}</figcaption>
+            </figure>
+          ) : (
+            <p style={{ background: item.color }}>{item.text}</p>
+          )}
+        </div>
+      ))}
+    </>
   );
 };
 
 const Hero = () => {
-  const heroRef = useRef(null);
   return (
-    <section className="hero" ref={heroRef}>
+    <section className="hero">
       <div className="hero-inner">
         <div className="hero-main">
           <h1>{profile.greeting}</h1>
@@ -443,9 +511,8 @@ const Hero = () => {
             <ExternalLinks links={profile.links} />
           </div>
         </div>
-        <Portrait heroRef={heroRef} />
+        <Desk />
       </div>
-      <SolarWind heroRef={heroRef} />
     </section>
   );
 };
@@ -465,34 +532,59 @@ const Facts = () => (
 
 const ProjectLog = () => {
   const [filter, setFilter] = useState("All");
-  const [hovered, setHovered] = useState(null);
+  const [open, setOpen] = useState(null);
   const entries = filter === "All" ? log : log.filter((e) => e.type === filter);
-  const active = entries.find((e) => e.slug === hovered) || entries[0];
   const filtersRef = useRef(null);
-  const listRef = useRef(null);
+  const gridRef = useRef(null);
+  const lastSpots = useRef(new Map());
   const [pill, setPill] = useState(null);
-  const [bar, setBar] = useState(null);
 
-  // slide the filter pill and the row marker to whatever is selected
+  // slide the filter highlight to whichever filter is selected
   useLayoutEffect(() => {
     const measure = () => {
       const button = filtersRef.current?.querySelector('[aria-pressed="true"]');
       if (button) setPill({ x: button.offsetLeft, y: button.offsetTop, w: button.offsetWidth, h: button.offsetHeight });
-      const row = listRef.current?.querySelector(`[data-slug="${active.slug}"]`);
-      if (row) setBar({ y: row.offsetTop, h: row.offsetHeight });
     };
     measure();
     window.addEventListener("resize", measure);
     document.fonts?.ready.then(measure);
     return () => window.removeEventListener("resize", measure);
-  }, [filter, active.slug]);
+  }, [filter]);
+
+  // when cards change places, glide each one from its old spot to its new one
+  useLayoutEffect(() => {
+    const grid = gridRef.current;
+    if (!grid) return;
+    const origin = grid.getBoundingClientRect();
+    const reduced = prefersReducedMotion();
+    grid.querySelectorAll("[data-slug]").forEach((card) => {
+      const r = card.getBoundingClientRect();
+      const spot = { x: r.left - origin.left, y: r.top - origin.top };
+      const old = lastSpots.current.get(card.dataset.slug);
+      if (old && !reduced && (old.x !== spot.x || old.y !== spot.y)) {
+        card.animate([{ transform: `translate(${old.x - spot.x}px, ${old.y - spot.y}px)` }, { transform: "none" }], {
+          duration: 420,
+          easing: "cubic-bezier(0.3, 0.8, 0.3, 1)",
+        });
+      }
+      lastSpots.current.set(card.dataset.slug, spot);
+    });
+  }, [filter, open]);
+
+  const toggle = (slug, button) => {
+    const opening = open !== slug;
+    setOpen(opening ? slug : null);
+    if (opening && !prefersReducedMotion()) {
+      setTimeout(() => button.closest(".log-card")?.scrollIntoView({ behavior: "smooth", block: "nearest" }), 340);
+    }
+  };
 
   return (
     <section id="log" className="block reveal">
       <div className="block-head">
         <div>
           <h2>Project log</h2>
-          <p className="block-intro">What I’ve been working on. Point at one for a preview, or open it for the full story.</p>
+          <p className="block-intro">What I’ve been working on. Click a card to open it right here.</p>
         </div>
         <div className="filters" role="group" aria-label="Filter projects" ref={filtersRef}>
           {pill && <span className="filter-pill" style={{ transform: `translate(${pill.x}px, ${pill.y}px)`, width: pill.w, height: pill.h }} />}
@@ -503,7 +595,7 @@ const ProjectLog = () => {
               aria-pressed={filter === t}
               onClick={() => {
                 setFilter(t);
-                setHovered(null);
+                if (t !== "All" && !log.some((e) => e.slug === open && e.type === t)) setOpen(null);
               }}
             >
               {t}
@@ -512,53 +604,57 @@ const ProjectLog = () => {
         </div>
       </div>
 
-      <div className="log-explorer">
-        <div className="log-list-wrap" ref={listRef}>
-          {bar && <span className="row-marker" style={{ transform: `translateY(${bar.y}px)`, height: bar.h }} />}
-          <ul className="log-list" key={filter}>
-            {entries.map((e, i) => (
-              <li key={e.slug} style={{ "--i": i }} data-slug={e.slug}>
-                <a
-                  className={e.slug === active.slug ? "log-row selected" : "log-row"}
-                  href={`#/log/${e.slug}`}
-                  onPointerEnter={(ev) => ev.pointerType === "mouse" && setHovered(e.slug)}
-                  onFocus={() => setHovered(e.slug)}
-                >
-                  <span className="log-text">
-                    <span className="log-title">{e.title}</span>
-                    <span className="log-summary">{e.summary}</span>
-                    <span className="log-dates">{e.dates}</span>
-                  </span>
+      <ul className="log-grid" ref={gridRef}>
+        {entries.map((e, i) => {
+          const isOpen = open === e.slug;
+          return (
+            <li key={e.slug} data-slug={e.slug} className={`log-card card-${e.type.toLowerCase()}${isOpen ? " open" : ""}`} style={{ "--i": i }}>
+              <button type="button" className="card-head" aria-expanded={isOpen} onClick={(ev) => toggle(e.slug, ev.currentTarget)}>
+                <span className="card-top">
                   <TypeLabel type={e.type} />
-                  <Chevron />
-                </a>
-              </li>
-            ))}
-          </ul>
-        </div>
-
-        <aside className="log-preview">
-          <div className="preview-inner" key={active.slug}>
-            <TypeLabel type={active.type} />
-            <h3>{active.title}</h3>
-            <p className="preview-overview">{active.overview}</p>
-            {active.did && (
-              <ul className="did-list">
-                {active.did.map((d, i) => (
-                  <li key={d} style={{ "--i": i }}>
-                    {d}
-                  </li>
-                ))}
-              </ul>
-            )}
-            {active.tools && <p className="preview-tools">{active.tools.join(", ")}</p>}
-            <a className="preview-open" href={`#/log/${active.slug}`}>
-              Open project
-              <Chevron />
-            </a>
-          </div>
-        </aside>
-      </div>
+                  <span className="card-dates">{e.dates}</span>
+                </span>
+                <span className="card-title">{e.title}</span>
+                <span className="card-summary">{e.summary}</span>
+                <span className="card-toggle" aria-hidden="true">
+                  <svg viewBox="0 0 16 16" width="16" height="16">
+                    <path d="M8 3v10M3 8h10" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+                  </svg>
+                </span>
+              </button>
+              <div className="card-panel" inert={!isOpen}>
+                <div className="card-panel-inner">
+                  <div className="card-detail">
+                    <p className="card-overview">{e.overview}</p>
+                    {e.did && (
+                      <>
+                        <h3>What I did</h3>
+                        <ul className="did-list">
+                          {e.did.map((d) => (
+                            <li key={d}>{d}</li>
+                          ))}
+                        </ul>
+                      </>
+                    )}
+                  </div>
+                  <div className="card-side">
+                    {e.tools && (
+                      <>
+                        <h3>Tools and methods</h3>
+                        <p>{e.tools.join(", ")}</p>
+                      </>
+                    )}
+                    <a className="card-open" href={`#/log/${e.slug}`}>
+                      See the full page
+                      <Chevron />
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </li>
+          );
+        })}
+      </ul>
     </section>
   );
 };
