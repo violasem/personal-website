@@ -26,15 +26,15 @@ export const profile = {
 // phone sets a different spot on small screens, and phone: null hides the item there.
 // kind can be "photo", "note", or "object" (the drawings live in App.jsx).
 export const deskItems = [
-  { id: "stadium", kind: "photo", src: "/potrait.jpeg", focus: "42% 30%", caption: "Michigan Stadium", alt: "Viola at Michigan Stadium with the marching band behind her", at: { x: 1, y: 0, rot: 4 }, phone: { x: 1, y: 0.02, rot: 4 } },
+  { id: "stadium", kind: "photo", src: "/potrait.jpeg", focus: "42% 30%", caption: "Michigan Stadium", alt: "Viola at Michigan Stadium with the marching band behind her", at: { x: 1, y: 0, rot: 4 }, phone: { x: 1, y: 0, rot: 4 } },
   { id: "me", kind: "photo", src: "/avatar.jpeg", caption: "me, with ears", alt: "Illustrated portrait of Viola with glasses and puppy ears", at: { x: 0, y: 0.03, rot: -5 }, phone: { x: 0, y: 0, rot: -4 } },
-  { id: "pennant", kind: "object", art: "pennant", label: "A Go Blue pennant", at: { x: 0, y: 0.68, rot: -8 }, phone: { x: 0.02, y: 0.66, rot: -7 } },
-  { id: "manga", kind: "object", art: "manga", label: "A fantasy manga book, because I'm always looking for good ones", at: { x: 0.55, y: 0.62, rot: 7 }, phone: null },
-  { id: "multimeter", kind: "object", art: "multimeter", label: "A digital multimeter from the circuits lab", at: { x: 0.38, y: 0.62, rot: -6 }, phone: { x: 0.54, y: 0.64, rot: 6 } },
+  { id: "pennant", kind: "object", art: "pennant", label: "A Go Blue pennant", at: { x: 0, y: 0.68, rot: -8 }, phone: { x: 0, y: 0.6, rot: -7 } },
+  { id: "manga", kind: "object", art: "manga", label: "A fantasy manga book, because I'm always looking for good ones", at: { x: 0.55, y: 0.62, rot: 7 }, phone: { x: 0.84, y: 0.63, rot: 7 } },
+  { id: "multimeter", kind: "object", art: "multimeter", label: "A digital multimeter from the circuits lab", at: { x: 0.38, y: 0.62, rot: -6 }, phone: { x: 0.53, y: 0.62, rot: 6 } },
   { id: "resistor", kind: "object", art: "resistor", label: "A resistor", at: { x: 0.66, y: 0.5, rot: 12 }, phone: null },
   { id: "gpa", kind: "note", text: "3.94 GPA, Dean's List", color: "#f0e3b8", at: { x: 0.415, y: 0, rot: -3 }, phone: { x: 0, y: 1, rot: 3 } },
-  { id: "next", kind: "note", text: "Next up: embedded and control systems", color: "#d6e0eb", at: { x: 0.425, y: 0.25, rot: 3 }, phone: { x: 1, y: 1, rot: -3 } },
-  { id: "research", kind: "note", text: "Solar wind and machine learning research", color: "#d7e3d8", at: { x: 1, y: 0.6, rot: 5 }, phone: null },
+  { id: "next", kind: "note", text: "Next up: embedded and control systems", color: "#d6e0eb", at: { x: 0.425, y: 0.25, rot: 3 }, phone: { x: 1, y: 1, rot: 3 } },
+  { id: "research", kind: "note", text: "Solar wind and machine learning research", color: "#d7e3d8", at: { x: 1, y: 0.6, rot: 5 }, phone: { x: 0.5, y: 0.97, rot: -2 } },
   { id: "eecs", kind: "note", text: "Teaching circuits in EECS 215", color: "#e4dcee", at: { x: 0.72, y: 1, rot: -4 }, phone: null },
   { id: "dog", kind: "note", text: "Dog person", color: "#ebd4d6", at: { x: 0.02, y: 1, rot: 3 }, phone: null },
   { id: "medan", kind: "note", text: "Born and raised in Medan", color: "#f3dfc9", at: { x: 0.25, y: 1, rot: -3 }, phone: null },

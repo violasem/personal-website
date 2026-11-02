@@ -220,27 +220,43 @@ const ScrollProgress = () => {
   return <span className="scroll-progress" ref={barRef} aria-hidden="true" />;
 };
 
-const TopBar = ({ route, current }) => (
-  <header className="topbar">
-    <div className="topbar-inner">
-      <a className="brand" href="#/">
-        {profile.name}
-      </a>
-      <nav aria-label="Main">
-        {navItems.map((n) => {
-          const id = n.href.slice(2);
-          const active = current ? current === id : route === id || (id === "log" && route.startsWith("log/"));
-          return (
-            <a key={n.href} href={n.href} aria-current={active ? "page" : undefined}>
-              {n.label}
-            </a>
-          );
-        })}
-      </nav>
-    </div>
-    <ScrollProgress />
-  </header>
-);
+const TopBar = ({ route, current }) => {
+  const navRef = useRef(null);
+
+  // on phones the menu can scroll sideways, so keep the current section's link in view
+  useEffect(() => {
+    const nav = navRef.current;
+    const link = nav?.querySelector('[aria-current="page"]');
+    if (link && nav.scrollWidth > nav.clientWidth) {
+      nav.scrollTo({ left: link.offsetLeft - nav.clientWidth / 2 + link.offsetWidth / 2, behavior: "smooth" });
+    }
+  });
+
+  return (
+    <header className="topbar">
+      <div className="topbar-inner">
+        <a className="brand" href="#/" aria-label={profile.name}>
+          <span className="brand-full">{profile.name}</span>
+          <span className="brand-short" aria-hidden="true">
+            VS
+          </span>
+        </a>
+        <nav aria-label="Main" ref={navRef}>
+          {navItems.map((n) => {
+            const id = n.href.slice(2);
+            const active = current ? current === id : route === id || (id === "log" && route.startsWith("log/"));
+            return (
+              <a key={n.href} href={n.href} aria-current={active ? "page" : undefined}>
+                {n.label}
+              </a>
+            );
+          })}
+        </nav>
+      </div>
+      <ScrollProgress />
+    </header>
+  );
+};
 
 // Drawings for the desk.
 const DeskObject = ({ art }) => {
@@ -423,11 +439,20 @@ const Desk = () => {
       place(item.id);
     };
 
+    const start = { x: p.x, y: p.y };
+
     const onUp = (ev) => {
       el.removeEventListener("pointermove", onMove);
       el.removeEventListener("pointerup", onUp);
       el.removeEventListener("pointercancel", onUp);
       el.classList.remove("dragging");
+
+      // on a phone, a vertical swipe scrolls the page instead, so put the item back
+      if (ev.type === "pointercancel") {
+        Object.assign(p, start, { rot: p.baseRot, vx: 0, vy: 0 });
+        place(item.id);
+        return;
+      }
 
       if (!dragged) {
         tapItem(item, el, ev);
@@ -516,7 +541,10 @@ const Desk = () => {
               tidy up
             </button>
           ) : (
-            "go ahead, move things around"
+            <>
+              <span className="hint-mouse">go ahead, move things around</span>
+              <span className="hint-touch">slide things sideways to pick them up</span>
+            </>
           )}
         </p>
       </div>
@@ -630,7 +658,13 @@ const ProjectLog = () => {
     const opening = open !== slug;
     setOpen(opening ? slug : null);
     if (opening && !prefersReducedMotion()) {
-      setTimeout(() => button.closest(".log-card")?.scrollIntoView({ behavior: "smooth", block: "nearest" }), 340);
+      setTimeout(() => {
+        const card = button.closest(".log-card");
+        if (!card) return;
+        // a tall card on a phone lines up with the top; otherwise just bring it into view
+        const tall = card.offsetHeight > window.innerHeight * 0.7;
+        card.scrollIntoView({ behavior: "smooth", block: tall ? "start" : "nearest" });
+      }, 420);
     }
   };
 
@@ -639,7 +673,7 @@ const ProjectLog = () => {
       <div className="block-head">
         <div>
           <h2>Project log</h2>
-          <p className="block-intro">What I’ve been working on. Click a card to open it right here.</p>
+          <p className="block-intro">What I’ve been working on. Open a card to read more.</p>
         </div>
         <div className="filters" role="group" aria-label="Filter projects" ref={filtersRef}>
           {pill && <span className="filter-pill" style={{ transform: `translate(${pill.x}px, ${pill.y}px)`, width: pill.w, height: pill.h }} />}
@@ -794,7 +828,7 @@ const Experience = () => {
       <div className="block-head">
         <div>
           <h2>Experience</h2>
-          <p className="block-intro">Each line steps up while I held that role. Move across it to travel through time, or click a role for a short summary.</p>
+          <p className="block-intro">Each line steps up while I held that role. Slide across it to travel through time, or tap a role for a short summary.</p>
         </div>
       </div>
       <div
