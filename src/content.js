@@ -312,11 +312,20 @@ export const timeline = [
   { role: "Study Group Facilitator", org: "U-M Mathematics", from: "2025-08", dates: "Aug 2025 – present", log: "math-tutoring" },
 ];
 
+// The "What's next" roadmap, in order.
+export const nextSteps = [
+  { when: "Winter and Fall 2027", title: "Perot Jain TechLab", text: "Working on electrification with Wheelhouse, a startup I’m matched with through the program." },
+  { when: "Winter and Fall 2027", title: "MDP research", text: "Joining the MuRoAM team through the Multidisciplinary Design Program." },
+  { when: "May 2028", title: "Graduate", text: "B.S.E. in Computer Engineering, with a minor in Data Science." },
+  { when: "After that", title: "Master’s degree", text: "Planning a master’s in electrical and computer engineering, focused on embedded systems." },
+];
+
 export const education = {
   school: "University of Michigan College of Engineering",
   degree: "B.S.E. in Computer Engineering, minor in Data Science",
   dates: "Aug 2024 – May 2028",
-  note: "GPA 3.94/4.0. Dean’s List and University Honors to date.",
+  note: "GPA 3.94/4.0.",
+  honors: "James B. Angell Scholar, Dean’s List, and University Honors.",
   scholarship: "Beasiswa Indonesia Maju (BIM)",
   scholarshipNote: "Full-ride, government-funded scholarship and pre-university program.",
   scholarshipDates: "May 2024 – present",

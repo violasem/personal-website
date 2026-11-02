@@ -1,11 +1,12 @@
 import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { contact, deskItems, education, log, logTypes, profile, skills, timeline } from "./content.js";
+import { contact, deskItems, education, log, logTypes, nextSteps, profile, skills, timeline } from "./content.js";
 
 
 const navItems = [
   { href: "#/log", label: "Project log" },
   { href: "#/experience", label: "Experience" },
+  { href: "#/next", label: "Next" },
   { href: "#/education", label: "Education" },
   { href: "#/contact", label: "Contact" },
 ];
@@ -57,7 +58,7 @@ const useCurrentSection = (enabled) => {
       setCurrent(null);
       return;
     }
-    const ids = ["log", "experience", "education", "contact"];
+    const ids = ["log", "experience", "next", "education", "contact"];
     const onScroll = () => {
       let found = null;
       for (const id of ids) {
@@ -172,6 +173,9 @@ const Puppy = () => {
     const onTreat = (e) => {
       treat = e.detail;
     };
+    const onCancel = () => {
+      treat = null;
+    };
 
     const tick = () => {
       // heading for a treat, the dog leaves the floor and runs right to it
@@ -205,11 +209,13 @@ const Puppy = () => {
     window.addEventListener("pointermove", onMove);
     window.addEventListener("pointerdown", onDown);
     dogBus.addEventListener("treat", onTreat);
+    dogBus.addEventListener("cancel", onCancel);
     frame = requestAnimationFrame(tick);
     return () => {
       window.removeEventListener("pointermove", onMove);
       window.removeEventListener("pointerdown", onDown);
       dogBus.removeEventListener("treat", onTreat);
+      dogBus.removeEventListener("cancel", onCancel);
       cancelAnimationFrame(frame);
     };
   }, []);
@@ -608,7 +614,7 @@ const Desk = () => {
     el.addEventListener("pointercancel", onUp);
   };
 
-  // the dog runs over, eats the treat, and a new one appears where it started
+  // the dog runs over and eats the treat, and it stays gone until the desk is tidied
   const giveTreat = (item, el) => {
     const p = state.current[item.id];
     p.vx = 0;
@@ -616,17 +622,12 @@ const Desk = () => {
     p.rot = p.baseRot;
     place(item.id);
     el.classList.add("claimed");
+    setMessy(true);
     const r = el.getBoundingClientRect();
     const eaten = () => {
       burstHearts(r.left + r.width / 2, r.top + r.height / 2, 5);
       el.classList.add("eaten");
       showTipGone();
-      setTimeout(() => {
-        const home = homeOf(item);
-        if (home) Object.assign(p, home, { baseRot: home.rot });
-        place(item.id);
-        el.classList.remove("eaten", "claimed");
-      }, 2200);
     };
     if (prefersReducedMotion()) eaten();
     else dogBus.dispatchEvent(Object.assign(new Event("treat"), { detail: { x: r.left + r.width / 2, y: r.top + r.height / 2, onEaten: eaten } }));
@@ -668,6 +669,7 @@ const Desk = () => {
   };
 
   const tidy = () => {
+    dogBus.dispatchEvent(new Event("cancel"));
     deskItems.forEach((item) => {
       const el = itemRefs.current[item.id];
       const home = homeOf(item);
@@ -675,6 +677,13 @@ const Desk = () => {
       if (!home || !p) return;
       cancelAnimationFrame(p.frame);
       Object.assign(p, home, { baseRot: home.rot, vx: 0, vy: 0 });
+      if (el.classList.contains("eaten")) {
+        // an eaten treat fades back in at its spot
+        place(item.id);
+        el.classList.remove("eaten", "claimed");
+        return;
+      }
+      el.classList.remove("claimed");
       el.classList.add("settling");
       setTimeout(() => el.classList.remove("settling"), 800);
       place(item.id);
@@ -1143,6 +1152,24 @@ const Experience = () => {
   );
 };
 
+const NextSteps = () => (
+  <section id="next" className="block reveal">
+    <div className="block-head">
+      <h2>What’s next</h2>
+    </div>
+    <ol className="roadmap">
+      {nextSteps.map((step, i) => (
+        <li key={step.title} style={{ "--i": i }}>
+          <span className="road-dot" aria-hidden="true" />
+          <span className="road-when">{step.when}</span>
+          <h3>{step.title}</h3>
+          <p>{step.text}</p>
+        </li>
+      ))}
+    </ol>
+  </section>
+);
+
 const EducationSkills = () => (
   <section id="education" className="block two-col reveal">
     <div>
@@ -1151,6 +1178,7 @@ const EducationSkills = () => (
       <p>{education.degree}</p>
       <p className="muted">{education.dates}</p>
       <p className="muted edu-note">{education.note}</p>
+      <p className="muted">{education.honors}</p>
       <h3 className="edu-school edu-scholarship">{education.scholarship}</h3>
       <p>{education.scholarshipNote}</p>
       <p className="muted">{education.scholarshipDates}</p>
@@ -1228,6 +1256,7 @@ const Home = () => (
       <Facts />
       <ProjectLog />
       <Experience />
+      <NextSteps />
       <EducationSkills />
       <Contact />
     </main>

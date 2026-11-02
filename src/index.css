@@ -393,9 +393,10 @@ button:focus-visible {
 }
 
 .desk-item.eaten {
+  visibility: hidden;
   opacity: 0;
   scale: 0.2;
-  transition: opacity 0.2s ease, scale 0.2s ease;
+  transition: opacity 0.2s ease, scale 0.2s ease, visibility 0s linear 0.2s;
 }
 
 /* the desk drawer: a wooden frame, a dark slot, and a front that pulls out */
@@ -1397,6 +1398,81 @@ button:focus-visible {
     opacity: 0;
     transform: scale(2.8);
   }
+}
+
+/* what's next: a line that draws across, with a stop for each step */
+.roadmap {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 24px clamp(20px, 3vw, 36px);
+}
+
+.roadmap::before {
+  content: "";
+  position: absolute;
+  top: 6px;
+  right: 0;
+  left: 0;
+  height: 2px;
+  background: var(--rule-strong);
+  transform: scaleX(0);
+  transform-origin: left;
+}
+
+.reveal.in .roadmap::before {
+  transform: scaleX(1);
+  transition: transform 1.2s cubic-bezier(0.4, 0, 0.2, 1) 0.15s;
+}
+
+.roadmap li {
+  position: relative;
+  padding-top: 28px;
+}
+
+.reveal.in .roadmap li {
+  animation: riseIn 0.55s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  animation-delay: calc(var(--i) * 0.2s + 0.2s);
+}
+
+.road-dot {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 14px;
+  height: 14px;
+  border: 2px solid var(--page);
+  border-radius: 50%;
+  background: var(--slate);
+  box-shadow: 0 0 0 1px var(--slate);
+  transition: background-color 0.2s ease, box-shadow 0.2s ease, scale 0.2s ease;
+}
+
+.roadmap li:hover .road-dot {
+  background: var(--rose);
+  box-shadow: 0 0 0 1px var(--rose);
+  scale: 1.25;
+}
+
+.road-when {
+  display: block;
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-soft);
+}
+
+.roadmap h3 {
+  margin: 3px 0 5px;
+  font-family: "Fraunces", Georgia, serif;
+  font-size: 22px;
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+.roadmap p {
+  font-size: 16px;
+  line-height: 1.45;
+  color: var(--ink-soft);
 }
 
 /* education, skills, about */
@@ -2587,6 +2663,34 @@ button:focus-visible {
     gap: 18px;
   }
 
+  .roadmap {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 22px;
+  }
+
+  .roadmap::before {
+    top: 0;
+    right: auto;
+    bottom: 0;
+    left: 6px;
+    width: 2px;
+    height: auto;
+    transform: scaleY(0);
+    transform-origin: top;
+  }
+
+  .reveal.in .roadmap::before {
+    transform: scaleY(1);
+  }
+
+  .roadmap li {
+    padding: 0 0 0 28px;
+  }
+
+  .road-dot {
+    top: 3px;
+  }
+
   .log-grid {
     grid-template-columns: minmax(0, 1fr);
   }
@@ -2767,6 +2871,10 @@ button:focus-visible {
 
   .reveal {
     opacity: 1;
+    transform: none;
+  }
+
+  .roadmap::before {
     transform: none;
   }
 
