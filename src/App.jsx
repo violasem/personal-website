@@ -1254,15 +1254,16 @@ const Figure = ({ figure, onZoom }) => (
   </figure>
 );
 
-const CycleComparison = ({ comparisons }) => {
+const CycleComparison = ({ comparisons, figures, onZoom }) => {
   const [id, setId] = useState(comparisons[0].id);
   const c = comparisons.find((x) => x.id === id);
   const [low, high] = [-1.2, -0.4];
   const pos = (v) => ((v - low) / (high - low)) * 100;
 
   return (
+    <div className="r-compare">
     <div className="r-panel">
-      <Segments label="Choose a part of the solar cycle" options={comparisons} value={id} onChange={setId} />
+      <Segments label="Choose a comparison" options={comparisons} value={id} onChange={setId} />
       <p className="r-verdict">{c.verdict}</p>
       <div className="meanline" role="img" aria-label={`Mean log O7+/O6+: ${c.years[0]} ${c.means[0]}, ${c.years[1]} ${c.means[1]}`}>
         <span className="meanline-track" />
@@ -1281,28 +1282,40 @@ const CycleComparison = ({ comparisons }) => {
       </div>
       <p className="r-axis-note">Mean of log O⁷⁺/O⁶⁺ in each year</p>
       <p>{c.text}</p>
-      <dl className="r-stats">
-        <div>
-          <dt>t-statistic</dt>
-          <dd>{c.t}</dd>
-        </div>
-        <div>
-          <dt>t-test p-value</dt>
-          <dd>{c.tp}</dd>
-        </div>
-        <div>
-          <dt>Chi-square</dt>
-          <dd>{c.chi}</dd>
-        </div>
-        <div>
-          <dt>Chi-square p-value</dt>
-          <dd>{c.chip}</dd>
-        </div>
-        <div>
-          <dt>Degrees of freedom</dt>
-          <dd>{c.dof}</dd>
-        </div>
-      </dl>
+      {c.t && (
+        <dl className="r-stats">
+          {[
+            ["t-statistic", c.t],
+            ["t-test p-value", c.tp],
+            ["Chi-square", c.chi],
+            ["Chi-square p-value", c.chip],
+            ["Degrees of freedom", c.dof],
+          ].map(([label, value]) => (
+            <div key={label}>
+              <dt>{label}</dt>
+              <dd>{value}</dd>
+            </div>
+          ))}
+        </dl>
+      )}
+    </div>
+    <div className="r-swap" key={c.id}>
+      <Figure figure={figures[c.figure]} onZoom={onZoom} />
+    </div>
+    </div>
+  );
+};
+
+const FitViews = ({ views, figures, onZoom }) => {
+  const [id, setId] = useState(views[views.length - 1].id);
+  const view = views.find((v) => v.id === id);
+  return (
+    <div className="r-views">
+      <Segments label="Choose an exponent" options={views} value={id} onChange={setId} />
+      <p className="r-view-text">{view.text}</p>
+      <div className="r-swap" key={view.id}>
+        <Figure figure={figures[view.figure]} onZoom={onZoom} />
+      </div>
     </div>
   );
 };
@@ -1413,24 +1426,35 @@ const ResearchStory = ({ research }) => {
         {tab === "ace" ? (
           <div className="r-tab-body" key="ace">
             <p className="r-method">{research.ace.method}</p>
-            <div className="r-split">
-              <CycleComparison comparisons={research.ace.comparisons} />
-              <Figure figure={f.cycles} onZoom={zoom} />
-            </div>
+            <CycleComparison comparisons={research.ace.comparisons} figures={f} onZoom={zoom} />
             <h3>Working around a damaged instrument</h3>
-            <div className="r-split">
-              <p>{research.ace.instrument}</p>
-              <Figure figure={f.instrument} onZoom={zoom} />
+            <p className="r-method">{research.ace.instrument}</p>
+            <dl className="r-stats r-cutoff">
+              {research.ace.cutoff.map((x) => (
+                <div key={x.label}>
+                  <dt>{x.label}</dt>
+                  <dd>{x.value}</dd>
+                </div>
+              ))}
+            </dl>
+            <div className="r-pair">
+              <Figure figure={f.cutoff} onZoom={zoom} />
+              <Figure figure={f.scatter} onZoom={zoom} />
             </div>
           </div>
         ) : (
           <div className="r-tab-body" key="psp">
             <p className="r-method">{research.psp.method}</p>
+            <h3>Step 1: Find the edges</h3>
+            <p className="r-method">{research.psp.stepOne}</p>
+            <Figure figure={f.pspEdges} onZoom={zoom} />
+            <h3>Step 2: Compare the exponents</h3>
+            <FitViews views={research.psp.views} figures={f} onZoom={zoom} />
+            <h3>Step 3: Test the fit</h3>
             <FitComparison psp={research.psp} />
-            <h3>{research.psp.transition}</h3>
-            <div className="r-pair">
-              <Figure figure={f.transition} onZoom={zoom} />
-              <Figure figure={f.scaling} onZoom={zoom} />
+            <div className="r-pair r-gap">
+              <Figure figure={f.envelope} onZoom={zoom} />
+              <Figure figure={f.fit} onZoom={zoom} />
             </div>
           </div>
         )}

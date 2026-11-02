@@ -1831,11 +1831,35 @@ button:focus-visible {
   margin-bottom: 20px;
 }
 
-.r-split {
+.r-compare {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  gap: 24px clamp(24px, 4vw, 48px);
+  grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+  gap: 24px clamp(20px, 3vw, 36px);
   align-items: start;
+}
+
+.r-swap {
+  animation: riseIn 0.4s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+.r-view-text {
+  max-width: 68ch;
+  min-height: 3.2em;
+  margin: 12px 0;
+}
+
+.r-cutoff {
+  margin: 0 0 20px;
+  padding-top: 0;
+  border-top: 0;
+}
+
+.r-cutoff dd {
+  font-size: 16px;
+}
+
+.r-gap {
+  margin-top: 24px;
 }
 
 .r-pair {
@@ -2144,7 +2168,7 @@ button:focus-visible {
 
 @media (max-width: 860px) {
   .r-findings,
-  .r-split,
+  .r-compare,
   .r-pair {
     grid-template-columns: minmax(0, 1fr);
   }
