@@ -25,19 +25,23 @@ export const profile = {
 // The things on the banner's desk. x and y are 0 to 1 within the desk area; rot is the tilt in degrees.
 // phone sets a different spot on small screens, and phone: null hides the item there.
 // kind can be "photo", "note", or "object" (the drawings live in App.jsx).
+// desc is what shows up when someone picks the item up.
 export const deskItems = [
-  { id: "stadium", kind: "photo", src: "/potrait.jpeg", focus: "42% 30%", caption: "Michigan Stadium", alt: "Viola at Michigan Stadium with the marching band behind her", at: { x: 1, y: 0, rot: 4 }, phone: { x: 1, y: 0, rot: 4 } },
-  { id: "me", kind: "photo", src: "/avatar.jpeg", caption: "me, with ears", alt: "Illustrated portrait of Viola with glasses and puppy ears", at: { x: 0, y: 0.03, rot: -5 }, phone: { x: 0, y: 0, rot: -4 } },
-  { id: "pennant", kind: "object", art: "pennant", label: "A Go Blue pennant", at: { x: 0, y: 0.68, rot: -8 }, phone: { x: 0, y: 0.6, rot: -7 } },
-  { id: "manga", kind: "object", art: "manga", label: "A fantasy manga book, because I'm always looking for good ones", at: { x: 0.55, y: 0.62, rot: 7 }, phone: { x: 0.84, y: 0.63, rot: 7 } },
-  { id: "multimeter", kind: "object", art: "multimeter", label: "A digital multimeter from the circuits lab", at: { x: 0.38, y: 0.62, rot: -6 }, phone: { x: 0.53, y: 0.62, rot: 6 } },
-  { id: "resistor", kind: "object", art: "resistor", label: "A resistor", at: { x: 0.66, y: 0.5, rot: 12 }, phone: null },
-  { id: "gpa", kind: "note", text: "3.94 GPA, Dean's List", color: "#f0e3b8", at: { x: 0.415, y: 0, rot: -3 }, phone: { x: 0, y: 1, rot: 3 } },
-  { id: "next", kind: "note", text: "Next up: embedded and control systems", color: "#d6e0eb", at: { x: 0.425, y: 0.25, rot: 3 }, phone: { x: 1, y: 1, rot: 3 } },
-  { id: "research", kind: "note", text: "Solar wind and machine learning research", color: "#d7e3d8", at: { x: 1, y: 0.6, rot: 5 }, phone: { x: 0.5, y: 0.97, rot: -2 } },
-  { id: "eecs", kind: "note", text: "Teaching circuits in EECS 215", color: "#e4dcee", at: { x: 0.72, y: 1, rot: -4 }, phone: null },
-  { id: "dog", kind: "note", text: "Dog person", color: "#ebd4d6", at: { x: 0.02, y: 1, rot: 3 }, phone: null },
-  { id: "medan", kind: "note", text: "Born and raised in Medan", color: "#f3dfc9", at: { x: 0.25, y: 1, rot: -3 }, phone: null },
+  { id: "stadium", kind: "photo", src: "/potrait.jpeg", focus: "42% 30%", caption: "Michigan Stadium", alt: "Viola at Michigan Stadium with the marching band behind her", desc: "Game day at Michigan Stadium.", at: { x: 1, y: 0, rot: 4 }, phone: { x: 1, y: 0, rot: 4 } },
+  { id: "me", kind: "photo", src: "/avatar.jpeg", caption: "me, with ears", alt: "Illustrated portrait of Viola with glasses and puppy ears", desc: "That’s me. Tap to boop my nose!", at: { x: 0, y: 0.03, rot: -5 }, phone: { x: 0, y: 0, rot: -4 } },
+  { id: "pennant", kind: "object", art: "pennant", label: "A Go Blue pennant", desc: "Computer engineering at Michigan, class of 2028.", at: { x: 0, y: 0.66, rot: -8 }, phone: { x: 0, y: 0.58, rot: -7 } },
+  { id: "multimeter", kind: "object", art: "multimeter", label: "A digital multimeter", desc: "From the circuits lab. The screen shows my GPA.", at: { x: 0.33, y: 0.62, rot: -6 }, phone: { x: 0.5, y: 0.6, rot: 6 } },
+  { id: "duck", kind: "object", art: "duck", label: "A rubber duck", desc: "Rubber duck debugging: explain your bug to the duck. Tap me!", at: { x: 0.47, y: 0.66, rot: 5 }, phone: { x: 0.8, y: 0.6, rot: 6 } },
+  { id: "sticker", kind: "object", art: "sticker", label: "An EECS sticker", desc: "Electrical Engineering and Computer Science at U-M.", at: { x: 0.6, y: 0.6, rot: -10 }, phone: { x: 1, y: 0.73, rot: -10 } },
+  { id: "resistor", kind: "object", art: "resistor", label: "A resistor", desc: "Brown, black, red, gold: 1 kΩ, ±5%.", at: { x: 0.71, y: 0.53, rot: 12 }, phone: null },
+  { id: "treat", kind: "object", art: "treat", label: "A dog treat", desc: "Drop me and see who comes running.", at: { x: 0.74, y: 0.71, rot: 14 }, phone: { x: 0.3, y: 0.76, rot: 14 } },
+  { id: "gpa", kind: "note", text: "3.94 GPA, Dean's List", color: "#f0e3b8", desc: "3.94/4.0 so far, with University Honors.", at: { x: 0.415, y: 0, rot: -3 }, phone: { x: 0, y: 1, rot: 3 } },
+  { id: "embedded", kind: "note", text: "Embedded systems", color: "#d6e0eb", desc: "Where I want to grow next.", at: { x: 0.425, y: 0.27, rot: 3 }, phone: { x: 0.5, y: 0.98, rot: -2 } },
+  { id: "control", kind: "note", text: "Control systems", color: "#e4dcee", desc: "The other half of where I’m headed.", at: { x: 0.52, y: 1, rot: 4 }, phone: { x: 1, y: 1, rot: 3 } },
+  { id: "research", kind: "note", text: "Solar wind and machine learning research", color: "#d7e3d8", desc: "Python pipelines on solar wind data, with Prof. Liang Zhao.", at: { x: 1, y: 0.56, rot: 5 }, phone: null },
+  { id: "eecs", kind: "note", text: "Teaching circuits in EECS 215", color: "#dfe7dc", desc: "Instructional aide for a lab section.", at: { x: 0.78, y: 1, rot: -4 }, phone: null },
+  { id: "dog", kind: "note", text: "Dog person", color: "#ebd4d6", desc: "Hence the dog at the bottom of your screen.", at: { x: 0.02, y: 1, rot: 3 }, phone: null },
+  { id: "medan", kind: "note", text: "Born and raised in Medan", color: "#f3dfc9", desc: "Medan, Indonesia, and now Ann Arbor.", at: { x: 0.26, y: 1, rot: -3 }, phone: null },
 ];
 
 // The project log. Every entry opens in place as a card. Add fullPage: true to give it its own page too.
@@ -191,4 +195,7 @@ export const skills = [
 export const contact = {
   email: "violasem@umich.edu",
   lead: "Email is the best way to reach me.",
+  // Add your resume PDF to the public folder and put its path here (like "/resume.pdf").
+  // The desk drawer will then offer it as a download.
+  resumeUrl: "",
 };

@@ -1,4 +1,5 @@
 import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { contact, deskItems, education, log, logTypes, profile, skills, timeline } from "./content.js";
 
 
@@ -116,11 +117,38 @@ const Chevron = () => (
 
 const TypeLabel = ({ type }) => <span className={`type type-${type.toLowerCase()}`}>{type}</span>;
 
-// The dog follows your cursor along the bottom of the screen. Click it to pet it.
+// Lets the desk tell the dog there's a treat.
+const dogBus = new EventTarget();
+
+const squeak = () => {
+  try {
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    const audio = new AudioCtx();
+    const now = audio.currentTime;
+    [0, 0.13].forEach((delay) => {
+      const osc = audio.createOscillator();
+      const gain = audio.createGain();
+      osc.type = "triangle";
+      osc.frequency.setValueAtTime(1050, now + delay);
+      osc.frequency.exponentialRampToValueAtTime(620, now + delay + 0.1);
+      gain.gain.setValueAtTime(0.0001, now + delay);
+      gain.gain.exponentialRampToValueAtTime(0.05, now + delay + 0.015);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + delay + 0.11);
+      osc.connect(gain).connect(audio.destination);
+      osc.start(now + delay);
+      osc.stop(now + delay + 0.12);
+    });
+    setTimeout(() => audio.close(), 500);
+  } catch {
+    // no sound available, and the quack bubble still shows
+  }
+};
+
+// The dog follows your cursor along the bottom of the screen. Click it to pet it, or give it a treat.
 const Puppy = () => {
   const rootRef = useRef(null);
   const [pets, setPets] = useState(0);
-  const [saying, setSaying] = useState(false);
+  const [saying, setSaying] = useState(null);
 
   useEffect(() => {
     const el = rootRef.current;
@@ -128,8 +156,10 @@ const Puppy = () => {
 
     const clamp = (value) => Math.max(8, Math.min(window.innerWidth - 80, value));
     let x = 24;
+    let y = 0;
     let target = 24;
     let frame;
+    let treat = null;
 
     // the dog trails behind the cursor, so it never sits on top of what you're clicking
     const onMove = (e) => {
@@ -139,40 +169,66 @@ const Puppy = () => {
       if (e.pointerType !== "mouse") target = clamp(e.clientX - 36);
     };
 
+    const onTreat = (e) => {
+      treat = e.detail;
+    };
+
     const tick = () => {
-      const gap = target - x;
-      x += Math.max(-3, Math.min(3, gap * 0.05));
-      el.style.transform = `translateX(${x}px)`;
-      el.classList.toggle("walking", Math.abs(gap) > 6);
-      if (Math.abs(gap) > 6) el.classList.toggle("flip", gap < 0);
+      // heading for a treat, the dog leaves the floor and runs right to it
+      const goalX = treat ? clamp(treat.x - 34) : target;
+      const goalY = treat ? treat.y - (window.innerHeight - 30) : 0;
+      const gapX = goalX - x;
+      const gapY = goalY - y;
+      const distance = Math.hypot(gapX, gapY);
+      if (treat || Math.abs(gapY) > 1) {
+        const speed = treat ? 7 : 5;
+        const step = Math.min(speed, distance) / (distance || 1);
+        x += gapX * step;
+        y += gapY * step;
+      } else {
+        x += Math.max(-3, Math.min(3, gapX * 0.05));
+        y = 0;
+      }
+      el.style.transform = `translate(${x}px, ${y}px)`;
+      const moving = treat ? distance > 8 : Math.abs(gapX) > 6 || Math.abs(gapY) > 1;
+      el.classList.toggle("walking", moving);
+      if (Math.abs(gapX) > 6) el.classList.toggle("flip", gapX < 0);
+      if (treat && distance <= 8) {
+        treat.onEaten();
+        treat = null;
+        setPets((n) => n + 1);
+        setSaying("yum!");
+      }
       frame = requestAnimationFrame(tick);
     };
 
     window.addEventListener("pointermove", onMove);
     window.addEventListener("pointerdown", onDown);
+    dogBus.addEventListener("treat", onTreat);
     frame = requestAnimationFrame(tick);
     return () => {
       window.removeEventListener("pointermove", onMove);
       window.removeEventListener("pointerdown", onDown);
+      dogBus.removeEventListener("treat", onTreat);
       cancelAnimationFrame(frame);
     };
   }, []);
 
   useEffect(() => {
     if (!saying) return;
-    const t = setTimeout(() => setSaying(false), 1100);
+    const t = setTimeout(() => setSaying(null), 1100);
     return () => clearTimeout(t);
   }, [saying, pets]);
 
   const pet = (e) => {
     setPets((n) => n + 1);
-    setSaying(true);
+    setSaying("woof");
     burstHearts(e.clientX || 60, e.clientY || window.innerHeight - 50, 4);
   };
 
   return (
     <div className="puppy" ref={rootRef} style={{ transform: "translateX(24px)" }}>
-      {saying && <span className="puppy-says">woof</span>}
+      {saying && <span className="puppy-says">{saying}</span>}
       <button type="button" className="puppy-button" aria-label="Pet the dog" onClick={pet}>
         <svg key={pets} className={pets ? "puppy-svg hop" : "puppy-svg"} viewBox="0 0 76 62" width="68" height="55" aria-hidden="true">
           <g className="tail">
@@ -270,15 +326,33 @@ const DeskObject = ({ art }) => {
       </svg>
     );
   }
-  if (art === "manga") {
+  if (art === "duck") {
     return (
-      <svg viewBox="0 0 100 136" width="100%" aria-hidden="true">
-        <rect x="8" y="4" width="88" height="128" rx="3" fill="#ece8e0" />
-        <rect x="3" y="2" width="88" height="128" rx="3" fill="#6d5a78" />
-        <rect x="3" y="2" width="9" height="128" rx="2" fill="#57465f" />
-        <path d="M52 34 l6.5 14 15 2 -11 10.5 2.8 15 -13.3 -7.4 -13.3 7.4 2.8 -15 -11 -10.5 15 -2 z" fill="#e6c97e" />
-        <text x="52" y="102" textAnchor="middle" fontFamily="Fraunces, Georgia, serif" fontSize="13" fill="#f3eee5">fantasy</text>
-        <text x="52" y="117" textAnchor="middle" fontFamily="Fraunces, Georgia, serif" fontSize="13" fill="#f3eee5">manga</text>
+      <svg viewBox="0 0 100 92" width="100%" aria-hidden="true">
+        <path d="M14 58 C12 44 24 42 34 46 C36 28 50 14 66 18 C82 22 86 40 76 50 C90 50 94 62 86 74 C78 86 44 90 28 84 C16 79 14 68 14 58 Z" fill="#ecc863" />
+        <path d="M84 30 C94 27 98 33 96 38 C92 42 84 42 79 39 Z" fill="#d8894a" />
+        <circle cx="68" cy="29" r="3.8" fill="#27303b" />
+        <circle cx="69.3" cy="27.7" r="1.2" fill="#fff" />
+        <path d="M38 62 C44 72 58 72 66 62" fill="none" stroke="#c9a33f" strokeWidth="3" strokeLinecap="round" />
+      </svg>
+    );
+  }
+  if (art === "sticker") {
+    return (
+      <svg viewBox="0 0 100 100" width="100%" aria-hidden="true">
+        <circle cx="50" cy="50" r="48" fill="#fff" />
+        <circle cx="50" cy="50" r="42" fill="#26405f" />
+        <text x="50" y="58" textAnchor="middle" fontFamily="Figtree, sans-serif" fontSize="24" fontWeight="800" letterSpacing="1" fill="#f0d98c">EECS</text>
+      </svg>
+    );
+  }
+  if (art === "treat") {
+    return (
+      <svg viewBox="0 0 100 52" width="100%" aria-hidden="true">
+        <path d="M24 10 A13 13 0 0 0 8 26 A13 13 0 0 0 24 42 C30 44 34 38 38 38 H62 C66 38 70 44 76 42 A13 13 0 0 0 92 26 A13 13 0 0 0 76 10 C70 8 66 14 62 14 H38 C34 14 30 8 24 10 Z" fill="#cfa877" stroke="#a9845a" strokeWidth="2.5" />
+        <circle cx="42" cy="26" r="2" fill="#a9845a" />
+        <circle cx="52" cy="24" r="2" fill="#a9845a" />
+        <circle cx="60" cy="28" r="2" fill="#a9845a" />
       </svg>
     );
   }
@@ -318,6 +392,10 @@ const Desk = () => {
   const moved = useRef(new Set());
   const topZ = useRef(deskItems.length + 2);
   const [messy, setMessy] = useState(false);
+  const [tipText, setTipText] = useState(null);
+  const tipRef = useRef(null);
+  const tipOwner = useRef(null);
+  const tipTimer = useRef(null);
 
   const heroEl = () => zoneRef.current.closest(".hero");
   const isPhone = () => window.innerWidth <= 860;
@@ -327,14 +405,44 @@ const Desk = () => {
       minX: -el.offsetWidth * 0.25,
       maxX: hero.clientWidth - el.offsetWidth * 0.75,
       minY: 0,
-      maxY: hero.clientHeight - el.offsetHeight * 0.6,
+      maxY: hero.clientHeight - 58 - el.offsetHeight * 0.75,
     };
   };
   const place = (id) => {
     const p = state.current[id];
     const el = itemRefs.current[id];
     if (el) el.style.transform = `translate(${p.x}px, ${p.y}px) rotate(${p.rot}deg)`;
+    if (tipOwner.current === id) positionTip();
   };
+  const positionTip = () => {
+    const el = itemRefs.current[tipOwner.current];
+    const tip = tipRef.current;
+    if (!el || !tip) return;
+    const hero = heroEl().getBoundingClientRect();
+    const r = el.getBoundingClientRect();
+    const left = Math.max(10, Math.min(hero.width - tip.offsetWidth - 10, r.left - hero.left + r.width / 2 - tip.offsetWidth / 2));
+    const above = r.top - hero.top - tip.offsetHeight - 10;
+    const top = above > 8 ? above : r.bottom - hero.top + 10;
+    tip.style.transform = `translate(${left}px, ${top}px)`;
+  };
+  const showTip = (item, text, linger) => {
+    clearTimeout(tipTimer.current);
+    tipOwner.current = item.id;
+    setTipText(text || item.desc);
+    if (linger) tipTimer.current = setTimeout(() => setTipText(null), linger);
+  };
+  const hideTipSoon = () => {
+    clearTimeout(tipTimer.current);
+    tipTimer.current = setTimeout(() => {
+      tipOwner.current = null;
+      setTipText(null);
+    }, 1700);
+  };
+
+  // the description needs measuring after its text changes
+  useLayoutEffect(() => {
+    if (tipText) positionTip();
+  });
   const homeOf = (item) => {
     const el = itemRefs.current[item.id];
     const spot = isPhone() ? item.phone : item.at;
@@ -413,6 +521,7 @@ const Desk = () => {
     el.classList.remove("settling");
     el.classList.add("dragging");
     el.style.zIndex = ++topZ.current;
+    showTip(item);
 
     const grabX = e.clientX - p.x;
     const grabY = e.clientY - p.y;
@@ -451,11 +560,19 @@ const Desk = () => {
       if (ev.type === "pointercancel") {
         Object.assign(p, start, { rot: p.baseRot, vx: 0, vy: 0 });
         place(item.id);
+        tipOwner.current = null;
+        clearTimeout(tipTimer.current);
+        setTipText(null);
         return;
       }
+      hideTipSoon();
 
       if (!dragged) {
         tapItem(item, el, ev);
+        return;
+      }
+      if (item.id === "treat") {
+        giveTreat(item, el);
         return;
       }
       moved.current.add(item.id);
@@ -491,7 +608,41 @@ const Desk = () => {
     el.addEventListener("pointercancel", onUp);
   };
 
+  // the dog runs over, eats the treat, and a new one appears where it started
+  const giveTreat = (item, el) => {
+    const p = state.current[item.id];
+    p.vx = 0;
+    p.vy = 0;
+    p.rot = p.baseRot;
+    place(item.id);
+    el.classList.add("claimed");
+    const r = el.getBoundingClientRect();
+    const eaten = () => {
+      burstHearts(r.left + r.width / 2, r.top + r.height / 2, 5);
+      el.classList.add("eaten");
+      showTipGone();
+      setTimeout(() => {
+        const home = homeOf(item);
+        if (home) Object.assign(p, home, { baseRot: home.rot });
+        place(item.id);
+        el.classList.remove("eaten", "claimed");
+      }, 2200);
+    };
+    if (prefersReducedMotion()) eaten();
+    else dogBus.dispatchEvent(Object.assign(new Event("treat"), { detail: { x: r.left + r.width / 2, y: r.top + r.height / 2, onEaten: eaten } }));
+  };
+
+  const showTipGone = () => {
+    tipOwner.current = null;
+    clearTimeout(tipTimer.current);
+    setTipText(null);
+  };
+
   const tapItem = (item, el, ev) => {
+    if (item.id === "duck") {
+      squeak();
+      showTip(item, "quack!", 1200);
+    }
     if (prefersReducedMotion()) return;
     el.firstChild?.animate?.(
       [{ transform: "scale(1)" }, { transform: "scale(1.04, 0.96)" }, { transform: "scale(0.98, 1.02)" }, { transform: "scale(1)" }],
@@ -542,7 +693,7 @@ const Desk = () => {
             </button>
           ) : (
             <>
-              <span className="hint-mouse">go ahead, move things around</span>
+              <span className="hint-mouse">pick things up to read about them</span>
               <span className="hint-touch">slide things sideways to pick them up</span>
             </>
           )}
@@ -561,6 +712,10 @@ const Desk = () => {
           aria-label={`${item.alt || item.label || item.text}. Drag it, or move it with the arrow keys.`}
           onPointerDown={(e) => startDrag(e, item)}
           onKeyDown={(e) => nudge(e, item)}
+          onFocus={(e) => {
+            if (e.target.matches(":focus-visible")) showTip(item);
+          }}
+          onBlur={hideTipSoon}
         >
           {item.kind === "object" ? (
             <div className={`object-art art-${item.art}`}>
@@ -576,7 +731,99 @@ const Desk = () => {
           )}
         </div>
       ))}
+      <div ref={tipRef} className={tipText ? "desk-tip shown" : "desk-tip"} role="status">
+        {tipText}
+      </div>
     </>
+  );
+};
+
+// A real little desk drawer. Opening it brings your resume up on a sheet of paper.
+const ResumeDrawer = () => {
+  const [open, setOpen] = useState(false);
+  const dialogRef = useRef(null);
+
+  const openDrawer = () => {
+    setOpen(true);
+    setTimeout(() => dialogRef.current?.showModal(), prefersReducedMotion() ? 0 : 320);
+  };
+  const close = () => dialogRef.current?.close();
+
+  return (
+    <div className="desk-front">
+      <button type="button" className={open ? "drawer open" : "drawer"} onClick={openDrawer} aria-haspopup="dialog">
+        <span className="drawer-label">resume</span>
+        <span className="drawer-handle" aria-hidden="true" />
+      </button>
+      {createPortal(
+      <dialog ref={dialogRef} className="resume" aria-label="Resume" onClose={() => setOpen(false)} onClick={(e) => e.target === dialogRef.current && close()}>
+        <div className="resume-actions">
+          {contact.resumeUrl ? (
+            <a className="button" href={contact.resumeUrl} download>
+              Download PDF
+            </a>
+          ) : (
+            <button type="button" className="button" onClick={() => window.print()}>
+              Print or save as PDF
+            </button>
+          )}
+          <button type="button" className="resume-close" onClick={close} aria-label="Close resume">
+            <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
+              <path d="M3 3l10 10M13 3L3 13" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+            </svg>
+          </button>
+        </div>
+        <article className="resume-paper">
+          <header>
+            <h2>{profile.name}</h2>
+            <p>
+              <a href={`mailto:${contact.email}`}>{contact.email}</a>
+              {profile.links.map((l) => (
+                <a key={l.name} href={l.url} target="_blank" rel="noopener noreferrer">
+                  {l.url.replace(/^https:\/\/(www\.)?/, "").replace(/\/$/, "")}
+                </a>
+              ))}
+            </p>
+          </header>
+          <section>
+            <h3>Education</h3>
+            <div className="resume-row">
+              <strong>{education.school}</strong>
+              <span>{education.dates}</span>
+            </div>
+            <p>{education.degree}</p>
+            <p>{education.note}</p>
+            <p>Relevant coursework: {education.coursework.join(", ")}</p>
+          </section>
+          <section>
+            <h3>Experience</h3>
+            {timeline.map((t) => {
+              const entry = log.find((e) => e.slug === t.log);
+              return (
+                <div key={t.role} className="resume-item">
+                  <div className="resume-row">
+                    <strong>{t.role}</strong>
+                    <span>{t.dates}</span>
+                  </div>
+                  <p className="resume-org">{t.org}</p>
+                  {entry && !timeline.slice(0, timeline.indexOf(t)).some((other) => other.log === t.log) && <p>{entry.summary}</p>}
+                </div>
+              );
+            })}
+          </section>
+          <section>
+            <h3>Skills</h3>
+            {skills.map((k) => (
+              <p key={k.group}>
+                <strong>{k.group}:</strong> {k.items}
+              </p>
+            ))}
+          </section>
+        </article>
+      </dialog>,
+        document.body
+      )}
+    </div>
   );
 };
 
@@ -596,6 +843,7 @@ const Hero = () => {
         </div>
         <Desk />
       </div>
+      <ResumeDrawer />
     </section>
   );
 };
@@ -758,6 +1006,8 @@ const ProjectLog = () => {
   );
 };
 
+const TYPE_COLORS = { Research: "#6f879c", Engineering: "#ad8f5e", Teaching: "#7d9484", Leadership: "#9c7a84" };
+
 // Each role is a line that steps up while I held it.
 const toMonths = (ym) => {
   const [y, m] = ym.split("-").map(Number);
@@ -777,6 +1027,7 @@ const Experience = () => {
   const xOf = (months) => ((months - start) / span) * 100;
   const [cursor, setCursor] = useState(null);
   const [open, setOpen] = useState(null);
+  const [only, setOnly] = useState(null);
   const axisRef = useRef(null);
   const timelineRef = useRef(null);
   const userTookOver = useRef(false);
@@ -831,6 +1082,13 @@ const Experience = () => {
           <p className="block-intro">Each line steps up while I held that role. Slide across it to travel through time, or tap a role for a short summary.</p>
         </div>
       </div>
+      <div className="tl-legend" role="group" aria-label="Highlight one kind of role">
+        {logTypes.map((type) => (
+          <button key={type} type="button" aria-pressed={only === type} style={{ "--type": TYPE_COLORS[type] }} onClick={() => setOnly(only === type ? null : type)}>
+            {type}
+          </button>
+        ))}
+      </div>
       <div
         className={cursor !== null ? "timeline scanning" : "timeline"}
         ref={timelineRef}
@@ -859,7 +1117,11 @@ const Experience = () => {
           const entry = log.find((e) => e.slug === t.log);
           const d = `M0 21 H${xOf(from)} V5 H${xOf(to)} ${t.to ? "V21 H100" : ""}`;
           return (
-            <div key={t.role} className={`tl-item${isActive ? " active" : ""}${isOpen ? " open" : ""}`} style={{ "--i": i }}>
+            <div
+              key={t.role}
+              className={`tl-item${isActive ? " active" : ""}${isOpen ? " open" : ""}${only && entry?.type !== only ? " faded" : ""}`}
+              style={{ "--i": i, "--type": TYPE_COLORS[entry?.type] || "#3c4b5c" }}
+            >
               <button type="button" className="tl-row" aria-expanded={isOpen} onClick={() => setOpen(isOpen ? null : t.role)}>
                 <span className="tl-name">
                   <span className="tl-role">{t.role}</span>
