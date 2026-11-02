@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { about, education, log, logTypes, profile, skills, timeline } from "./content.js";
 
 const NOTION_URL = "https://lopsided-passbook-280.notion.site/ebd//2ed826ec6ca8800ab28edaef165b6909";
@@ -203,6 +203,24 @@ const Puppy = () => {
   );
 };
 
+const ScrollProgress = () => {
+  const barRef = useRef(null);
+  useEffect(() => {
+    const update = () => {
+      const max = document.documentElement.scrollHeight - window.innerHeight;
+      if (barRef.current) barRef.current.style.transform = `scaleX(${max > 0 ? window.scrollY / max : 0})`;
+    };
+    update();
+    window.addEventListener("scroll", update, { passive: true });
+    window.addEventListener("resize", update);
+    return () => {
+      window.removeEventListener("scroll", update);
+      window.removeEventListener("resize", update);
+    };
+  }, []);
+  return <span className="scroll-progress" ref={barRef} aria-hidden="true" />;
+};
+
 const TopBar = ({ route, current }) => (
   <header className="topbar">
     <div className="topbar-inner">
@@ -221,93 +239,326 @@ const TopBar = ({ route, current }) => (
         })}
       </nav>
     </div>
+    <ScrollProgress />
   </header>
 );
 
-const Avatar = () => {
+// --- the banner's solar wind line: it draws itself in, bends around the cursor, and ripples on click ---
+const SolarWind = ({ heroRef }) => {
+  const canvasRef = useRef(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    const hero = heroRef.current;
+    if (!canvas || !hero) return;
+    const ctx = canvas.getContext("2d");
+    const reduced = prefersReducedMotion();
+    const HEIGHT = 170;
+    const BASE = 66;
+    let width = 0;
+    let frame;
+    let visible = true;
+    let pull = 0;
+    let pullTarget = 0;
+    let pointerX = 0;
+    const ripples = [];
+    const startedAt = performance.now();
+    const particles = Array.from({ length: 7 }, (_, i) => ({ at: i / 7, speed: 0.035 + (i % 3) * 0.012 }));
+
+    const resize = () => {
+      const ratio = Math.min(window.devicePixelRatio || 1, 2);
+      width = hero.clientWidth;
+      canvas.width = width * ratio;
+      canvas.height = HEIGHT * ratio;
+      canvas.style.height = `${HEIGHT}px`;
+      ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+      if (reduced) draw(performance.now());
+    };
+
+    const waveAt = (x, t, layer) => {
+      const phase = layer * 1.7;
+      let y = BASE + layer * 17;
+      y += Math.sin(x * 0.0065 + t * 0.55 + phase) * (15 - layer * 2);
+      y += Math.sin(x * 0.0165 - t * 0.38 + phase * 2) * 6;
+      const near = x - pointerX;
+      y -= pull * (30 - layer * 8) * Math.exp(-(near * near) / (2 * 130 * 130));
+      for (const r of ripples) {
+        const age = t - r.t;
+        const d = Math.abs(x - r.x) - age * 420;
+        y -= 24 * Math.exp(-(d * d) / (2 * 55 * 55)) * Math.exp(-age * 1.5) * (1 - layer * 0.25);
+      }
+      return y;
+    };
+
+    const strokeLayer = (t, layer, color, lineWidth, reach) => {
+      ctx.beginPath();
+      for (let x = 0; x <= reach; x += 6) {
+        const y = waveAt(x, t, layer);
+        if (x === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.strokeStyle = color;
+      ctx.lineWidth = lineWidth;
+      ctx.lineJoin = "round";
+      ctx.stroke();
+    };
+
+    function draw(now) {
+      const t = (now - startedAt) / 1000;
+      const progress = reduced ? 1 : Math.min(t / 1.4, 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      const reach = width * eased;
+      pull += (pullTarget - pull) * 0.09;
+      while (ripples.length && t - ripples[0].t > 3) ripples.shift();
+
+      ctx.clearRect(0, 0, width, HEIGHT);
+
+      // everything under the front line is the page, so the portrait disappears behind it
+      ctx.beginPath();
+      ctx.moveTo(0, HEIGHT);
+      for (let x = 0; x <= width + 6; x += 6) ctx.lineTo(x, waveAt(x, t, 0));
+      ctx.lineTo(width, HEIGHT);
+      ctx.closePath();
+      ctx.fillStyle = "#f7f7f5";
+      ctx.fill();
+
+      strokeLayer(t, 2, "rgba(156, 90, 100, 0.34)", 1.5, reach);
+      strokeLayer(t, 1, "rgba(60, 75, 92, 0.34)", 1.5, reach);
+      strokeLayer(t, 0, "#27303b", 2.5, reach);
+
+      // particles riding the line
+      ctx.fillStyle = "#9c5a64";
+      for (const p of particles) {
+        if (!reduced) p.at = (p.at + p.speed / 60) % 1;
+        const x = p.at * width;
+        if (x > reach) continue;
+        ctx.beginPath();
+        ctx.arc(x, waveAt(x, t, 0), 3, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      if (!reduced && visible) frame = requestAnimationFrame(draw);
+    }
+
+    const onMove = (e) => {
+      const r = hero.getBoundingClientRect();
+      pointerX = e.clientX - r.left;
+      pullTarget = e.pointerType === "mouse" ? 1 : 0;
+    };
+    const onLeave = () => {
+      pullTarget = 0;
+    };
+    const onDown = (e) => {
+      const r = hero.getBoundingClientRect();
+      ripples.push({ x: e.clientX - r.left, t: (performance.now() - startedAt) / 1000 });
+    };
+
+    resize();
+    window.addEventListener("resize", resize);
+    if (reduced) return () => window.removeEventListener("resize", resize);
+
+    hero.addEventListener("pointermove", onMove);
+    hero.addEventListener("pointerleave", onLeave);
+    hero.addEventListener("pointerdown", onDown);
+    const observer = new IntersectionObserver(([entry]) => {
+      const wasVisible = visible;
+      visible = entry.isIntersecting;
+      if (visible && !wasVisible) frame = requestAnimationFrame(draw);
+    });
+    observer.observe(hero);
+    frame = requestAnimationFrame(draw);
+
+    return () => {
+      cancelAnimationFrame(frame);
+      observer.disconnect();
+      window.removeEventListener("resize", resize);
+      hero.removeEventListener("pointermove", onMove);
+      hero.removeEventListener("pointerleave", onLeave);
+      hero.removeEventListener("pointerdown", onDown);
+    };
+  }, [heroRef]);
+
+  return <canvas ref={canvasRef} className="solar-wind" aria-hidden="true" />;
+};
+
+const Sun = () => (
+  <svg className="sun" viewBox="0 0 100 100" aria-hidden="true">
+    <g className="sun-rays">
+      {Array.from({ length: 12 }, (_, i) => (
+        <line key={i} x1="50" y1="9" x2="50" y2={i % 2 ? "16" : "20"} transform={`rotate(${i * 30} 50 50)`} />
+      ))}
+    </g>
+    <circle cx="50" cy="50" r="22" />
+  </svg>
+);
+
+const Portrait = ({ heroRef }) => {
   const [boops, setBoops] = useState(0);
+  const figureRef = useRef(null);
+
+  // the portrait leans slightly toward your cursor
+  useEffect(() => {
+    const hero = heroRef.current;
+    if (!hero || prefersReducedMotion()) return;
+    const onMove = (e) => {
+      if (e.pointerType !== "mouse" || !figureRef.current) return;
+      const r = hero.getBoundingClientRect();
+      const lean = ((e.clientX - r.left) / r.width - 0.5) * 4;
+      figureRef.current.style.setProperty("--lean", `${lean.toFixed(2)}deg`);
+    };
+    hero.addEventListener("pointermove", onMove);
+    return () => hero.removeEventListener("pointermove", onMove);
+  }, [heroRef]);
+
   return (
-    <button
-      type="button"
-      className="avatar-button"
-      aria-label="Boop Viola's nose"
-      onClick={(e) => {
-        setBoops((n) => n + 1);
-        burstHearts(e.clientX || 80, e.clientY || 160, 4);
-      }}
-    >
-      <img key={boops} src="/avatar.jpeg" alt="" className={boops ? "hero-avatar booped" : "hero-avatar"} draggable="false" />
-    </button>
+    <div className="hero-figure" ref={figureRef}>
+      <Sun />
+      <button
+        type="button"
+        className="avatar-button"
+        aria-label="Boop Viola's nose"
+        onClick={(e) => {
+          setBoops((n) => n + 1);
+          burstHearts(e.clientX || 300, e.clientY || 300, 5);
+        }}
+      >
+        <img key={boops} src="/avatar.jpeg" alt="" className={boops ? "hero-avatar booped" : "hero-avatar"} draggable="false" />
+      </button>
+    </div>
   );
 };
 
-const Hero = () => (
-  <section className="hero">
-    <div className="hero-glow" aria-hidden="true">
-      <span />
-      <span />
-    </div>
-    <div className="hero-inner">
-      <div className="hero-main">
-        <Avatar />
-        <h1>{profile.greeting}</h1>
-        <p className="hero-statement">{profile.statement}</p>
-        <div className="hero-actions">
-          <a className="button" href="#/log">
-            See my project log
-          </a>
-          <ExternalLinks links={profile.links} />
-        </div>
-      </div>
-      <dl className="hero-facts">
-        {profile.facts.map((f) => (
-          <div key={f.label} className="fact">
-            <dt>{f.label}</dt>
-            {f.lines.map((line) => (
-              <dd key={line}>{line}</dd>
-            ))}
+const Hero = () => {
+  const heroRef = useRef(null);
+  return (
+    <section className="hero" ref={heroRef}>
+      <div className="hero-inner">
+        <div className="hero-main">
+          <h1>{profile.greeting}</h1>
+          <p className="hero-statement">{profile.statement}</p>
+          <div className="hero-actions">
+            <a className="button" href="#/log">
+              See my project log
+            </a>
+            <ExternalLinks links={profile.links} />
           </div>
+        </div>
+        <Portrait heroRef={heroRef} />
+      </div>
+      <SolarWind heroRef={heroRef} />
+    </section>
+  );
+};
+
+const Facts = () => (
+  <dl className="facts">
+    {profile.facts.map((f, i) => (
+      <div key={f.label} className="fact" style={{ "--i": i }}>
+        <dt>{f.label}</dt>
+        {f.lines.map((line) => (
+          <dd key={line}>{line}</dd>
         ))}
-      </dl>
-    </div>
-  </section>
+      </div>
+    ))}
+  </dl>
 );
 
 const ProjectLog = () => {
   const [filter, setFilter] = useState("All");
+  const [hovered, setHovered] = useState(null);
   const entries = filter === "All" ? log : log.filter((e) => e.type === filter);
+  const active = entries.find((e) => e.slug === hovered) || entries[0];
+  const filtersRef = useRef(null);
+  const listRef = useRef(null);
+  const [pill, setPill] = useState(null);
+  const [bar, setBar] = useState(null);
+
+  // slide the filter pill and the row marker to whatever is selected
+  useLayoutEffect(() => {
+    const measure = () => {
+      const button = filtersRef.current?.querySelector('[aria-pressed="true"]');
+      if (button) setPill({ x: button.offsetLeft, y: button.offsetTop, w: button.offsetWidth, h: button.offsetHeight });
+      const row = listRef.current?.querySelector(`[data-slug="${active.slug}"]`);
+      if (row) setBar({ y: row.offsetTop, h: row.offsetHeight });
+    };
+    measure();
+    window.addEventListener("resize", measure);
+    document.fonts?.ready.then(measure);
+    return () => window.removeEventListener("resize", measure);
+  }, [filter, active.slug]);
 
   return (
     <section id="log" className="block reveal">
       <div className="block-head">
         <div>
           <h2>Project log</h2>
-          <p className="block-intro">What I’ve been working on. Click one to see what I did and what I learned.</p>
+          <p className="block-intro">What I’ve been working on. Point at one for a preview, or open it for the full story.</p>
         </div>
-        <div className="filters" role="group" aria-label="Filter projects">
+        <div className="filters" role="group" aria-label="Filter projects" ref={filtersRef}>
+          {pill && <span className="filter-pill" style={{ transform: `translate(${pill.x}px, ${pill.y}px)`, width: pill.w, height: pill.h }} />}
           {["All", ...logTypes].map((t) => (
-            <button key={t} type="button" aria-pressed={filter === t} onClick={() => setFilter(t)}>
+            <button
+              key={t}
+              type="button"
+              aria-pressed={filter === t}
+              onClick={() => {
+                setFilter(t);
+                setHovered(null);
+              }}
+            >
               {t}
             </button>
           ))}
         </div>
       </div>
 
-      <ul className="log-list" key={filter}>
-        {entries.map((e, i) => (
-          <li key={e.slug} style={{ "--i": i }}>
-            <a className="log-row" href={`#/log/${e.slug}`}>
-              <span className="log-dates">{e.dates}</span>
-              <span className="log-text">
-                <span className="log-title">{e.title}</span>
-                <span className="log-summary">{e.summary}</span>
-              </span>
-              <TypeLabel type={e.type} />
+      <div className="log-explorer">
+        <div className="log-list-wrap" ref={listRef}>
+          {bar && <span className="row-marker" style={{ transform: `translateY(${bar.y}px)`, height: bar.h }} />}
+          <ul className="log-list" key={filter}>
+            {entries.map((e, i) => (
+              <li key={e.slug} style={{ "--i": i }} data-slug={e.slug}>
+                <a
+                  className={e.slug === active.slug ? "log-row selected" : "log-row"}
+                  href={`#/log/${e.slug}`}
+                  onPointerEnter={(ev) => ev.pointerType === "mouse" && setHovered(e.slug)}
+                  onFocus={() => setHovered(e.slug)}
+                >
+                  <span className="log-text">
+                    <span className="log-title">{e.title}</span>
+                    <span className="log-summary">{e.summary}</span>
+                    <span className="log-dates">{e.dates}</span>
+                  </span>
+                  <TypeLabel type={e.type} />
+                  <Chevron />
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        <aside className="log-preview">
+          <div className="preview-inner" key={active.slug}>
+            <TypeLabel type={active.type} />
+            <h3>{active.title}</h3>
+            <p className="preview-overview">{active.overview}</p>
+            {active.did && (
+              <ul className="did-list">
+                {active.did.map((d, i) => (
+                  <li key={d} style={{ "--i": i }}>
+                    {d}
+                  </li>
+                ))}
+              </ul>
+            )}
+            {active.tools && <p className="preview-tools">{active.tools.join(", ")}</p>}
+            <a className="preview-open" href={`#/log/${active.slug}`}>
+              Open project
               <Chevron />
             </a>
-          </li>
-        ))}
-      </ul>
+          </div>
+        </aside>
+      </div>
     </section>
   );
 };
@@ -330,27 +581,67 @@ const Experience = () => {
   const span = nowMonths - start;
   const xOf = (months) => ((months - start) / span) * 100;
   const [cursor, setCursor] = useState(null);
+  const [open, setOpen] = useState(null);
   const axisRef = useRef(null);
+  const timelineRef = useRef(null);
+  const userTookOver = useRef(false);
 
   const ticks = [];
   for (let m = start; m <= nowMonths; m++) if ((m - start) % 3 === 0) ticks.push(m);
 
   const onMove = (e) => {
+    userTookOver.current = true;
     const r = axisRef.current?.getBoundingClientRect();
     if (!r) return;
     const fraction = (e.clientX - r.left) / r.width;
     setCursor(fraction >= 0 && fraction <= 1 ? start + fraction * span : null);
   };
 
+  // once the lines have drawn, the date cursor sweeps across once to show what it does
+  useEffect(() => {
+    const el = timelineRef.current;
+    if (!el || prefersReducedMotion() || !("IntersectionObserver" in window)) return;
+    let frame;
+    let timer;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry.isIntersecting) return;
+        observer.disconnect();
+        timer = setTimeout(() => {
+          const began = performance.now();
+          const step = (time) => {
+            if (userTookOver.current) return;
+            const p = Math.min((time - began) / 2600, 1);
+            setCursor(p < 1 ? start + p * span : null);
+            if (p < 1) frame = requestAnimationFrame(step);
+          };
+          frame = requestAnimationFrame(step);
+        }, 1500);
+      },
+      { threshold: 0.4 }
+    );
+    observer.observe(el);
+    return () => {
+      observer.disconnect();
+      clearTimeout(timer);
+      cancelAnimationFrame(frame);
+    };
+  }, [start, span]);
+
   return (
     <section id="experience" className="block reveal">
       <div className="block-head">
         <div>
           <h2>Experience</h2>
-          <p className="block-intro">Each line steps up while I held that role. Move across it to see a date, or open a role for details.</p>
+          <p className="block-intro">Each line steps up while I held that role. Move across it to travel through time, or click a role to open it.</p>
         </div>
       </div>
-      <div className="timeline" onPointerMove={onMove} onPointerLeave={() => setCursor(null)}>
+      <div
+        className={cursor !== null ? "timeline scanning" : "timeline"}
+        ref={timelineRef}
+        onPointerMove={onMove}
+        onPointerLeave={() => setCursor(null)}
+      >
         <div className="tl-axis">
           <div className="tl-axis-plot" ref={axisRef}>
             {ticks.map((m) => (
@@ -369,25 +660,43 @@ const Experience = () => {
           const from = toMonths(t.from);
           const to = t.to ? toMonths(t.to) + 1 : nowMonths;
           const isActive = cursor !== null && cursor >= from && cursor < to;
+          const isOpen = open === t.role;
+          const entry = log.find((e) => e.slug === t.log);
           const d = `M0 21 H${xOf(from)} V5 H${xOf(to)} ${t.to ? "V21 H100" : ""}`;
           return (
-            <a key={t.role} className={isActive ? "tl-row active" : "tl-row"} href={`#/log/${t.log}`} style={{ "--i": i }}>
-              <span className="tl-name">
-                <span className="tl-role">{t.role}</span>
-                <span className="tl-org">{t.org}</span>
-              </span>
-              <span className="tl-plot">
-                {ticks.map((m) => (
-                  <i key={m} className="tl-grid" style={{ left: `${xOf(m)}%` }} />
-                ))}
-                <svg viewBox="0 0 100 26" preserveAspectRatio="none" aria-hidden="true">
-                  <path d={d} />
-                </svg>
-                {!t.to && <i className="tl-now" />}
-                {cursor !== null && <i className="tl-cursor" style={{ left: `${xOf(cursor)}%` }} />}
-              </span>
-              <span className="tl-dates">{t.dates}</span>
-            </a>
+            <div key={t.role} className={`tl-item${isActive ? " active" : ""}${isOpen ? " open" : ""}`} style={{ "--i": i }}>
+              <button type="button" className="tl-row" aria-expanded={isOpen} onClick={() => setOpen(isOpen ? null : t.role)}>
+                <span className="tl-name">
+                  <span className="tl-role">{t.role}</span>
+                  <span className="tl-org">{t.org}</span>
+                </span>
+                <span className="tl-plot">
+                  {ticks.map((m) => (
+                    <i key={m} className="tl-grid" style={{ left: `${xOf(m)}%` }} />
+                  ))}
+                  <svg viewBox="0 0 100 26" preserveAspectRatio="none" aria-hidden="true">
+                    <path d={d} />
+                  </svg>
+                  {!t.to && <i className="tl-now" />}
+                  {cursor !== null && <i className="tl-cursor" style={{ left: `${xOf(cursor)}%` }} />}
+                </span>
+                <span className="tl-dates">
+                  {t.dates}
+                  <svg className="tl-toggle" viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
+                    <path d="M3 6l5 5 5-5" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </span>
+              </button>
+              <div className="tl-panel" inert={!isOpen}>
+                <div className="tl-panel-inner">
+                  <p>{entry?.summary}</p>
+                  <a href={`#/log/${t.log}`}>
+                    Open project
+                    <Chevron />
+                  </a>
+                </div>
+              </div>
+            </div>
           );
         })}
       </div>
@@ -455,6 +764,7 @@ const Home = () => (
   <>
     <Hero />
     <main className="wrap">
+      <Facts />
       <ProjectLog />
       <Experience />
       <EducationSkills />
