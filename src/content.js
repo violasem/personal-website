@@ -2,18 +2,30 @@
 
 export const profile = {
   name: "Viola Sembiring",
+  greeting: "hi, i'm viola!",
+  // what the speech bubble says when someone clicks the portrait
+  boopHint: "psst, boop my nose!",
+  boopLines: [
+    "boop!",
+    "hehe, again?",
+    "i'm a dog person, can you tell?",
+    "born and raised in medan!",
+    "ask me about solar wind!",
+    "i'm always looking for good fantasy manga",
+    "ok, go check out my project log!",
+  ],
   statement:
     "Computer engineering student growing into embedded and control systems, with a background in data and machine learning.",
   facts: [
     {
-      label: "Studying",
+      icon: "📚", label: "Studying",
       lines: ["B.S.E. in Computer Engineering, minor in Data Science", "University of Michigan, class of 2028"],
     },
     {
-      label: "Right now",
+      icon: "✨", label: "Right now",
       lines: ["Instructional Aide, EECS 215", "Tutor, Mathematics Learning Center", "Co-Director, PERMIAS Michigan"],
     },
-    { label: "Focus", lines: ["Circuits, embedded systems, and data"] },
+    { icon: "🔌", label: "Focus", lines: ["Circuits, embedded systems, and data"] },
   ],
   links: [
     { name: "LinkedIn", url: "https://www.linkedin.com/in/violasem/" },
@@ -24,7 +36,7 @@ export const profile = {
 // The project log. Each entry gets its own page at #/log/<slug>.
 //
 // Newest first. To add an entry, copy one of these blocks to the top of the list. Only slug,
-// title, type, dates and summary are required: leave out anything else and that
+// title, icon, type, dates and summary are required: leave out anything else and that
 // part of the page won't show.
 //
 //   links:   [{ name: "Research poster", url: "https://..." }]
@@ -34,6 +46,7 @@ export const logTypes = ["Research", "Engineering", "Teaching", "Leadership"];
 export const log = [
   {
     slug: "teaching-circuits",
+    icon: "🔌",
     title: "Teaching circuits in the EECS 215 lab",
     type: "Teaching",
     dates: "Aug 2026 – present",
@@ -51,6 +64,7 @@ export const log = [
   },
   {
     slug: "permias-external-relations",
+    icon: "🤝",
     title: "External relations for PERMIAS Michigan",
     type: "Leadership",
     dates: "Jul 2026 – present",
@@ -62,6 +76,7 @@ export const log = [
   },
   {
     slug: "full-stack-ai-saas",
+    icon: "💻",
     title: "Full-stack AI SaaS website",
     type: "Engineering",
     dates: "Jun 2026 – Sep 2026",
@@ -80,6 +95,7 @@ export const log = [
   },
   {
     slug: "space-physics-clustering",
+    icon: "🛰️",
     title: "Clustering and predicting solar wind behavior",
     type: "Research",
     dates: "May 2026 – Sep 2026",
@@ -96,6 +112,7 @@ export const log = [
   },
   {
     slug: "solar-wind-ml-pipelines",
+    icon: "☀️",
     title: "Solar wind machine learning pipelines",
     type: "Research",
     dates: "Oct 2025 – May 2026",
@@ -115,6 +132,7 @@ export const log = [
   },
   {
     slug: "math-tutoring",
+    icon: "🧮",
     title: "Tutoring calculus and differential equations",
     type: "Teaching",
     dates: "Aug 2025 – present",
@@ -132,6 +150,7 @@ export const log = [
   },
   {
     slug: "logic-design-fpga",
+    icon: "⚡",
     title: "Digital design in Verilog",
     type: "Engineering",
     dates: "Coursework",
