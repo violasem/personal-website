@@ -1,15 +1,12 @@
 import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { about, deskItems, education, log, logTypes, profile, skills, timeline } from "./content.js";
+import { contact, deskItems, education, log, logTypes, profile, skills, timeline } from "./content.js";
 
-const NOTION_URL = "https://lopsided-passbook-280.notion.site/ebd//2ed826ec6ca8800ab28edaef165b6909";
-const SPOTIFY_URL = "https://open.spotify.com/embed/playlist/1vHnZpoh3TbeXlvnFfp7Uf?utm_source=generator";
 
 const navItems = [
   { href: "#/log", label: "Project log" },
   { href: "#/experience", label: "Experience" },
   { href: "#/education", label: "Education" },
-  { href: "#/about", label: "About" },
-  { href: "#/notes", label: "Notes" },
+  { href: "#/contact", label: "Contact" },
 ];
 
 const prefersReducedMotion = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -59,14 +56,16 @@ const useCurrentSection = (enabled) => {
       setCurrent(null);
       return;
     }
-    const ids = ["log", "experience", "education", "about"];
+    const ids = ["log", "experience", "education", "contact"];
     const onScroll = () => {
       let found = null;
       for (const id of ids) {
         const el = document.getElementById(id);
         if (el && el.getBoundingClientRect().top <= window.innerHeight * 0.4) found = id;
       }
-      setCurrent(found);
+      // the last section may be too short to reach the line, so count the bottom of the page as reaching it
+      const atBottom = window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 80;
+      setCurrent(atBottom ? ids[ids.length - 1] : found);
     };
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
@@ -242,6 +241,58 @@ const TopBar = ({ route, current }) => (
     <ScrollProgress />
   </header>
 );
+
+// Drawings for the desk.
+const DeskObject = ({ art }) => {
+  if (art === "pennant") {
+    return (
+      <svg viewBox="0 0 170 84" width="100%" aria-hidden="true">
+        <rect x="2" y="2" width="9" height="80" rx="3" fill="#8a6f52" />
+        <path d="M11 6 L166 42 L11 78 Z" fill="#26405f" />
+        <path d="M11 6 L166 42 L11 78 Z" fill="none" stroke="#e3c46f" strokeWidth="3" strokeLinejoin="round" />
+        <text x="24" y="50" fontFamily="Figtree, sans-serif" fontSize="21" fontWeight="700" letterSpacing="0.5" fill="#f0d98c">GO BLUE</text>
+      </svg>
+    );
+  }
+  if (art === "manga") {
+    return (
+      <svg viewBox="0 0 100 136" width="100%" aria-hidden="true">
+        <rect x="8" y="4" width="88" height="128" rx="3" fill="#ece8e0" />
+        <rect x="3" y="2" width="88" height="128" rx="3" fill="#6d5a78" />
+        <rect x="3" y="2" width="9" height="128" rx="2" fill="#57465f" />
+        <path d="M52 34 l6.5 14 15 2 -11 10.5 2.8 15 -13.3 -7.4 -13.3 7.4 2.8 -15 -11 -10.5 15 -2 z" fill="#e6c97e" />
+        <text x="52" y="102" textAnchor="middle" fontFamily="Fraunces, Georgia, serif" fontSize="13" fill="#f3eee5">fantasy</text>
+        <text x="52" y="117" textAnchor="middle" fontFamily="Fraunces, Georgia, serif" fontSize="13" fill="#f3eee5">manga</text>
+      </svg>
+    );
+  }
+  if (art === "multimeter") {
+    return (
+      <svg viewBox="0 0 96 150" width="100%" aria-hidden="true">
+        <rect x="3" y="3" width="90" height="144" rx="12" fill="#d8a94f" />
+        <rect x="12" y="12" width="72" height="126" rx="7" fill="#2f3741" />
+        <rect x="20" y="20" width="56" height="30" rx="3" fill="#bfcdb6" />
+        <text x="72" y="42" textAnchor="end" fontFamily="ui-monospace, Menlo, monospace" fontSize="19" fontWeight="600" fill="#2f3741">3.94</text>
+        <circle cx="48" cy="86" r="20" fill="#c9ced3" />
+        <circle cx="48" cy="86" r="14" fill="#4b5560" />
+        <rect x="46" y="72" width="4" height="15" rx="2" fill="#e8ebee" />
+        <circle cx="30" cy="124" r="5" fill="#b4545a" />
+        <circle cx="48" cy="124" r="5" fill="#111518" />
+        <circle cx="66" cy="124" r="5" fill="#b4545a" />
+      </svg>
+    );
+  }
+  return (
+    <svg viewBox="0 0 150 36" width="100%" aria-hidden="true">
+      <path d="M1 18 H148" stroke="#8f959a" strokeWidth="4" strokeLinecap="round" />
+      <rect x="38" y="5" width="74" height="26" rx="11" fill="#d9c09b" />
+      <rect x="50" y="5" width="7" height="26" fill="#7d5a3c" />
+      <rect x="64" y="5" width="7" height="26" fill="#2f3741" />
+      <rect x="78" y="5" width="7" height="26" fill="#b4545a" />
+      <rect x="95" y="5" width="6" height="26" fill="#c8a24f" />
+    </svg>
+  );
+};
 
 // --- the banner is a desk: photos and notes you can pick up, throw, and tidy ---
 const Desk = () => {
@@ -479,11 +530,15 @@ const Desk = () => {
           style={{ zIndex: i + 2 }}
           tabIndex={0}
           role="group"
-          aria-label={`${item.kind === "photo" ? item.alt : item.text}. Drag it, or move it with the arrow keys.`}
+          aria-label={`${item.alt || item.label || item.text}. Drag it, or move it with the arrow keys.`}
           onPointerDown={(e) => startDrag(e, item)}
           onKeyDown={(e) => nudge(e, item)}
         >
-          {item.kind === "photo" ? (
+          {item.kind === "object" ? (
+            <div className={`object-art art-${item.art}`}>
+              <DeskObject art={item.art} />
+            </div>
+          ) : item.kind === "photo" ? (
             <figure>
               <img src={item.src} alt="" draggable="false" style={{ objectPosition: item.focus }} />
               <figcaption>{item.caption}</figcaption>
@@ -623,7 +678,7 @@ const ProjectLog = () => {
                 </span>
               </button>
               <div className="card-panel" inert={!isOpen}>
-                <div className="card-panel-inner">
+                <div className={e.tools || e.fullPage ? "card-panel-inner" : "card-panel-inner solo"}>
                   <div className="card-detail">
                     <p className="card-overview">{e.overview}</p>
                     {e.did && (
@@ -636,19 +691,29 @@ const ProjectLog = () => {
                         </ul>
                       </>
                     )}
-                  </div>
-                  <div className="card-side">
-                    {e.tools && (
+                    {e.learned && (
                       <>
-                        <h3>Tools and methods</h3>
-                        <p>{e.tools.join(", ")}</p>
+                        <h3>What I learned</h3>
+                        <p className="card-overview">{e.learned}</p>
                       </>
                     )}
-                    <a className="card-open" href={`#/log/${e.slug}`}>
-                      See the full page
-                      <Chevron />
-                    </a>
                   </div>
+                  {(e.tools || e.fullPage) && (
+                    <div className="card-side">
+                      {e.tools && (
+                        <>
+                          <h3>Tools and methods</h3>
+                          <p>{e.tools.join(", ")}</p>
+                        </>
+                      )}
+                      {e.fullPage && (
+                        <a className="card-open" href={`#/log/${e.slug}`}>
+                          See the full page
+                          <Chevron />
+                        </a>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
             </li>
@@ -729,7 +794,7 @@ const Experience = () => {
       <div className="block-head">
         <div>
           <h2>Experience</h2>
-          <p className="block-intro">Each line steps up while I held that role. Move across it to travel through time, or click a role to open it.</p>
+          <p className="block-intro">Each line steps up while I held that role. Move across it to travel through time, or click a role for a short summary.</p>
         </div>
       </div>
       <div
@@ -786,10 +851,12 @@ const Experience = () => {
               <div className="tl-panel" inert={!isOpen}>
                 <div className="tl-panel-inner">
                   <p>{entry?.summary}</p>
-                  <a href={`#/log/${t.log}`}>
-                    Open project
-                    <Chevron />
-                  </a>
+                  {entry?.fullPage && (
+                    <a href={`#/log/${t.log}`}>
+                      See the full page
+                      <Chevron />
+                    </a>
+                  )}
                 </div>
               </div>
             </div>
@@ -829,32 +896,45 @@ const EducationSkills = () => (
   </section>
 );
 
-const About = () => (
-  <section id="about" className="block two-col about reveal">
-    <div>
-      <h2>About</h2>
-      <p className="about-intro">{about.intro}</p>
-      <p className="muted">{about.more}</p>
-      <h4>Outside of work</h4>
-      <p className="muted">{about.outside}</p>
-      <iframe
-        title="Playlist Viola is listening to on Spotify"
-        className="playlist"
-        src={SPOTIFY_URL}
-        width="100%"
-        height="152"
-        allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
-        loading="lazy"
-      />
-    </div>
-    <img
-      src="/potrait.jpeg"
-      alt="Viola in a maize shirt at Michigan Stadium after a game, with the marching band behind her"
-      className="about-photo"
-      loading="lazy"
-    />
-  </section>
-);
+const Contact = () => {
+  const [copied, setCopied] = useState(false);
+  const timer = useRef(null);
+  useEffect(() => () => clearTimeout(timer.current), []);
+
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(contact.email);
+      setCopied(true);
+      clearTimeout(timer.current);
+      timer.current = setTimeout(() => setCopied(false), 1800);
+    } catch {
+      window.location.href = `mailto:${contact.email}`;
+    }
+  };
+
+  return (
+    <section id="contact" className="block reveal">
+      <div className="contact-card">
+        <div>
+          <h2>Contact</h2>
+          <p className="contact-lead">{contact.lead}</p>
+          <a className="contact-email" href={`mailto:${contact.email}`}>
+            {contact.email}
+          </a>
+        </div>
+        <div className="contact-actions">
+          <a className="contact-button primary" href={`mailto:${contact.email}`}>
+            Send an email
+          </a>
+          <button type="button" className="contact-button" onClick={copy} aria-live="polite">
+            {copied ? "Copied" : "Copy email"}
+          </button>
+          <ExternalLinks links={profile.links} />
+        </div>
+      </div>
+    </section>
+  );
+};
 
 const Home = () => (
   <>
@@ -864,28 +944,29 @@ const Home = () => (
       <ProjectLog />
       <Experience />
       <EducationSkills />
-      <About />
+      <Contact />
     </main>
   </>
 );
 
 const LogDetail = ({ slug }) => {
-  const index = log.findIndex((e) => e.slug === slug);
-  const entry = log[index];
+  const fullPages = log.filter((e) => e.fullPage);
+  const index = fullPages.findIndex((e) => e.slug === slug);
+  const entry = fullPages[index];
 
   if (!entry) {
     return (
       <main className="wrap detail">
-        <h1 className="detail-title">Project not found</h1>
-        <p className="muted">This project isn’t in the log. It may have been renamed.</p>
-        <a className="back" href="#/log">
+        <h1 className="detail-title">This project doesn’t have its own page</h1>
+        <p className="muted">You can read about it in the project log.</p>
+        <a className="back after" href="#/log">
           Back to project log
         </a>
       </main>
     );
   }
 
-  const next = log[(index + 1) % log.length];
+  const next = fullPages[(index + 1) % fullPages.length];
   const facts = [
     ["Role", entry.role],
     ["Where", entry.where],
@@ -959,7 +1040,7 @@ const LogDetail = ({ slug }) => {
       </div>
 
       <a className="next-project" href={`#/log/${next.slug}`}>
-        <span className="muted">Next project</span>
+        <span className="muted">Other research</span>
         <span className="next-title">
           <span>{next.title}</span>
           <Chevron />
@@ -969,42 +1050,28 @@ const LogDetail = ({ slug }) => {
   );
 };
 
-const Notes = () => (
-  <main className="wrap detail">
-    <h1 className="detail-title">Notes</h1>
-    <p className="detail-overview">Reflections and things I’m thinking through while I learn.</p>
-    <iframe title="Viola's notes on Notion" className="notes-frame" src={NOTION_URL} width="100%" height="720" loading="lazy" allowFullScreen />
-  </main>
-);
-
 export default function App() {
   const route = useRoute();
   const isDetail = route.startsWith("log/");
-  const isNotes = route === "notes";
-  const showsHome = !isDetail && !isNotes;
-  const current = useCurrentSection(showsHome);
+  const current = useCurrentSection(!isDetail);
   const cameFromPage = useRef(false);
-  useReveal(showsHome);
+  useReveal(!isDetail);
 
   useEffect(() => {
-    if (isDetail) {
-      const entry = log.find((e) => e.slug === route.slice(4));
-      document.title = entry ? `${entry.title} | ${profile.name}` : profile.name;
-    } else {
-      document.title = isNotes ? `Notes | ${profile.name}` : profile.name;
-    }
+    const entry = isDetail ? log.find((e) => e.slug === route.slice(4) && e.fullPage) : null;
+    document.title = entry ? `${entry.title} | ${profile.name}` : profile.name;
 
-    const target = showsHome && route ? document.getElementById(route) : null;
+    const target = !isDetail && route ? document.getElementById(route) : null;
     // smooth when moving around the home page, instant when arriving from another page
     if (target) target.scrollIntoView({ behavior: cameFromPage.current || prefersReducedMotion() ? "auto" : "smooth" });
     else window.scrollTo({ top: 0, behavior: "auto" });
-    cameFromPage.current = !showsHome;
-  }, [route, isDetail, isNotes, showsHome]);
+    cameFromPage.current = isDetail;
+  }, [route, isDetail]);
 
   return (
     <div className="app">
       <TopBar route={route} current={current} />
-      {isDetail ? <LogDetail slug={route.slice(4)} /> : isNotes ? <Notes /> : <Home />}
+      {isDetail ? <LogDetail slug={route.slice(4)} /> : <Home />}
       <footer className="footer">
         <div className="wrap footer-inner">
           <span>{profile.name}</span>

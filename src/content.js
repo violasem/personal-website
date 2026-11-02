@@ -24,20 +24,27 @@ export const profile = {
 
 // The things on the banner's desk. x and y are 0 to 1 within the desk area; rot is the tilt in degrees.
 // phone sets a different spot on small screens, and phone: null hides the item there.
+// kind can be "photo", "note", or "object" (the drawings live in App.jsx).
 export const deskItems = [
-  { id: "stadium", kind: "photo", src: "/potrait.jpeg", focus: "42% 30%", caption: "Michigan Stadium", alt: "Viola at Michigan Stadium with the marching band behind her", at: { x: 1, y: 0.02, rot: 4 }, phone: { x: 1, y: 0.05, rot: 4 } },
-  { id: "me", kind: "photo", src: "/avatar.jpeg", caption: "me, with ears", alt: "Illustrated portrait of Viola with glasses and puppy ears", at: { x: 0.02, y: 0.1, rot: -5 }, phone: { x: 0, y: 0, rot: -4 } },
-  { id: "dog", kind: "note", text: "Dog person", color: "#f0e3b8", at: { x: 0.02, y: 1, rot: 3 }, phone: { x: 0.04, y: 1, rot: 3 } },
-  { id: "medan", kind: "note", text: "Born and raised in Medan", color: "#ebd4d6", at: { x: 0.42, y: 1, rot: -3 }, phone: { x: 0.92, y: 1, rot: -3 } },
-  { id: "eecs", kind: "note", text: "Teaching circuits in EECS 215", color: "#d7e3d8", at: { x: 1, y: 0.68, rot: 5 }, phone: null },
-  { id: "manga", kind: "note", text: "Always looking for good fantasy manga", color: "#d6e0eb", at: { x: 0.76, y: 1, rot: -2 }, phone: null },
+  { id: "stadium", kind: "photo", src: "/potrait.jpeg", focus: "42% 30%", caption: "Michigan Stadium", alt: "Viola at Michigan Stadium with the marching band behind her", at: { x: 1, y: 0, rot: 4 }, phone: { x: 1, y: 0.02, rot: 4 } },
+  { id: "me", kind: "photo", src: "/avatar.jpeg", caption: "me, with ears", alt: "Illustrated portrait of Viola with glasses and puppy ears", at: { x: 0, y: 0.03, rot: -5 }, phone: { x: 0, y: 0, rot: -4 } },
+  { id: "pennant", kind: "object", art: "pennant", label: "A Go Blue pennant", at: { x: 0, y: 0.68, rot: -8 }, phone: { x: 0.02, y: 0.66, rot: -7 } },
+  { id: "manga", kind: "object", art: "manga", label: "A fantasy manga book, because I'm always looking for good ones", at: { x: 0.55, y: 0.62, rot: 7 }, phone: null },
+  { id: "multimeter", kind: "object", art: "multimeter", label: "A digital multimeter from the circuits lab", at: { x: 0.38, y: 0.62, rot: -6 }, phone: { x: 0.54, y: 0.64, rot: 6 } },
+  { id: "resistor", kind: "object", art: "resistor", label: "A resistor", at: { x: 0.66, y: 0.5, rot: 12 }, phone: null },
+  { id: "gpa", kind: "note", text: "3.94 GPA, Dean's List", color: "#f0e3b8", at: { x: 0.415, y: 0, rot: -3 }, phone: { x: 0, y: 1, rot: 3 } },
+  { id: "next", kind: "note", text: "Next up: embedded and control systems", color: "#d6e0eb", at: { x: 0.425, y: 0.25, rot: 3 }, phone: { x: 1, y: 1, rot: -3 } },
+  { id: "research", kind: "note", text: "Solar wind and machine learning research", color: "#d7e3d8", at: { x: 1, y: 0.6, rot: 5 }, phone: null },
+  { id: "eecs", kind: "note", text: "Teaching circuits in EECS 215", color: "#e4dcee", at: { x: 0.72, y: 1, rot: -4 }, phone: null },
+  { id: "dog", kind: "note", text: "Dog person", color: "#ebd4d6", at: { x: 0.02, y: 1, rot: 3 }, phone: null },
+  { id: "medan", kind: "note", text: "Born and raised in Medan", color: "#f3dfc9", at: { x: 0.25, y: 1, rot: -3 }, phone: null },
 ];
 
-// The project log. Each entry gets its own page at #/log/<slug>.
+// The project log. Every entry opens in place as a card. Add fullPage: true to give it its own page too.
 //
 // Newest first. To add an entry, copy one of these blocks to the top of the list. Only slug,
 // title, type, dates and summary are required: leave out anything else and that
-// part of the page won't show.
+// part won't show.
 //
 //   links:   [{ name: "Research poster", url: "https://..." }]
 //   updates: [{ date: "Nov 2026", text: "What happened" }]   a running log for the project
@@ -92,6 +99,7 @@ export const log = [
   },
   {
     slug: "space-physics-clustering",
+    fullPage: true,
     title: "Clustering and predicting solar wind behavior",
     type: "Research",
     dates: "May 2026 – Sep 2026",
@@ -108,6 +116,7 @@ export const log = [
   },
   {
     slug: "solar-wind-ml-pipelines",
+    fullPage: true,
     title: "Solar wind machine learning pipelines",
     type: "Research",
     dates: "Oct 2025 – May 2026",
@@ -141,18 +150,6 @@ export const log = [
     ],
     learned:
       "Differential equations sit at the heart of circuits and control systems, so teaching them keeps me sharp in the math that embedded work depends on. Tutoring has also made me a patient, clear communicator.",
-  },
-  {
-    slug: "logic-design-fpga",
-    title: "Digital design in Verilog",
-    type: "Engineering",
-    dates: "Coursework",
-    summary: "Learned how digital systems make decisions, and built skills in Verilog and FPGA design.",
-    where: "Introduction to Logic Design, University of Michigan",
-    overview:
-      "Coursework that became the start of my hardware foundation, alongside circuits: how digital systems make decisions, and how to describe them in hardware.",
-    did: ["Built skills in Verilog and FPGA design."],
-    tools: ["Verilog", "FPGA"],
   },
 ];
 
@@ -191,9 +188,7 @@ export const skills = [
   { group: "Tools", items: "Git, Linux, React" },
 ];
 
-export const about = {
-  intro:
-    "I’m Viola Charissa Diana Sembiring. I love building things that are both logical and alive: circuits, embedded systems, and data that tells a story, especially space plasma and solar wind.",
-  more: "I’m curious about how systems behave, how they fail, and how they can be designed more thoughtfully. I like hardware debugging, clean architecture, CAD, and making hard things feel simple.",
-  outside: "Born and raised in Medan, Indonesia. Always looking for good fantasy manga and manhwa. Dog person.",
+export const contact = {
+  email: "violasem@umich.edu",
+  lead: "Email is the best way to reach me.",
 };
