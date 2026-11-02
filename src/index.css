@@ -2203,6 +2203,234 @@ button:focus-visible {
   }
 }
 
+/* clustering and prediction study */
+.pipe-steps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.pipe-steps button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 42px;
+  padding: 6px 13px 6px 7px;
+  border: 1px solid var(--rule-strong);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--ink-soft);
+  font: inherit;
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+.pipe-steps button:hover {
+  border-color: var(--slate);
+  color: var(--ink);
+}
+
+.pipe-steps button[aria-pressed="true"] {
+  border-color: var(--slate);
+  background: var(--slate);
+  color: #fff;
+}
+
+.pipe-num {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: #e9ebec;
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.pipe-steps button.done .pipe-num {
+  background: #d7c3c6;
+}
+
+.pipe-steps button[aria-pressed="true"] .pipe-num {
+  background: #fff;
+}
+
+.pipe-steps button:focus-visible,
+.share-bar button:focus-visible,
+.cluster-names button:focus-visible {
+  outline: 2px solid var(--rose);
+  outline-offset: 2px;
+}
+
+.pipe-text {
+  max-width: 68ch;
+  min-height: 4.7em;
+  margin-top: 14px;
+  animation: riseIn 0.3s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+.r-first {
+  margin-top: 0;
+}
+
+.r-narrow {
+  max-width: 760px;
+}
+
+.r-small {
+  max-width: 480px;
+}
+
+.figure-stack {
+  display: grid;
+  gap: 18px;
+}
+
+.fit-row:disabled {
+  cursor: default;
+}
+
+.share-bar {
+  display: flex;
+  gap: 2px;
+  height: 22px;
+}
+
+.share-bar button {
+  flex-basis: 0;
+  min-width: 8px;
+  padding: 0;
+  border: 0;
+  border-radius: 3px;
+  opacity: 0.5;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+}
+
+.share-bar button:hover,
+.share-bar button[aria-pressed="true"] {
+  opacity: 1;
+}
+
+.cluster-names {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 12px;
+  margin: 10px 0 0 -6px;
+}
+
+.cluster-names button {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 34px;
+  padding: 3px 6px;
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  color: var(--ink-soft);
+  font: inherit;
+  font-size: 14px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.cluster-names button::before {
+  content: "";
+  flex-shrink: 0;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--cluster);
+}
+
+.cluster-names button[aria-pressed="true"] {
+  background: #eef0f1;
+  color: var(--ink);
+}
+
+.cluster-detail {
+  margin-top: 14px;
+  animation: riseIn 0.35s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+.cluster-detail h4 {
+  font-family: "Fraunces", Georgia, serif;
+  font-size: 22px;
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+.threshold-note {
+  margin-bottom: 10px;
+  font-size: 15px;
+  line-height: 1.45;
+  color: var(--ink-soft);
+}
+
+.below-row {
+  grid-template-columns: minmax(0, 1fr) 48px;
+  min-height: 34px;
+}
+
+.below-row .fit-bar {
+  background: var(--cluster);
+}
+
+.val-compare {
+  margin-top: 14px;
+}
+
+.meter + .meter {
+  margin-top: 14px;
+}
+
+.meter-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 5px;
+  font-size: 15px;
+}
+
+.meter-head strong {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.meter-track {
+  display: block;
+  height: 10px;
+  border-radius: 5px;
+  background: #e9ebec;
+}
+
+.meter-fill {
+  display: block;
+  height: 100%;
+  border-radius: 5px;
+  background: var(--rose);
+  transition: width 0.55s cubic-bezier(0.3, 0.8, 0.3, 1);
+}
+
+.val-note {
+  margin-top: 14px;
+  font-size: 15px;
+  line-height: 1.45;
+  color: var(--ink-soft);
+}
+
+@media (max-width: 860px) {
+  .cluster-compare,
+  .val-compare {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
 /* footer: leaves room for the dog to walk along the bottom */
 .footer {
   padding: 26px 0 72px;

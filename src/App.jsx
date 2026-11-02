@@ -1385,14 +1385,35 @@ const FitComparison = ({ psp }) => {
   );
 };
 
-const ResearchStory = ({ research }) => {
-  const [tab, setTab] = useState("ace");
+const useFigureZoom = () => {
   const [zoomed, setZoomed] = useState(null);
   const dialogRef = useRef(null);
   const zoom = (figure) => {
     setZoomed(figure);
     dialogRef.current?.showModal();
   };
+  const dialog = createPortal(
+    <dialog ref={dialogRef} className="zoom" aria-label={zoomed?.caption || "Figure"} onClose={() => setZoomed(null)} onClick={(e) => e.target === dialogRef.current && dialogRef.current.close()}>
+      <button type="button" className="resume-close zoom-close" onClick={() => dialogRef.current?.close()} aria-label="Close">
+        <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
+          <path d="M3 3l10 10M13 3L3 13" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+        </svg>
+      </button>
+      {zoomed && (
+        <>
+          <img src={zoomed.src} alt={zoomed.alt} />
+          <p>{zoomed.caption}</p>
+        </>
+      )}
+    </dialog>,
+    document.body
+  );
+  return { zoom, dialog };
+};
+
+const ResearchStory = ({ research }) => {
+  const [tab, setTab] = useState("ace");
+  const { zoom, dialog } = useFigureZoom();
   const tabs = [
     { id: "ace", label: research.ace.label },
     { id: "psp", label: research.psp.label },
@@ -1468,22 +1489,244 @@ const ResearchStory = ({ research }) => {
         </button>
       </section>
 
-      {createPortal(
-        <dialog ref={dialogRef} className="zoom" aria-label={zoomed?.caption || "Figure"} onClose={() => setZoomed(null)} onClick={(e) => e.target === dialogRef.current && dialogRef.current.close()}>
-          <button type="button" className="resume-close zoom-close" onClick={() => dialogRef.current?.close()} aria-label="Close">
-            <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
-              <path d="M3 3l10 10M13 3L3 13" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
-            </svg>
+      {dialog}
+    </div>
+  );
+};
+
+// --- the clustering and prediction study ---
+const Pipeline = ({ steps }) => {
+  const [at, setAt] = useState(0);
+  return (
+    <div className="pipeline">
+      <ol className="pipe-steps">
+        {steps.map((step, i) => (
+          <li key={step.title}>
+            <button type="button" aria-pressed={at === i} className={i < at ? "done" : ""} onClick={() => setAt(i)}>
+              <span className="pipe-num">{i + 1}</span>
+              {step.title}
+            </button>
+          </li>
+        ))}
+      </ol>
+      <p className="pipe-text" key={at}>
+        {steps[at].text}
+      </p>
+    </div>
+  );
+};
+
+const KChooser = ({ data, note, figures, onZoom }) => {
+  const [k, setK] = useState(4);
+  const pick = data.find((d) => d.k === k);
+  const max = Math.max(...data.map((d) => d.score));
+  return (
+    <div className="r-compare">
+      <div className="r-panel">
+        <p className="r-chart-title r-first">Silhouette score. Higher means more distinct clusters.</p>
+        <div className="fit-bars">
+          {data.map((d) => (
+            <button key={d.k} type="button" disabled={!d.figure} aria-pressed={d.k === k} className={`fit-row${d.k === 4 ? " best" : ""}${d.k === k ? " picked" : ""}`} onClick={() => setK(d.k)}>
+              <span className="fit-k">k = {d.k}</span>
+              <span className="fit-track">
+                <span className="fit-bar" style={{ width: `${(d.score / max) * 100}%` }} />
+              </span>
+              <span className="fit-value">{d.score.toFixed(3)}</span>
+            </button>
+          ))}
+        </div>
+        <p>{note}</p>
+      </div>
+      <div className="r-swap" key={pick.k}>
+        <Figure figure={figures[pick.figure]} onZoom={onZoom} />
+      </div>
+    </div>
+  );
+};
+
+const ClusterExplorer = ({ clusters, threshold }) => {
+  const [id, setId] = useState(clusters[0].id);
+  const c = clusters.find((x) => x.id === id);
+  return (
+    <div className="r-panel cluster-panel" style={{ "--cluster": c.color }}>
+      <div className="share-bar" role="group" aria-label="Choose a solar wind type. Width shows its share of the observations.">
+        {clusters.map((x) => (
+          <button key={x.id} type="button" aria-pressed={x.id === id} aria-label={`${x.name}, ${x.share}% of observations`} title={x.name} style={{ flexGrow: x.share, background: x.color }} onClick={() => setId(x.id)} />
+        ))}
+      </div>
+      <div className="cluster-names">
+        {clusters.map((x) => (
+          <button key={x.id} type="button" aria-pressed={x.id === id} style={{ "--cluster": x.color }} onClick={() => setId(x.id)}>
+            {x.name}
           </button>
-          {zoomed && (
-            <>
-              <img src={zoomed.src} alt={zoomed.alt} />
-              <p>{zoomed.caption}</p>
-            </>
-          )}
-        </dialog>,
-        document.body
-      )}
+        ))}
+      </div>
+      <div className="cluster-detail" key={c.id}>
+        <h4>{c.name}</h4>
+        <p>{c.note}</p>
+        <dl className="r-stats">
+          {[
+            ["Observations", `${c.n.toLocaleString("en-US")} (${c.share}%)`],
+            ["Median velocity", `${c.velocity} km/s`],
+            ["Median density", `${c.density} cm⁻³`],
+            ["Median O⁷⁺/O⁶⁺", c.ratio],
+          ].map(([label, value]) => (
+            <div key={label}>
+              <dt>{label}</dt>
+              <dd>{value}</dd>
+            </div>
+          ))}
+        </dl>
+      </div>
+      <p className="r-chart-title">Share of each type below the Zhao threshold</p>
+      <p className="threshold-note">{threshold}</p>
+      <div className="fit-bars">
+        {clusters.map((x) => (
+          <button key={x.id} type="button" aria-pressed={x.id === id} className={`fit-row below-row${x.id === id ? " picked" : ""}`} onClick={() => setId(x.id)} style={{ "--cluster": x.color }}>
+            <span className="fit-track">
+              <span className="fit-bar" style={{ width: `${x.below}%` }} />
+            </span>
+            <span className="fit-value">{x.below}%</span>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+const Validation = ({ metrics, figures, onZoom }) => {
+  const [id, setId] = useState(metrics[0].id);
+  const m = metrics.find((x) => x.id === id);
+  return (
+    <div>
+      <Segments label="Choose a measure" options={metrics} value={id} onChange={setId} />
+      <div className="r-compare val-compare">
+        <div className="r-panel">
+          {[
+            ["Within ±1σ", m.within1, m.pct1],
+            ["Within ±2σ", m.within2, m.pct2],
+          ].map(([label, count, pct]) => (
+            <div key={label} className="meter">
+              <div className="meter-head">
+                <span>{label}</span>
+                <strong>
+                  {count} ({pct}%)
+                </strong>
+              </div>
+              <span className="meter-track">
+                <span className="meter-fill" style={{ width: `${pct}%` }} />
+              </span>
+            </div>
+          ))}
+          <dl className="r-stats">
+            {[
+              ["MAE", m.mae],
+              ["RMSE", m.rmse],
+              ["R²", m.r2],
+              ["Mean bias", m.bias],
+            ].map(([label, value]) => (
+              <div key={label}>
+                <dt>{label}</dt>
+                <dd>{value}</dd>
+              </div>
+            ))}
+          </dl>
+          <p className="val-note">{m.note}</p>
+        </div>
+        <div className="r-swap" key={m.id}>
+          <Figure figure={figures[m.figure]} onZoom={onZoom} />
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const ClusterStory = ({ study }) => {
+  const [tab, setTab] = useState("clustering");
+  const { zoom, dialog } = useFigureZoom();
+  const f = study.figures;
+  const { clustering: c, prediction: p } = study;
+
+  return (
+    <div className="research">
+      <section className="r-why">
+        <h2>Why it matters</h2>
+        <p>{study.why}</p>
+      </section>
+
+      <ol className="r-findings">
+        {study.findings.map((x, i) => (
+          <li key={x.value} style={{ "--i": i }}>
+            <strong>{x.value}</strong>
+            <span>{x.text}</span>
+          </li>
+        ))}
+      </ol>
+
+      <section className="r-data">
+        <h2>Explore the work</h2>
+        <div className="r-tabs">
+          <Segments
+            label="Choose a part of the project"
+            options={[
+              { id: "clustering", label: c.label },
+              { id: "prediction", label: p.label },
+            ]}
+            value={tab}
+            onChange={setTab}
+          />
+        </div>
+        {tab === "clustering" ? (
+          <div className="r-tab-body" key="clustering">
+            <h3>Step 1: Prepare the data</h3>
+            <Pipeline steps={c.pipeline} />
+            <div className="r-gap">
+              <Figure figure={f.preprocess} onZoom={zoom} />
+            </div>
+            <h3>Step 2: See what drives the differences</h3>
+            <p className="r-method">{c.pcaNote}</p>
+            <Figure figure={f.pca} onZoom={zoom} />
+            <h3>Step 3: Choose the number of clusters</h3>
+            <KChooser data={c.silhouette} note={c.kNote} figures={f} onZoom={zoom} />
+            <h3>Step 4: Meet the four wind types</h3>
+            <div className="r-compare cluster-compare">
+              <ClusterExplorer clusters={c.clusters} threshold={c.threshold} />
+              <div className="figure-stack">
+                <Figure figure={f.charge} onZoom={zoom} />
+                <Figure figure={f.density} onZoom={zoom} />
+              </div>
+            </div>
+            <h3>Step 5: Draw the boundaries</h3>
+            <p className="r-method">{c.boundary}</p>
+            <Figure figure={f.boundaries} onZoom={zoom} />
+            <h3>One surprise: fast wind has two populations</h3>
+            <p className="r-method">{c.blue}</p>
+            <div className="r-narrow">
+              <Figure figure={f.blue} onZoom={zoom} />
+            </div>
+          </div>
+        ) : (
+          <div className="r-tab-body" key="prediction">
+            <p className="r-method">{p.intro}</p>
+            <h3>Step 1: Build the model</h3>
+            <Pipeline steps={p.pipeline} />
+            <div className="r-gap r-small">
+              <Figure figure={f.fourier} onZoom={zoom} />
+            </div>
+            <h3>Step 2: Test it on data it hasn’t seen</h3>
+            <Validation metrics={p.metrics} figures={f} onZoom={zoom} />
+            <h3>Where it falls short</h3>
+            <p className="r-method">{p.limits}</p>
+            <div className="r-narrow">
+              <Figure figure={f.residuals} onZoom={zoom} />
+            </div>
+            <h3>Step 3: Forecast ahead</h3>
+            <p className="r-method">{p.forecast}</p>
+            <Figure figure={f.forecast} onZoom={zoom} />
+          </div>
+        )}
+      </section>
+      {dialog}
     </div>
   );
 };
@@ -1523,6 +1766,7 @@ const LogDetail = ({ slug }) => {
       <p className="detail-overview">{entry.overview}</p>
 
       {entry.research && <ResearchStory research={entry.research} />}
+      {entry.study && <ClusterStory study={entry.study} />}
 
       <div className="detail-grid">
         <div className="detail-body">
