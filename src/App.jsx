@@ -1,368 +1,365 @@
-import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
+import { about, education, experience, log, logTypes, profile, skills } from "./content.js";
 
-// The hero line is the word "viola" sent over UART: the line idles high, then
-// each character is a start bit (low), 8 data bits (LSB first) and a stop bit (high).
-const buildTrace = (width) => {
-  const high = 30;
-  const low = 58;
-  const gutter = Math.max(window.innerWidth * 0.08, (window.innerWidth - 1400) / 2);
-  const bit = width < 720 ? Math.min((width - gutter - 90) / 50, 7) : Math.min((width * 0.45) / 50, 16);
+const NOTION_URL = "https://lopsided-passbook-280.notion.site/ebd//2ed826ec6ca8800ab28edaef165b6909";
+const SPOTIFY_URL = "https://open.spotify.com/embed/playlist/1vHnZpoh3TbeXlvnFfp7Uf?utm_source=generator";
 
-  const bits = [];
-  for (const ch of "viola") {
-    const code = ch.charCodeAt(0);
-    bits.push(0);
-    for (let i = 0; i < 8; i++) bits.push((code >> i) & 1);
-    bits.push(1);
-  }
+const navItems = [
+  { href: "#/log", label: "Project log" },
+  { href: "#/experience", label: "Experience" },
+  { href: "#/education", label: "Education" },
+  { href: "#/about", label: "About" },
+  { href: "#/notes", label: "Notes" },
+];
 
-  let x = gutter;
-  let level = 1;
-  let d = `M0 ${high} H${x}`;
-  for (const b of bits) {
-    if (b !== level) {
-      d += ` V${b ? high : low}`;
-      level = b;
-    }
-    x += bit;
-    d += ` H${x}`;
-  }
+// Hash routes work on any host, with no server setup: #/log/<slug>, #/notes, or a home section.
+const parseRoute = () => window.location.hash.replace(/^#\/?/, "");
 
-  const hx = x + 44;
-  const s = 22;
-  const heart =
-    `C${hx - 6} ${high - 12} ${hx - s} ${high - 12} ${hx - s} ${high + 4} ` +
-    `C${hx - s} ${high + 16} ${hx - 6} ${high + 26} ${hx} ${high + 34} ` +
-    `C${hx + 6} ${high + 26} ${hx + s} ${high + 16} ${hx + s} ${high + 4} ` +
-    `C${hx + s} ${high - 12} ${hx + 6} ${high - 12} ${hx} ${high}`;
-
-  return {
-    line: `${d} H${hx} ${heart} H${width}`,
-    heart: `M${hx} ${high} ${heart} Z`,
-  };
+const useRoute = () => {
+  const [route, setRoute] = useState(parseRoute);
+  useEffect(() => {
+    const onChange = () => setRoute(parseRoute());
+    window.addEventListener("hashchange", onChange);
+    return () => window.removeEventListener("hashchange", onChange);
+  }, []);
+  return route;
 };
 
-const introAlreadySeen = () => {
-  try {
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return true;
-    return sessionStorage.getItem("intro-seen") === "1";
-  } catch {
-    return false;
-  }
-};
+const ExternalLinks = ({ links, className = "text-links" }) => (
+  <div className={className}>
+    {links.map((l) => (
+      <a key={l.name} href={l.url} target="_blank" rel="noopener noreferrer">
+        {l.name}
+      </a>
+    ))}
+  </div>
+);
 
-// ---------------------------------------------------------------------------
-// Site content: edit the text below to update the site.
-// ---------------------------------------------------------------------------
+const Chevron = () => (
+  <svg className="chevron" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
+    <path d="M6 3l5 5-5 5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
 
-const tagline = "Computer engineering at the University of Michigan, class of 2028. Circuits, embedded systems, and data.";
+const TopBar = ({ route }) => (
+  <header className="topbar">
+    <div className="topbar-inner">
+      <a className="brand" href="#/">
+        {profile.name}
+      </a>
+      <nav aria-label="Main">
+        {navItems.map((n) => {
+          const active = route === n.href.slice(2) || (n.href === "#/log" && route.startsWith("log/"));
+          return (
+            <a key={n.href} href={n.href} aria-current={active ? "page" : undefined}>
+              {n.label}
+            </a>
+          );
+        })}
+      </nav>
+    </div>
+  </header>
+);
 
-const socialLinks = [
-  { name: "LinkedIn", url: "https://www.linkedin.com/in/violasem/" },
-  { name: "GitHub", url: "https://github.com/violasem" },
-];
-
-const sections = [
-  { id: "about", label: "About" },
-  { id: "experience", label: "Experience" },
-  { id: "education", label: "Education" },
-  { id: "skills", label: "Skills" },
-  { id: "notes", label: "Notes" },
-  { id: "outside-work", label: "Outside work" },
-];
-
-const experience = [
-  {
-    org: "PERMIAS Michigan",
-    place: "Ann Arbor, on-site",
-    summary: "Outreach to alumni and partner organizations for the Indonesian student organization at U-M.",
-    roles: [{ title: "Co-Director of External Relations", dates: "Jul 2026 – present" }],
-  },
-  {
-    org: "Electrical and Computer Engineering, University of Michigan",
-    roles: [
-      {
-        title: "Instructional Aide, EECS 215: Introduction to Circuits",
-        dates: "Aug 2026 – present",
-        summary: "Course staff for a lab section.",
-      },
-    ],
-  },
-  {
-    org: "University of Michigan Department of Mathematics",
-    place: "Ann Arbor, on-site",
-    summary:
-      "Weekly tutoring sessions and study groups for engineering students, breaking down topics in vector calculus, linear algebra, and differential equations. Drop-in calculus tutoring focused on helping students approach problems with more confidence.",
-    roles: [
-      { title: "Differential Equations Tutor, Mathematics Learning Center", dates: "Jan 2026 – present" },
-      { title: "Calculus I & II Tutor, Mathematics Learning Center", dates: "Aug 2025 – present" },
-      { title: "Study Group Facilitator", dates: "Aug 2025 – present" },
-    ],
-  },
-  {
-    org: "Stealth Startup",
-    place: "Jakarta, hybrid",
-    roles: [
-      {
-        title: "Developer Intern",
-        dates: "Jun 2026 – Sep 2026",
-        summary:
-          "Helped build an AI startup developing software with large language models to automate workflows, improve customer experiences, and solve real-world business challenges.",
-      },
-    ],
-  },
-  {
-    org: "University of Michigan Climate and Space",
-    roles: [
-      {
-        title: "Data Engineer",
-        dates: "May 2026 – Sep 2026",
-        summary:
-          "Applied dimensionality reduction to multi-layered space physics datasets with 7 parameters, and used machine learning models to cluster, classify, and predict plasma and solar wind behavior.",
-      },
-      {
-        title: "Research Intern",
-        dates: "Oct 2025 – May 2026",
-        summary:
-          "Worked with Associate Professor Liang Zhao to build Python machine learning pipelines that preprocess and analyze large-scale in-situ solar wind data from the Swift Observatory and Parker Solar Probe.",
-      },
-    ],
-  },
-];
-
-const coursework = [
-  "Programming and data structures",
-  "Logic design",
-  "Computer organization",
-  "Electric circuits",
-  "Discrete math",
-  "Differential equations",
-  "Computational linear algebra",
-];
-
-const skills = [
-  { group: "Languages", items: "C++, Python, Verilog, MATLAB" },
-  { group: "Hardware", items: "Arduino, FPGA logic, circuits" },
-  { group: "Data", items: "Machine learning pipelines, dimensionality reduction, clustering" },
-  { group: "Tools", items: "Git, Linux, React" },
-];
-
-const Section = ({ id, title, children }) => (
-  <section id={id} className="section">
-    <h2 className="section-title">{title}</h2>
-    <div className="section-body">{children}</div>
+const Hero = () => (
+  <section className="hero">
+    <div className="hero-inner">
+      <div className="hero-main">
+        <img src="/avatar.jpeg" alt="Illustrated portrait of Viola with glasses and puppy ears" className="hero-avatar" />
+        <h1>{profile.name}</h1>
+        <p className="hero-statement">{profile.statement}</p>
+        <div className="hero-actions">
+          <a className="button" href="#/log">
+            See my project log
+          </a>
+          <ExternalLinks links={profile.links} />
+        </div>
+      </div>
+      <dl className="hero-facts">
+        {profile.facts.map((f) => (
+          <div key={f.label} className="fact">
+            <dt>{f.label}</dt>
+            {f.lines.map((line) => (
+              <dd key={line}>{line}</dd>
+            ))}
+          </div>
+        ))}
+      </dl>
+    </div>
   </section>
 );
 
+const ProjectLog = () => {
+  const [filter, setFilter] = useState("All");
+  const entries = filter === "All" ? log : log.filter((e) => e.type === filter);
+
+  return (
+    <section id="log" className="block">
+      <div className="block-head">
+        <div>
+          <h2>Project log</h2>
+          <p className="block-intro">What I’ve worked on. Select one to see what I did and what I learned.</p>
+        </div>
+        <div className="filters" role="group" aria-label="Filter projects">
+          {["All", ...logTypes].map((t) => (
+            <button key={t} type="button" aria-pressed={filter === t} onClick={() => setFilter(t)}>
+              {t}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <ul className="log-list">
+        {entries.map((e) => (
+          <li key={e.slug}>
+            <a className="log-row" href={`#/log/${e.slug}`}>
+              <span className="log-dates">{e.dates}</span>
+              <span className="log-text">
+                <span className="log-title">{e.title}</span>
+                <span className="log-summary">{e.summary}</span>
+              </span>
+              <span className={`type type-${e.type.toLowerCase()}`}>{e.type}</span>
+              <Chevron />
+            </a>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+};
+
+const Experience = () => (
+  <section id="experience" className="block">
+    <div className="block-head">
+      <h2>Experience</h2>
+    </div>
+    <div className="exp-list">
+      {experience.map((e) => (
+        <article key={e.org} className="exp-org">
+          <h3>{e.org}</h3>
+          <ul>
+            {e.roles.map((r) => (
+              <li key={r.title} className="exp-role">
+                <a href={`#/log/${r.log}`}>{r.title}</a>
+                <span className="dates">{r.dates}</span>
+              </li>
+            ))}
+          </ul>
+        </article>
+      ))}
+    </div>
+  </section>
+);
+
+const EducationSkills = () => (
+  <section id="education" className="block two-col">
+    <div>
+      <h2>Education</h2>
+      <h3 className="edu-school">{education.school}</h3>
+      <p className="edu-degree">{education.degree}</p>
+      <p className="muted">{education.dates}</p>
+      <p className="muted edu-note">{education.note}</p>
+      <h4>Relevant coursework</h4>
+      <ul className="course-list">
+        {education.coursework.map((c) => (
+          <li key={c}>{c}</li>
+        ))}
+      </ul>
+    </div>
+    <div>
+      <h2>Skills</h2>
+      <dl className="skills">
+        {skills.map((s) => (
+          <div key={s.group}>
+            <dt>{s.group}</dt>
+            <dd>{s.items}</dd>
+          </div>
+        ))}
+      </dl>
+    </div>
+  </section>
+);
+
+const About = () => (
+  <section id="about" className="block two-col about">
+    <div>
+      <h2>About</h2>
+      <p className="about-intro">{about.intro}</p>
+      <p className="muted">{about.more}</p>
+      <h4>Outside of work</h4>
+      <p className="muted">{about.outside}</p>
+      <iframe
+        title="Playlist Viola is listening to on Spotify"
+        className="playlist"
+        src={SPOTIFY_URL}
+        width="100%"
+        height="152"
+        allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+        loading="lazy"
+      />
+    </div>
+    <img
+      src="/potrait.jpeg"
+      alt="Viola in a maize shirt at Michigan Stadium after a game, with the marching band behind her"
+      className="about-photo"
+      loading="lazy"
+    />
+  </section>
+);
+
+const Home = () => (
+  <>
+    <Hero />
+    <main className="wrap">
+      <ProjectLog />
+      <Experience />
+      <EducationSkills />
+      <About />
+    </main>
+  </>
+);
+
+const LogDetail = ({ slug }) => {
+  const index = log.findIndex((e) => e.slug === slug);
+  const entry = log[index];
+
+  if (!entry) {
+    return (
+      <main className="wrap detail">
+        <h1 className="detail-title">Project not found</h1>
+        <p className="muted">This project isn’t in the log. It may have been renamed.</p>
+        <a className="back" href="#/log">
+          Back to project log
+        </a>
+      </main>
+    );
+  }
+
+  const next = log[(index + 1) % log.length];
+  const facts = [
+    ["Role", entry.role],
+    ["Where", entry.where],
+    ["With", entry.with],
+    ["When", entry.dates],
+  ].filter(([, value]) => value);
+
+  return (
+    <main className="wrap detail">
+      <a className="back" href="#/log">
+        Back to project log
+      </a>
+      <span className={`type type-${entry.type.toLowerCase()}`}>{entry.type}</span>
+      <h1 className="detail-title">{entry.title}</h1>
+      <p className="detail-overview">{entry.overview}</p>
+
+      <div className="detail-grid">
+        <div className="detail-body">
+          {entry.did && (
+            <section>
+              <h2>What I did</h2>
+              <ul className="did-list">
+                {entry.did.map((d) => (
+                  <li key={d}>{d}</li>
+                ))}
+              </ul>
+            </section>
+          )}
+          {entry.learned && (
+            <section>
+              <h2>What I learned</h2>
+              <p>{entry.learned}</p>
+            </section>
+          )}
+          {entry.updates && (
+            <section>
+              <h2>Updates</h2>
+              <ol className="updates">
+                {entry.updates.map((u) => (
+                  <li key={u.date + u.text}>
+                    <span className="dates">{u.date}</span>
+                    <span>{u.text}</span>
+                  </li>
+                ))}
+              </ol>
+            </section>
+          )}
+        </div>
+
+        <aside className="detail-side">
+          <dl>
+            {facts.map(([label, value]) => (
+              <div key={label}>
+                <dt>{label}</dt>
+                <dd>{value}</dd>
+              </div>
+            ))}
+          </dl>
+          {entry.tools && (
+            <div className="side-group">
+              <h2>Tools and methods</h2>
+              <ul className="tool-list">
+                {entry.tools.map((t) => (
+                  <li key={t}>{t}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+          {entry.links && (
+            <div className="side-group">
+              <h2>Links</h2>
+              <ExternalLinks links={entry.links} />
+            </div>
+          )}
+        </aside>
+      </div>
+
+      <a className="next-project" href={`#/log/${next.slug}`}>
+        <span className="muted">Next project</span>
+        <span className="next-title">
+          {next.title}
+          <Chevron />
+        </span>
+      </a>
+    </main>
+  );
+};
+
+const Notes = () => (
+  <main className="wrap detail">
+    <h1 className="detail-title">Notes</h1>
+    <p className="detail-overview">Reflections and things I’m thinking through while I learn.</p>
+    <iframe title="Viola's notes on Notion" className="notes-frame" src={NOTION_URL} width="100%" height="720" loading="lazy" allowFullScreen />
+  </main>
+);
+
 export default function App() {
-  // intro runs draw -> settle -> done
-  const [phase, setPhase] = useState(() => (introAlreadySeen() ? "done" : "draw"));
-  const hasEntered = phase !== "draw";
-
-  const heroRef = useRef(null);
-  const traceWrapRef = useRef(null);
-  const [traceWidth, setTraceWidth] = useState(() => document.documentElement.clientWidth);
+  const route = useRoute();
+  const isDetail = route.startsWith("log/");
+  const isNotes = route === "notes";
 
   useEffect(() => {
-    if (!traceWrapRef.current) return;
-    const observer = new ResizeObserver(([entry]) => setTraceWidth(entry.contentRect.width));
-    observer.observe(traceWrapRef.current);
-    return () => observer.disconnect();
-  }, []);
-
-  // the line starts at the middle of the screen, then drops into place
-  useLayoutEffect(() => {
-    if (phase !== "draw" || !traceWrapRef.current || !heroRef.current) return;
-    const top = traceWrapRef.current.getBoundingClientRect().top;
-    heroRef.current.style.setProperty("--trace-from", `${window.innerHeight / 2 - top - 30}px`);
-  }, [phase]);
-
-  useEffect(() => {
-    if (phase === "done") return;
-    if (phase === "settle") {
-      const t = setTimeout(() => setPhase("done"), 1000);
-      return () => clearTimeout(t);
+    if (isDetail) {
+      const entry = log.find((e) => e.slug === route.slice(4));
+      document.title = entry ? `${entry.title} | ${profile.name}` : profile.name;
+    } else {
+      document.title = isNotes ? `Notes | ${profile.name}` : profile.name;
     }
-    const settle = () => {
-      try {
-        sessionStorage.setItem("intro-seen", "1");
-      } catch {
-        // storage is optional: the intro just plays again next visit
-      }
-      setPhase("settle");
-    };
-    const t = setTimeout(settle, 1650);
-    window.addEventListener("pointerdown", settle);
-    window.addEventListener("keydown", settle);
-    return () => {
-      clearTimeout(t);
-      window.removeEventListener("pointerdown", settle);
-      window.removeEventListener("keydown", settle);
-    };
-  }, [phase]);
 
-  const trace = buildTrace(traceWidth);
+    const target = !isDetail && !isNotes && route ? document.getElementById(route) : null;
+    if (target) target.scrollIntoView();
+    else window.scrollTo(0, 0);
+  }, [route, isDetail, isNotes]);
 
   return (
     <div className="app">
-      <header ref={heroRef} className={`hero phase-${phase}`}>
-        <div className="hero-stage">
-          <h1 className="hero-name">
-            viola
-            <br />
-            sembiring
-          </h1>
-          <img src="/avatar.jpeg" alt="Illustrated portrait of Viola with glasses and puppy ears" className="hero-avatar" />
+      <TopBar route={route} />
+      {isDetail ? <LogDetail slug={route.slice(4)} /> : isNotes ? <Notes /> : <Home />}
+      <footer className="footer">
+        <div className="wrap footer-inner">
+          <span>{profile.name}</span>
+          <ExternalLinks links={profile.links} />
         </div>
-
-        <div className="hero-trace" ref={traceWrapRef}>
-          <svg
-            viewBox={`0 0 ${traceWidth} 80`}
-            preserveAspectRatio="none"
-            role="img"
-            aria-label="A signal line spelling viola in UART, ending in a heart"
-          >
-            <path className="trace-line" d={trace.line} pathLength="1" />
-            <path className="trace-heart" d={trace.heart} />
-          </svg>
-        </div>
-
-        <div className="hero-meta">
-          <p className="hero-tagline">{tagline}</p>
-          <div className="link-row">
-            {socialLinks.map((s) => (
-              <a key={s.name} href={s.url} target="_blank" rel="noopener noreferrer">
-                {s.name}
-              </a>
-            ))}
-          </div>
-        </div>
-      </header>
-
-      {hasEntered && (
-        <div className="page">
-          <nav className="site-nav" aria-label="Sections">
-            <div className="site-nav-inner">
-              {sections.map((s) => (
-                <a key={s.id} href={`#${s.id}`}>
-                  {s.label}
-                </a>
-              ))}
-            </div>
-          </nav>
-
-          <main className="content">
-            <Section id="about" title="About">
-              <p className="lede">
-                I’m Viola Charissa Diana Sembiring, a computer engineering student who loves building things that are
-                both logical and alive: circuits, embedded systems, and data that tells a story, especially space
-                plasma and solar wind.
-              </p>
-              <p className="body-text">
-                I’m curious about systems: how they behave, how they fail, and how they can be designed more
-                thoughtfully. I like hardware debugging, clean architecture, CAD, and making hard things feel simple.
-              </p>
-              <img
-                src="/potrait.jpeg"
-                alt="Viola in a maize shirt at Michigan Stadium after a game, with the marching band behind her"
-                className="about-photo"
-                loading="lazy"
-              />
-            </Section>
-
-            <Section id="experience" title="Experience">
-              {experience.map((e) => (
-                <article key={e.org} className="org">
-                  <h3 className="org-name">{e.org}</h3>
-                  {e.place && <p className="org-place">{e.place}</p>}
-                  {e.roles.map((r) => (
-                    <div key={r.title} className="role">
-                      <div className="role-head">
-                        <h4 className="role-title">{r.title}</h4>
-                        <span className="dates">{r.dates}</span>
-                      </div>
-                      {r.summary && <p className="body-text">{r.summary}</p>}
-                    </div>
-                  ))}
-                  {e.summary && <p className="body-text org-summary">{e.summary}</p>}
-                </article>
-              ))}
-            </Section>
-
-            <Section id="education" title="Education">
-              <article className="org">
-                <h3 className="org-name">University of Michigan College of Engineering</h3>
-                <div className="role">
-                  <div className="role-head">
-                    <h4 className="role-title">B.S.E. in Computer Engineering, minor in Data Science</h4>
-                    <span className="dates">Aug 2024 – May 2028</span>
-                  </div>
-                  <p className="body-text">GPA 3.94/4.0. Dean’s List and University Honors to date.</p>
-                </div>
-                <h4 className="list-title">Relevant coursework</h4>
-                <ul className="plain-list">
-                  {coursework.map((c) => (
-                    <li key={c}>{c}</li>
-                  ))}
-                </ul>
-              </article>
-            </Section>
-
-            <Section id="skills" title="Skills">
-              <dl className="skills">
-                {skills.map((s) => (
-                  <div key={s.group} className="skill-row">
-                    <dt>{s.group}</dt>
-                    <dd>{s.items}</dd>
-                  </div>
-                ))}
-              </dl>
-            </Section>
-
-            <Section id="notes" title="Notes">
-              <p className="body-text notes-intro">Reflections and things I’m thinking through while I learn.</p>
-              <iframe
-                title="Viola's notes on Notion"
-                className="notes-frame"
-                src="https://lopsided-passbook-280.notion.site/ebd//2ed826ec6ca8800ab28edaef165b6909"
-                width="100%"
-                height="600"
-                loading="lazy"
-                allowFullScreen
-              />
-            </Section>
-
-            <Section id="outside-work" title="Outside work">
-              <p className="body-text">
-                Born and raised in Medan, Indonesia. Always looking for good fantasy manga and manhwa. Dog person.
-              </p>
-              <iframe
-                title="Playlist Viola is listening to on Spotify"
-                className="playlist"
-                src="https://open.spotify.com/embed/playlist/1vHnZpoh3TbeXlvnFfp7Uf?utm_source=generator"
-                width="100%"
-                height="152"
-                allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
-                loading="lazy"
-              />
-            </Section>
-          </main>
-
-          <footer className="footer">
-            <div className="link-row">
-              {socialLinks.map((s) => (
-                <a key={s.name} href={s.url} target="_blank" rel="noopener noreferrer">
-                  {s.name}
-                </a>
-              ))}
-            </div>
-            <p className="footer-note">
-              The line at the top of this page is my name, sent over UART: 8 data bits, LSB first, with a start and stop
-              bit per letter.
-            </p>
-          </footer>
-        </div>
-      )}
+      </footer>
     </div>
   );
 }
