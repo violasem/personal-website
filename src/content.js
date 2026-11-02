@@ -2,25 +2,44 @@
 
 export const profile = {
   name: "Viola Sembiring",
-  greeting: "Hi, I’m Viola.",
+  partLine: "VS-2028 Computer engineer, in development",
   statement:
-    "Computer engineering student growing into embedded and control systems, with a background in data and machine learning.",
-  facts: [
-    {
-      label: "Studying",
-      lines: ["B.S.E. in Computer Engineering, minor in Data Science", "University of Michigan, class of 2028"],
-    },
-    {
-      label: "Right now",
-      lines: ["Instructional Aide, EECS 215", "Tutor, Mathematics Learning Center", "Co-Director, PERMIAS Michigan"],
-    },
-    { label: "Focus", lines: ["Circuits, embedded systems, and data"] },
-  ],
+    "Computer engineering student at the University of Michigan, growing into embedded and control systems, with a background in data and machine learning.",
+  release: "PRODUCTION RELEASE EXPECTED MAY 2028",
   links: [
     { name: "LinkedIn", url: "https://www.linkedin.com/in/violasem/" },
     { name: "GitHub", url: "https://github.com/violasem" },
   ],
 };
+
+// The chip's pins, numbered the way a real DIP is: down the left side, then back up the right.
+export const pins = [
+  { name: "SPECS", href: "#/specs", note: "The numbers, in a table." },
+  { name: "PROJECT LOG", href: "#/log", note: "What I’ve worked on, with what I did and learned on each." },
+  { name: "EXPERIENCE", href: "#/experience", note: "Every role, drawn as a timing diagram." },
+  { name: "EDUCATION", href: "#/education", note: "University of Michigan, B.S.E. in Computer Engineering." },
+  { name: "ABOUT", href: "#/about", note: "Who I am outside of the datasheet." },
+  { name: "NOTES", href: "#/notes", note: "Reflections while I learn." },
+  { name: "GITHUB", href: "https://github.com/violasem", external: true, note: "Opens GitHub in a new tab." },
+  { name: "LINKEDIN", href: "https://www.linkedin.com/in/violasem/", external: true, note: "Opens LinkedIn in a new tab." },
+];
+
+export const features = [
+  "Python machine learning pipelines for solar wind data",
+  "Full-stack AI web development",
+  "Verilog and FPGA design",
+  "Teaches circuits in the EECS 215 lab",
+];
+
+export const applications = ["Embedded systems", "Control systems", "Data and machine learning"];
+
+// Only real numbers go here. Leave a column empty ("") if it doesn't apply.
+export const specs = [
+  { parameter: "GPA", conditions: "University of Michigan, to date", min: "", typ: "3.94", max: "4.00", unit: "points" },
+  { parameter: "Tutoring load", conditions: "Mathematics Learning Center", min: "20", typ: "", max: "30", unit: "students/week" },
+  { parameter: "Dataset dimensionality", conditions: "Space physics datasets, before reduction", min: "", typ: "7", max: "", unit: "parameters" },
+  { parameter: "Graduation", conditions: "B.S.E. in Computer Engineering", min: "", typ: "May 2028", max: "", unit: "" },
+];
 
 // The project log. Each entry gets its own page at #/log/<slug>.
 //
@@ -29,7 +48,7 @@ export const profile = {
 // part of the page won't show.
 //
 //   links:   [{ name: "Research poster", url: "https://..." }]
-//   updates: [{ date: "Nov 2026", text: "What happened" }]   a running log for the project
+//   updates: [{ date: "Nov 2026", text: "What happened" }]   shows as a revision history on the page
 export const logTypes = ["Research", "Engineering", "Teaching", "Leadership"];
 
 export const log = [
@@ -145,34 +164,16 @@ export const log = [
   },
 ];
 
-export const experience = [
-  {
-    org: "PERMIAS Michigan",
-    roles: [{ title: "Co-Director of External Relations", dates: "Jul 2026 – present", log: "permias-external-relations" }],
-  },
-  {
-    org: "University of Michigan, Electrical and Computer Engineering",
-    roles: [{ title: "Instructional Aide, EECS 215", dates: "Aug 2026 – present", log: "teaching-circuits" }],
-  },
-  {
-    org: "University of Michigan, Department of Mathematics",
-    roles: [
-      { title: "Differential Equations Tutor", dates: "Jan 2026 – present", log: "math-tutoring" },
-      { title: "Calculus I & II Tutor", dates: "Aug 2025 – present", log: "math-tutoring" },
-      { title: "Study Group Facilitator", dates: "Aug 2025 – present", log: "math-tutoring" },
-    ],
-  },
-  {
-    org: "Stealth startup, Jakarta",
-    roles: [{ title: "Developer Intern", dates: "Jun 2026 – Sep 2026", log: "full-stack-ai-saas" }],
-  },
-  {
-    org: "University of Michigan, Climate and Space",
-    roles: [
-      { title: "Data Engineer", dates: "May 2026 – Sep 2026", log: "space-physics-clustering" },
-      { title: "Research Intern", dates: "Oct 2025 – May 2026", log: "solar-wind-ml-pipelines" },
-    ],
-  },
+// The timing diagram. from/to are "year-month"; leave out "to" if the role is ongoing.
+export const timing = [
+  { signal: "Instructional Aide, EECS 215", org: "U-M Electrical and Computer Engineering", from: "2026-08", dates: "Aug 2026 – present", log: "teaching-circuits" },
+  { signal: "Co-Director of External Relations", org: "PERMIAS Michigan", from: "2026-07", dates: "Jul 2026 – present", log: "permias-external-relations" },
+  { signal: "Developer Intern", org: "Stealth startup, Jakarta", from: "2026-06", to: "2026-09", dates: "Jun 2026 – Sep 2026", log: "full-stack-ai-saas" },
+  { signal: "Data Engineer", org: "U-M Climate and Space", from: "2026-05", to: "2026-09", dates: "May 2026 – Sep 2026", log: "space-physics-clustering" },
+  { signal: "Differential Equations Tutor", org: "U-M Mathematics", from: "2026-01", dates: "Jan 2026 – present", log: "math-tutoring" },
+  { signal: "Research Intern", org: "U-M Climate and Space", from: "2025-10", to: "2026-05", dates: "Oct 2025 – May 2026", log: "solar-wind-ml-pipelines" },
+  { signal: "Calculus I & II Tutor", org: "U-M Mathematics", from: "2025-08", dates: "Aug 2025 – present", log: "math-tutoring" },
+  { signal: "Study Group Facilitator", org: "U-M Mathematics", from: "2025-08", dates: "Aug 2025 – present", log: "math-tutoring" },
 ];
 
 export const education = {
@@ -202,5 +203,6 @@ export const about = {
   intro:
     "I’m Viola Charissa Diana Sembiring. I love building things that are both logical and alive: circuits, embedded systems, and data that tells a story, especially space plasma and solar wind.",
   more: "I’m curious about how systems behave, how they fail, and how they can be designed more thoughtfully. I like hardware debugging, clean architecture, CAD, and making hard things feel simple.",
+  figure: "Figure 1. Device in its operating environment, Michigan Stadium.",
   outside: "Born and raised in Medan, Indonesia. Always looking for good fantasy manga and manhwa. Dog person.",
 };
