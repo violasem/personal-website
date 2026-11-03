@@ -35,7 +35,7 @@ const playNotes = (frequencies, gap, type, length) => {
 
 const SOUNDS = {
   piano: () => playNotes([261.6, 329.6, 392, 523.3], 0.14, "square", 0.3),
-  guitar: () => playNotes([164.8, 246.9, 329.6, 392, 493.9], 0.05, "triangle", 0.7),
+  guitar: () => playNotes([82.4, 123.5, 164.8, 207.7], 0.03, "sawtooth", 0.6),
   lamp: () => playNotes([1400], 0.01, "square", 0.04),
 };
 
@@ -306,30 +306,70 @@ const drawRoom = (ctx, s) => {
   R(C.ink, 118, 33, 2, 8);
   blob(118, 26, [3, 4, 4, 5, 5, 6, 6, 7], s.night ? "#ffe9a8" : "#e6cf9a", C.ink);
 
-  // guitar, leaning on the wall
+  // red electric guitar, leaning on the wall
   const sway = since("guitar") < 0.8 ? (frame % 4 < 2 ? 1 : 0) : 0;
   const gx = 172 + sway;
-  R(C.ink, gx - 3, 22, 7, 10);
-  R(C.woodD, gx - 2, 23, 5, 8);
-  [24, 27].forEach((y) => {
-    R(C.metal, gx - 5, y, 2, 1);
-    R(C.metal, gx + 4, y, 2, 1);
+  // headstock, with the tuners down one side
+  R(C.ink, gx - 2, 18, 7, 14);
+  R(C.woodL, gx - 1, 19, 5, 12);
+  [20, 23, 26, 29].forEach((y) => R(C.metal, gx + 5, y, 2, 1));
+  // neck
+  R(C.ink, gx - 2, 32, 5, 34);
+  R(C.woodL, gx - 1, 32, 3, 34);
+  for (let y = 36; y < 66; y += 5) R(C.woodD, gx - 1, y, 3, 1);
+  // body: [left, right] spans per row, with two horns around the neck
+  const bodyRows = [
+    [[-8, -6], [6, 9]],
+    [[-9, -5], [5, 10]],
+    [[-9, -4], [4, 10]],
+    [[-9, -3], [3, 10]],
+    [[-9, 9]],
+    [[-8, 8]],
+    [[-8, 8]],
+    [[-7, 7]],
+    [[-7, 7]],
+    [[-8, 8]],
+    [[-9, 9]],
+    [[-10, 10]],
+    [[-11, 11]],
+    [[-12, 12]],
+    [[-12, 12]],
+    [[-12, 12]],
+    [[-12, 12]],
+    [[-12, 12]],
+    [[-12, 12]],
+    [[-11, 11]],
+    [[-11, 11]],
+    [[-10, 10]],
+    [[-8, 8]],
+    [[-5, 5]],
+  ];
+  const by0 = 63;
+  bodyRows.forEach((spans, j) => {
+    spans.forEach(([a, b]) => R(C.ink, gx + a - 1, by0 + j - 1, b - a + 3, 3));
   });
-  R(C.ink, gx - 2, 32, 5, 30);
-  R(C.woodD, gx - 1, 32, 3, 30);
-  for (let y = 36; y < 62; y += 6) R(C.woodL, gx - 1, y, 3, 1);
-  const body = [5, 7, 8, 9, 9, 9, 8, 7, 6, 6, 7, 9, 10, 11, 11, 12, 12, 12, 12, 12, 12, 11, 11, 10, 9, 7, 5];
-  blob(gx, 62, body, C.guitar, C.ink);
-  R(C.guitarL, gx - 7, 66, 2, 5);
-  R(C.guitarL, gx - 10, 76, 2, 7);
-  R(C.guitarD, gx + 8, 76, 2, 9);
-  blob(gx, 67, [2, 3, 3, 3, 3, 3, 2], C.hole, C.ink);
-  R(C.woodD, gx - 4, 81, 9, 2);
+  bodyRows.forEach((spans, j) => {
+    spans.forEach(([a, b]) => {
+      R("#c8332c", gx + a, by0 + j, b - a + 1, 1);
+      R("#e8604f", gx + a, by0 + j, 2, 1);
+      R("#93231f", gx + b - 1, by0 + j, 2, 1);
+    });
+  });
+  // pickguard, pickups, bridge, and knobs
+  R(C.sheet, gx - 6, 67, 11, 15);
+  R(C.sheet, gx - 8, 74, 3, 6);
+  R(C.sheetD, gx - 6, 81, 11, 1);
+  [69, 73].forEach((y) => R(C.ink, gx - 4, y, 8, 2));
+  R(C.metalD, gx - 4, 78, 8, 3);
+  R(C.metal, gx - 4, 78, 8, 1);
+  R(C.metal, gx + 7, 76, 2, 2);
+  R(C.metal, gx + 8, 80, 2, 2);
+  // strings
   const buzz = since("guitar") < 0.8;
   [-1, 1].forEach((d, i) => {
     const xo = buzz && (frame + i) % 2 ? (d < 0 ? -1 : 1) : 0;
-    R(buzz ? C.cloud : C.sheetD, gx + d, 32, 1, 30);
-    R(buzz ? C.cloud : C.sheetD, gx + d + xo, 62, 1, 20);
+    R(buzz ? C.cloud : C.metal, gx + d, 22, 1, 44);
+    R(buzz ? C.cloud : C.metal, gx + d + xo, 66, 1, 13);
   });
   R(C.floorLine, gx - 12, 89, 25, 1);
 
@@ -578,7 +618,7 @@ export default function Room() {
 
       <div className="room">
         <div className="room-scene">
-          <canvas ref={canvasRef} width={W} height={H} role="img" aria-label="A pixel art drawing of my room, with a bed, a record player, a piano, a guitar, a barbell, a TV, polaroids, a lamp, and an Indonesian flag" />
+          <canvas ref={canvasRef} width={W} height={H} role="img" aria-label="A pixel art drawing of my room, with a bed, a record player, a piano, a red electric guitar, a barbell, a TV, polaroids, a lamp, and an Indonesian flag" />
           {room.items.map((item) => {
             const [x, y, w, h] = ROOM_SPOTS[item.id].box;
             const place = {
