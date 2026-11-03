@@ -1530,24 +1530,12 @@ button:focus-visible {
 }
 
 /* contact: a little game conversation */
-.block .game-title {
-  margin-bottom: 20px;
-}
-
-.game {
-  overflow: hidden;
-  border: 3px solid var(--ink);
-  border-radius: 4px;
-  background: var(--ink);
-}
-
-.game canvas {
-  display: block;
-  width: 100%;
+.puppy.away {
+  visibility: hidden;
 }
 
 .game-box {
-  min-height: 230px;
+  min-height: 64px;
   padding: 14px 18px 18px;
   color: #f5f1e6;
   font-family: "Pixelify Sans", "Figtree", sans-serif;
@@ -2816,7 +2804,6 @@ button:focus-visible {
   }
 
   .game-box {
-    min-height: 260px;
     padding: 12px 12px 16px;
     font-size: 19px;
   }

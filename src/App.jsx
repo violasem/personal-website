@@ -2,14 +2,13 @@ import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { contact, deskItems, education, log, logTypes, nextUp, profile, skills, timeline } from "./content.js";
 import Room from "./Room.jsx";
-import Contact from "./Contact.jsx";
+import { dogBus } from "./dogBus.js";
 
 
 const navItems = [
   { href: "#/log", label: "Project log" },
   { href: "#/experience", label: "Experience" },
   { href: "#/education", label: "Education" },
-  { href: "#/room", label: "My room" },
   { href: "#/contact", label: "Contact" },
 ];
 
@@ -60,7 +59,7 @@ const useCurrentSection = (enabled) => {
       setCurrent(null);
       return;
     }
-    const ids = ["log", "experience", "education", "room", "contact"];
+    const ids = ["log", "experience", "education", "contact"];
     const onScroll = () => {
       let found = null;
       for (const id of ids) {
@@ -120,8 +119,6 @@ const Chevron = () => (
 
 const TypeLabel = ({ type }) => <span className={`type type-${type.toLowerCase()}`}>{type}</span>;
 
-// Lets the desk tell the dog there's a treat.
-const dogBus = new EventTarget();
 
 const squeak = () => {
   try {
@@ -219,6 +216,18 @@ const Puppy = () => {
       dogBus.removeEventListener("treat", onTreat);
       dogBus.removeEventListener("cancel", onCancel);
       cancelAnimationFrame(frame);
+    };
+  }, []);
+
+  // the dog leaves the floor of your screen when it's invited into the room
+  useEffect(() => {
+    const hide = () => rootRef.current?.classList.add("away");
+    const show = () => rootRef.current?.classList.remove("away");
+    dogBus.addEventListener("hide", hide);
+    dogBus.addEventListener("show", show);
+    return () => {
+      dogBus.removeEventListener("hide", hide);
+      dogBus.removeEventListener("show", show);
     };
   }, []);
 
@@ -1210,7 +1219,6 @@ const Home = () => (
       <NextSteps />
       <EducationSkills />
       <Room />
-      <Contact />
     </main>
   </>
 );

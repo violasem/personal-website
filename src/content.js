@@ -319,7 +319,7 @@ export const nextUp = "Working with a startup and doing research at Michigan, th
 export const room = {
   title: "My room",
   intro: "The part of me that isn’t on my resume.",
-  hint: "Click on anything in the room.",
+  hint: "Click on anything in the room, or a sign to reach me.",
   items: [
     { id: "music", name: "Music", text: "What I’m listening to right now.", url: "https://open.spotify.com/playlist/1vHnZpoh3TbeXlvnFfp7Uf", link: "Open my Spotify" },
     { id: "guitar", name: "Guitar", text: "I learned guitar." },
@@ -366,23 +366,52 @@ export const skills = [
 
 export const contact = {
   email: "violasem@umich.edu",
-  defaultSubject: "Hi Viola",
-  // The conversation in the Contact section.
+  // The conversation that starts when someone clicks a "contact me" sign in the room.
   dialogue: {
-    copiedText: "You got: Viola’s email! It’s copied to your clipboard. Talk soon!",
+    copiedText: "You got: Viola’s email! It’s copied to your clipboard.",
     start: {
-      text: "Oh hi! You made it to the bottom. What brings you here?",
+      text: "Oh hi! You found me. What brings you here?",
       choices: [
-        { label: "I have an opportunity for you", next: "opportunity", subject: "An opportunity for you" },
-        { label: "I want to talk about your research", next: "research", subject: "Your solar wind research" },
-        { label: "I saw your site and wanted to say hi", next: "hi", subject: "Saw your website" },
-        { label: "I’m just here for the dog", next: "dog", subject: "About your dog" },
+        { label: "I have an opportunity for you", next: "opportunity" },
+        { label: "I’d love to talk about your research", next: "research" },
+        { label: "Just wanted to say hi", next: "hi" },
+        { label: "I’m just here for the dog", next: "dog" },
       ],
+      actions: ["close"],
     },
-    opportunity: { text: "Ooh, tell me more! Email is the best way to reach me.", actions: true },
-    research: { text: "I could talk about solar wind all day. Send me a message!", actions: true },
-    hi: { text: "Hi! That made my day. Send me a note anytime.", actions: true },
-    dog: { text: "Fair. Try dropping a treat on my desk. You can also tell me how great the dog is.", actions: true },
+    opportunity: {
+      text: "Ooh, tell me more!",
+      email: {
+        label: "Write me an email",
+        subject: "An opportunity for you",
+        body: "Hi Viola,\n\nI came across your website (violasem.com) and would love to talk to you about an opportunity.\n\nBest,\n",
+      },
+      actions: ["email", "copy", "links", "back"],
+    },
+    research: {
+      text: "I’d love to! Send me a message.",
+      email: {
+        label: "Write me an email",
+        subject: "Your research",
+        body: "Hi Viola,\n\nI saw your research on your website (violasem.com) and would love to talk about it.\n\nBest,\n",
+      },
+      actions: ["email", "copy", "links", "back"],
+    },
+    hi: {
+      text: "Hi!",
+      wave: true,
+      email: {
+        label: "Send me a hi to my email",
+        subject: "Hi Viola!",
+        body: "Hi Viola!\n\nI stopped by your website (violasem.com) and wanted to say hi.\n",
+      },
+      actions: ["email", "back"],
+    },
+    dog: {
+      text: "Good choice. Say hi!",
+      dog: true,
+      actions: ["back"],
+    },
   },
   // To update your resume, replace public/resume.pdf and public/resume.jpg (a picture of the page).
   resumePdf: "/resume.pdf",

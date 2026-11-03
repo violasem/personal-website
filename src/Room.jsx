@@ -1,5 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
-import { room } from "./content.js";
+import { AVATAR_COLORS, AVATAR_EYES, AVATAR_SHOULDER, avatarPose } from "./avatars.js";
+import { dogBus } from "./dogBus.js";
+import { contact, profile, room } from "./content.js";
 
 const W = 236;
 const H = 120;
@@ -83,6 +85,29 @@ const C = {
 
 const Z_SPRITE = ["#####", "   # ", "  #  ", " #   ", "#####"];
 const NOTE_SPRITE = ["  ##", "  # ", "  # ", "### ", "### "];
+const GLYPHS = {
+  A: [" # ", "# #", "###", "# #", "# #"],
+  C: [" ##", "#  ", "#  ", "#  ", " ##"],
+  E: ["###", "#  ", "## ", "#  ", "###"],
+  M: ["# #", "###", "###", "# #", "# #"],
+  N: ["## ", "# #", "# #", "# #", "# #"],
+  O: [" # ", "# #", "# #", "# #", " # "],
+  T: ["###", " # ", " # ", " # ", " # "],
+};
+const DOG = [
+  "..........DDDD..",
+  ".........DddddD.",
+  ".T.......Ddndnd.",
+  ".TT......Ddddddn",
+  "..TddddddDdddss.",
+  "...ddddddddddd..",
+  "...ddddddddddd..",
+  "...ddddddddddd..",
+  "...dd.dd..dd.dd.",
+  "...dd.dd..dd.dd.",
+  "...nn.nn..nn.nn.",
+];
+const DOG_COLORS = { d: "#d9bd9b", D: "#755a42", T: "#c6a988", n: "#2a2f3a", s: "#f1e6d8" };
 const M_SPRITE = ["##   ##", "### ###", "#######", "## # ##", "##   ##", "##   ##"];
 
 // One drawing pass of the whole room. `s` holds the active item and animation clock.
@@ -447,6 +472,75 @@ const drawRoom = (ctx, s) => {
     R(c, mx, by + top - 1, w, h + 1);
   });
 
+  // the signs and letters that lead to me
+  const glow = !s.dialogue && frame % 20 < 10;
+  [[211, 104], [221, 112], [134, 113]].forEach(([x, y], i) => {
+    if (s.dogHere && i === 2) return;
+    R(C.ink, x - 1, y - 1, 11, 9);
+    R(C.cloud, x, y, 9, 7);
+    R(C.sheetD, x + 1, y + 1, 1, 1);
+    R(C.sheetD, x + 7, y + 1, 1, 1);
+    R(C.sheetD, x + 2, y + 2, 1, 1);
+    R(C.sheetD, x + 6, y + 2, 1, 1);
+    R(C.sheetD, x + 3, y + 3, 3, 1);
+    R(C.rose, x + 4, y + 4, 1, 1);
+  });
+  R(C.ink, 186, 106, 5, 13);
+  R(C.woodD, 187, 106, 3, 12);
+  R(C.ink, 172, 92, 33, 17);
+  R(glow ? C.woodL : "#c79a6d", 173, 93, 31, 15);
+  R(C.woodD, 173, 107, 31, 1);
+  [["CONTACT", 175, 95], ["ME", 185, 101]].forEach(([word, x0, y0]) => {
+    [...word].forEach((ch, i) => sprite(GLYPHS[ch], C.ink, x0 + i * 4, y0));
+  });
+
+  // me, sitting on the floor until someone wants to talk
+  const waving = s.stand && s.time < s.waveUntil;
+  const pose = s.stand ? (waving ? "wave" : "stand") : "sit";
+  const rows = avatarPose(pose);
+  const px = 149;
+  const py = 119 - rows.length;
+  R(C.floorLine, px + 1, 118, 19, 1);
+  rows.forEach((row, j) => {
+    for (let i = 0; i < row.length; i++) {
+      const c = AVATAR_COLORS[row[i]];
+      if (c) R(c, px + i, py + j, 1, 1);
+    }
+  });
+  // a blink now and then, and a wave
+  if (frame % 50 < 2) {
+    const { top, height, width, left, right } = AVATAR_EYES;
+    [left, right].forEach((x) => {
+      R(AVATAR_COLORS.s, px + x, py + top, width, height);
+      R(AVATAR_COLORS.g, px + x, py + top + 3, width, 1);
+    });
+  }
+  if (waving) {
+    const lean = frame % 6 < 3 ? 0 : 1;
+    const y = py + AVATAR_SHOULDER;
+    R(C.ink, px - 2, y - 7, 4, 10); // outline, so the arm stands out from the floor
+    R(C.ink, px - 2, y - 1, 7, 4);
+    R(C.ink, px - 4 - lean, y - 11, 6, 6);
+    R(AVATAR_COLORS.s, px + 1, y, 4, 2); // upper arm, out from the shoulder
+    R(AVATAR_COLORS.s, px - 1, y - 6, 2, 8); // forearm, up
+    R(AVATAR_COLORS.s, px - 3 - lean, y - 10, 4, 4); // hand
+    R(AVATAR_COLORS.d, px - 3 - lean, y - 7, 4, 1);
+  }
+  // the dog, when it's been invited in
+  if (s.dogHere) {
+    const dx = 132;
+    const dy = 107;
+    R(C.floorLine, dx + 2, 118, 14, 1);
+    DOG.forEach((row, j) => {
+      for (let i = 0; i < row.length; i++) {
+        const c = DOG_COLORS[row[i]];
+        if (!c) continue;
+        const wag = row[i] === "T" && frame % 4 < 2 ? 1 : 0;
+        R(c, dx + i, dy + j - wag, 1, 1);
+      }
+    });
+  }
+
   // night: dim the room, then light the sky and the lamp
   if (s.night) {
     ctx.globalCompositeOperation = "multiply";
@@ -536,14 +630,95 @@ const ROOM_SPOTS = {
   photos: { box: [106, 6, 50, 20], arrow: [131, 1] },
   lamp: { box: [108, 26, 20, 18], arrow: [118, 20] },
   flag: { box: [204, 4, 26, 26], arrow: [218, 2] },
+  contact: { arrow: [188, 86] },
 };
+
+// the things that start the conversation: the sign, me, and the letters
+const CONTACT_BOXES = [
+  [170, 90, 37, 30],
+  [149, 86, 21, 34],
+  [208, 101, 26, 19],
+  [131, 110, 15, 10],
+];
+
+const box = ([x, y, w, h]) => ({
+  left: `${(x / W) * 100}%`,
+  top: `${(y / H) * 100}%`,
+  width: `${(w / W) * 100}%`,
+  height: `${(h / H) * 100}%`,
+});
 
 export default function Room() {
   const [active, setActive] = useState(null);
   const canvasRef = useRef(null);
-  const state = useRef({ active: null, plays: {}, time: 0, activeAt: 0, night: false, reduced: false });
+  const state = useRef({ active: null, plays: {}, time: 0, activeAt: 0, night: false, reduced: false, stand: false, waveUntil: 0, dogHere: false, dialogue: false });
   const wasActive = useRef(false);
   const current = room.items.find((item) => item.id === active);
+
+  const [dialog, setDialog] = useState(null);
+  const [typed, setTyped] = useState(0);
+  const [copied, setCopied] = useState(false);
+  const dialogue = contact.dialogue;
+  const node = dialog ? dialogue[dialog] : null;
+  const text = node ? (copied ? dialogue.copiedText : node.text) : "";
+  const done = typed >= text.length;
+
+  const say = (next) => {
+    setCopied(false);
+    setActive(null);
+    setDialog(next);
+    setTyped(reducedMotion() ? Infinity : 0);
+    const s = state.current;
+    s.stand = true;
+    s.waveUntil = dialogue[next].wave ? s.time + 5 : 0;
+    s.redraw?.();
+  };
+  const closeDialog = () => {
+    setDialog(null);
+    setCopied(false);
+    state.current.stand = false;
+    state.current.redraw?.();
+  };
+
+  // the dog leaves the bottom of the screen and sits next to me, then goes back
+  useEffect(() => {
+    const here = dialog === "dog";
+    state.current.dogHere = here;
+    state.current.dialogue = Boolean(dialog);
+    state.current.redraw?.();
+    dogBus.dispatchEvent(new Event(here ? "hide" : "show"));
+  }, [dialog]);
+  useEffect(() => () => dogBus.dispatchEvent(new Event("show")), []);
+
+  // the words type out
+  useEffect(() => {
+    if (!dialog || done) return;
+    const t = setTimeout(() => setTyped((n) => n + 1), 24);
+    return () => clearTimeout(t);
+  }, [dialog, done, typed]);
+
+  // the Contact link in the top menu starts the conversation
+  useEffect(() => {
+    const check = () => {
+      if (window.location.hash === "#/contact") say("start");
+    };
+    check();
+    window.addEventListener("hashchange", check);
+    return () => window.removeEventListener("hashchange", check);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const copyEmail = async () => {
+    try {
+      await navigator.clipboard.writeText(contact.email);
+    } catch {
+      window.location.href = `mailto:${contact.email}`;
+      return;
+    }
+    setCopied(true);
+    setTyped(reducedMotion() ? Infinity : 0);
+  };
+  const mailto = (email) => `mailto:${contact.email}?subject=${encodeURIComponent(email.subject)}&body=${encodeURIComponent(email.body)}`;
 
   useEffect(() => {
     state.current.active = active;
@@ -597,6 +772,7 @@ export default function Room() {
   }, [active]);
 
   const play = (id) => {
+    if (dialog) closeDialog();
     setActive(id);
     if (id === "lamp") {
       state.current.night = !state.current.night;
@@ -608,7 +784,7 @@ export default function Room() {
   };
 
   return (
-    <section id="room" className="block reveal">
+    <section id="contact" className="block reveal">
       <div className="block-head">
         <div>
           <h2>{room.title}</h2>
@@ -620,19 +796,13 @@ export default function Room() {
         <div className="room-scene">
           <canvas ref={canvasRef} width={W} height={H} role="img" aria-label="A pixel art drawing of my room, with a bed, a record player, a piano, a red electric guitar, a barbell, a TV, polaroids, a lamp, and an Indonesian flag" />
           {room.items.map((item) => {
-            const [x, y, w, h] = ROOM_SPOTS[item.id].box;
-            const place = {
-              left: `${(x / W) * 100}%`,
-              top: `${(y / H) * 100}%`,
-              width: `${(w / W) * 100}%`,
-              height: `${(h / H) * 100}%`,
-            };
+            const place = box(ROOM_SPOTS[item.id].box);
             const shared = {
               className: "room-hit",
               style: place,
               "aria-label": `${item.name}. ${item.text}`,
-              onPointerEnter: (e) => e.pointerType === "mouse" && setActive(item.id),
-              onFocus: () => setActive(item.id),
+              onPointerEnter: (e) => e.pointerType === "mouse" && !dialog && setActive(item.id),
+              onFocus: () => !dialog && setActive(item.id),
             };
             return item.url ? (
               <a
@@ -647,6 +817,7 @@ export default function Room() {
                 onClick={(e) => {
                   // on a phone, the first tap explains it; a second tap or the caption link opens it
                   if (isTouch() && !wasActive.current) e.preventDefault();
+                  if (dialog) closeDialog();
                   setActive(item.id);
                 }}
               />
@@ -654,24 +825,84 @@ export default function Room() {
               <button key={item.id} type="button" {...shared} onClick={() => play(item.id)} />
             );
           })}
+          {CONTACT_BOXES.map((b, i) => (
+            <button
+              key={i}
+              type="button"
+              className="room-hit"
+              style={box(b)}
+              aria-label="Contact me"
+              onPointerEnter={(e) => e.pointerType === "mouse" && !dialog && setActive("contact")}
+              onClick={() => say("start")}
+            />
+          ))}
         </div>
 
-        <div className="room-caption" aria-live="polite">
-          {current ? (
-            <p key={current.id}>
-              <strong>{current.name}:</strong> {current.text}
-              {current.url && (
-                <a href={current.url} target="_blank" rel="noopener noreferrer">
-                  {current.link}
-                </a>
-              )}
+        {node ? (
+          <div className="game-box" onClick={() => !done && setTyped(Infinity)}>
+            <p className="game-name">Viola</p>
+            <p className="game-text" aria-hidden="true">
+              {text.slice(0, typed)}
+              {!done && <span className="game-caret" />}
             </p>
-          ) : (
-            <p>{room.hint}</p>
-          )}
-        </div>
+            <p className="sr-only" aria-live="polite">
+              {text}
+            </p>
+            {done && (
+              <div className="game-choices">
+                {node.choices?.map((choice) => (
+                  <button key={choice.label} type="button" onClick={() => say(choice.next)}>
+                    {choice.label}
+                  </button>
+                ))}
+                {node.actions.includes("email") && <a href={mailto(node.email)}>{node.email.label}</a>}
+                {node.actions.includes("copy") && (
+                  <button type="button" onClick={copyEmail}>
+                    Copy my email address
+                  </button>
+                )}
+                {node.actions.includes("links") &&
+                  profile.links.map((l) => (
+                    <a key={l.name} href={l.url} target="_blank" rel="noopener noreferrer">
+                      {l.name}
+                    </a>
+                  ))}
+                {node.actions.includes("back") && (
+                  <button type="button" onClick={() => say("start")}>
+                    Back
+                  </button>
+                )}
+                {node.actions.includes("close") && (
+                  <button type="button" onClick={closeDialog}>
+                    Never mind
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="room-caption" aria-live="polite">
+            {active === "contact" ? (
+              <p>Click to say hi.</p>
+            ) : current ? (
+              <p key={current.id}>
+                <strong>{current.name}:</strong> {current.text}
+                {current.url && (
+                  <a href={current.url} target="_blank" rel="noopener noreferrer">
+                    {current.link}
+                  </a>
+                )}
+              </p>
+            ) : (
+              <p>{room.hint}</p>
+            )}
+          </div>
+        )}
       </div>
 
+      <p className="game-plain">
+        Rather skip the room? <a href={`mailto:${contact.email}`}>{contact.email}</a>
+      </p>
     </section>
   );
 }
