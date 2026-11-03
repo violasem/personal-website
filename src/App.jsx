@@ -1157,16 +1157,14 @@ const NextSteps = () => (
     <div className="block-head">
       <h2>What’s next</h2>
     </div>
-    <ol className="roadmap">
-      {nextSteps.map((step, i) => (
-        <li key={step.title} style={{ "--i": i }}>
-          <span className="road-dot" aria-hidden="true" />
-          <span className="road-when">{step.when}</span>
+    <ul className="next-list">
+      {nextSteps.map((step) => (
+        <li key={step.title}>
           <h3>{step.title}</h3>
           <p>{step.text}</p>
         </li>
       ))}
-    </ol>
+    </ul>
   </section>
 );
 

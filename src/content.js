@@ -312,12 +312,11 @@ export const timeline = [
   { role: "Study Group Facilitator", org: "U-M Mathematics", from: "2025-08", dates: "Aug 2025 – present", log: "math-tutoring" },
 ];
 
-// The "What's next" roadmap, in order.
+// The "What's next" section.
 export const nextSteps = [
-  { when: "Winter and Fall 2027", title: "Perot Jain TechLab", text: "Working on electrification with Wheelhouse, a startup I’m matched with through the program." },
-  { when: "Winter and Fall 2027", title: "MDP research", text: "Joining the MuRoAM team through the Multidisciplinary Design Program." },
-  { when: "May 2028", title: "Graduate", text: "B.S.E. in Computer Engineering, with a minor in Data Science." },
-  { when: "After that", title: "Master’s degree", text: "Planning a master’s in electrical and computer engineering, focused on embedded systems." },
+  { title: "Perot Jain TechLab", text: "Working on electrification with Wheelhouse, a startup." },
+  { title: "MDP research", text: "Doing research through the Multidisciplinary Design Program." },
+  { title: "After graduation", text: "Planning a master’s focused on embedded systems." },
 ];
 
 export const education = {
