@@ -1,5 +1,9 @@
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { room } from "./content.js";
+
+const W = 200;
+const H = 120;
+const FPS = 10;
 
 const reducedMotion = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 const isTouch = () => window.matchMedia("(hover: none)").matches;
@@ -17,7 +21,7 @@ const playNotes = (frequencies, gap, type, length) => {
       osc.type = type;
       osc.frequency.setValueAtTime(frequency, at);
       gain.gain.setValueAtTime(0.0001, at);
-      gain.gain.exponentialRampToValueAtTime(0.045, at + 0.012);
+      gain.gain.exponentialRampToValueAtTime(0.04, at + 0.012);
       gain.gain.exponentialRampToValueAtTime(0.0001, at + length);
       osc.connect(gain).connect(audio.destination);
       osc.start(at);
@@ -30,127 +34,417 @@ const playNotes = (frequencies, gap, type, length) => {
 };
 
 const SOUNDS = {
-  piano: () => playNotes([261.6, 329.6, 392, 523.3], 0.14, "triangle", 0.5),
-  guitar: () => playNotes([164.8, 246.9, 329.6, 392, 493.9], 0.05, "triangle", 0.8),
+  piano: () => playNotes([261.6, 329.6, 392, 523.3], 0.14, "square", 0.3),
+  guitar: () => playNotes([164.8, 246.9, 329.6, 392, 493.9], 0.05, "triangle", 0.7),
 };
 
-const Art = {
-  bed: () => (
-    <>
-      <rect x="44" y="282" width="24" height="168" rx="6" fill="#8a7158" />
-      <rect x="326" y="352" width="18" height="98" rx="5" fill="#8a7158" />
-      <rect x="60" y="376" width="274" height="56" rx="8" fill="#a58c70" />
-      <rect x="62" y="346" width="272" height="44" rx="12" fill="#f3f1ec" />
-      <rect x="72" y="326" width="84" height="38" rx="15" fill="#fff" stroke="#d9d8d2" strokeWidth="2" />
-      <path d="M148 346 h176 a12 12 0 0 1 12 12 v30 h-188 z" fill="#8ea3b8" />
-      <path d="M148 372 h188 M148 356 h188" stroke="#a9bacb" strokeWidth="3" />
-      <g className="zzz" fontFamily="Fraunces, Georgia, serif" fill="#5c6670">
-        <text x="150" y="312" fontSize="22">z</text>
-        <text x="170" y="290" fontSize="28">z</text>
-        <text x="194" y="264" fontSize="34">z</text>
-      </g>
-    </>
-  ),
-  music: () => (
-    <>
-      <rect x="388" y="352" width="146" height="98" rx="5" fill="#a58c70" />
-      <rect x="398" y="362" width="58" height="78" rx="3" fill="#b89f84" />
-      <rect x="466" y="362" width="58" height="78" rx="3" fill="#b89f84" />
-      <rect x="378" y="310" width="166" height="42" rx="5" fill="#3c4b5c" />
-      <ellipse cx="452" cy="309" rx="58" ry="11" fill="#27303b" />
-      <g className="record">
-        <circle cx="452" cy="265" r="48" fill="#1e2229" />
-        <circle cx="452" cy="265" r="36" fill="none" stroke="#3a404a" strokeWidth="1.5" />
-        <circle cx="452" cy="265" r="26" fill="none" stroke="#3a404a" strokeWidth="1.5" />
-        <circle cx="452" cy="265" r="15" fill="#9c5a64" />
-        <path d="M452 250 a15 15 0 0 1 15 15 h-15 z" fill="#c98f98" />
-        <circle cx="452" cy="265" r="3" fill="#f7f7f5" />
-      </g>
-      <path d="M526 318 V258 L500 232" fill="none" stroke="#c5ccd2" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round" />
-      <circle cx="526" cy="320" r="7" fill="#c5ccd2" />
-      <g className="notes" fill="#9c5a64" fontSize="24" fontFamily="Georgia, serif">
-        <text x="382" y="228">♪</text>
-        <text x="424" y="196">♫</text>
-      </g>
-    </>
-  ),
-  piano: () => (
-    <>
-      <rect x="578" y="196" width="196" height="150" rx="6" fill="#3c4b5c" />
-      <rect x="592" y="210" width="168" height="62" rx="3" fill="#47586a" />
-      <rect x="650" y="222" width="52" height="38" rx="1" fill="#f3f1ec" />
-      <path d="M658 232 h36 M658 240 h36 M658 248 h24" stroke="#a7adb3" strokeWidth="2" />
-      <rect x="566" y="330" width="220" height="20" rx="3" fill="#2f3b49" />
-      <rect x="582" y="350" width="188" height="100" rx="3" fill="#3c4b5c" />
-      <g className="keys">
-        {Array.from({ length: 13 }, (_, i) => (
-          <rect key={i} className="key" style={{ "--i": i }} x={572 + i * 16} y="318" width="15" height="24" rx="1.5" fill="#fbfaf7" />
-        ))}
-      </g>
-      {[1, 2, 4, 5, 6, 8, 9, 11, 12].map((i) => (
-        <rect key={i} x={566 + i * 16} y="318" width="9" height="14" rx="1" fill="#1e2229" />
-      ))}
-      <rect x="622" y="412" width="108" height="16" rx="5" fill="#8a7158" />
-      <rect x="632" y="426" width="10" height="42" rx="2" fill="#6f5d49" />
-      <rect x="710" y="426" width="10" height="42" rx="2" fill="#6f5d49" />
-    </>
-  ),
-  guitar: () => (
-    <g className="guitar">
-      <rect x="867" y="168" width="16" height="164" rx="2" fill="#5a4635" />
-      <rect x="861" y="134" width="28" height="42" rx="5" fill="#3f3226" />
-      <circle cx="856" cy="146" r="4" fill="#c5ccd2" />
-      <circle cx="856" cy="164" r="4" fill="#c5ccd2" />
-      <circle cx="894" cy="146" r="4" fill="#c5ccd2" />
-      <circle cx="894" cy="164" r="4" fill="#c5ccd2" />
-      <path d="M875 268 c-30 0 -44 20 -36 46 c4 13 -16 26 -16 54 c0 44 25 70 52 70 s52 -26 52 -70 c0 -28 -20 -41 -16 -54 c8 -26 -6 -46 -36 -46 z" fill="#c69a63" stroke="#94703f" strokeWidth="3" />
-      <circle cx="875" cy="346" r="19" fill="#3f3226" />
-      <rect x="854" y="396" width="42" height="9" rx="2" fill="#3f3226" />
-      <g className="strings" stroke="#f1ead8" strokeWidth="1.3">
-        <path d="M870 170 V398" />
-        <path d="M875 170 V398" />
-        <path d="M880 170 V398" />
-      </g>
-    </g>
-  ),
-  barbell: () => (
-    <g className="barbell">
-      <rect x="346" y="497" width="312" height="8" rx="4" fill="#9aa2a9" />
-      <rect x="364" y="463" width="20" height="76" rx="5" fill="#27303b" />
-      <rect x="386" y="473" width="15" height="56" rx="4" fill="#9c5a64" />
-      <rect x="403" y="481" width="10" height="40" rx="3" fill="#3c4b5c" />
-      <rect x="620" y="463" width="20" height="76" rx="5" fill="#27303b" />
-      <rect x="603" y="473" width="15" height="56" rx="4" fill="#9c5a64" />
-      <rect x="591" y="481" width="10" height="40" rx="3" fill="#3c4b5c" />
-    </g>
-  ),
+const C = {
+  ink: "#2a2f3a",
+  wall: "#d6dde4",
+  wallDot: "#ccd4dc",
+  wallShade: "#bcc6d0",
+  trim: "#f1ece1",
+  trimShade: "#d5cec0",
+  floorA: "#b98f66",
+  floorB: "#ad8359",
+  floorLine: "#8f6a49",
+  woodL: "#b98a60",
+  wood: "#9a6e4b",
+  woodD: "#74503a",
+  navyL: "#4c6685",
+  navy: "#34475f",
+  navyD: "#232f42",
+  maize: "#f0c84a",
+  rose: "#b25a68",
+  roseL: "#d98a96",
+  roseD: "#8c4350",
+  blueL: "#9db6cd",
+  blue: "#7596b5",
+  blueD: "#587792",
+  sheet: "#f5f1e6",
+  sheetD: "#d9d3c6",
+  sky: ["#9fcdea", "#b4d9ef", "#cbe6f3", "#e0f1f5"],
+  sun: "#f4cf63",
+  cloud: "#ffffff",
+  guitarL: "#e0ab66",
+  guitar: "#c78d4c",
+  guitarD: "#94642f",
+  hole: "#2a1f18",
+  metal: "#b7c0c8",
+  metalD: "#7f8995",
+  plate: "#2c323c",
+  leafL: "#6fa877",
+  leaf: "#4f8a5c",
+  leafD: "#386a47",
+  pot: "#b86f50",
+  potD: "#935439",
 };
 
-const HIT_AREAS = {
-  bed: { x: 36, y: 250, width: 316, height: 208 },
-  music: { x: 372, y: 180, width: 180, height: 276 },
-  piano: { x: 560, y: 188, width: 232, height: 284 },
-  guitar: { x: 816, y: 126, width: 122, height: 322 },
-  barbell: { x: 340, y: 456, width: 324, height: 90 },
+const Z_SPRITE = ["#####", "   # ", "  #  ", " #   ", "#####"];
+const NOTE_SPRITE = ["  ##", "  # ", "  # ", "### ", "### "];
+const M_SPRITE = ["##   ##", "### ###", "#######", "## # ##", "##   ##", "##   ##"];
+
+// One drawing pass of the whole room. `s` holds the active item and animation clock.
+const drawRoom = (ctx, s) => {
+  const R = (c, x, y, w, h) => {
+    ctx.fillStyle = c;
+    ctx.fillRect(x, y, w, h);
+  };
+  const sprite = (rows, c, x, y) => {
+    rows.forEach((row, j) => {
+      for (let i = 0; i < row.length; i++) if (row[i] !== " ") R(c, x + i, y + j, 1, 1);
+    });
+  };
+  // a rounded shape from a list of half-widths, one per row
+  const blob = (cx, y, widths, fill, line) => {
+    widths.forEach((hw, j) => {
+      R(line, cx - hw, y + j, hw * 2 + 1, 1);
+      const above = widths[j - 1] ?? -1;
+      const below = widths[j + 1] ?? -1;
+      const inner = Math.min(hw - 1, above - 0, below - 0);
+      if (inner >= 0) R(fill, cx - inner, y + j, inner * 2 + 1, 1);
+    });
+  };
+  const since = (id) => (s.plays[id] === undefined ? Infinity : s.time - s.plays[id]);
+  const frame = Math.floor(s.time * FPS);
+
+  // wall
+  R(C.wall, 0, 0, W, 84);
+  for (let y = 4; y < 80; y += 8) for (let x = (y % 16 === 4 ? 2 : 6); x < W; x += 8) R(C.wallDot, x, y, 1, 1);
+  R(C.wallShade, 0, 82, W, 2);
+  R(C.trim, 0, 84, W, 3);
+  R(C.trimShade, 0, 87, W, 1);
+
+  // floor
+  for (let row = 0; row < 6; row++) {
+    const y = 88 + row * 6;
+    R(row % 2 ? C.floorB : C.floorA, 0, y, W, 6);
+    R(C.floorLine, 0, y + 5, W, 1);
+    for (let x = (row * 23) % 41; x < W; x += 41) R(C.floorLine, x, y, 1, 5);
+  }
+
+  // window, with a cloud drifting past
+  R(C.ink, 19, 7, 37, 37);
+  R(C.trim, 20, 8, 35, 35);
+  C.sky.forEach((c, i) => R(c, 22, 10 + i * 8, 31, 8));
+  R(C.sky[3], 22, 40, 31, 1);
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(22, 10, 31, 31);
+  ctx.clip();
+  blob(44, 13, [2, 3, 4, 4, 4, 3, 2], C.sun, C.sun);
+  const cloudX = 14 + (s.time * 1.5) % 50;
+  const cx = Math.floor(cloudX);
+  R(C.cloud, cx, 28, 13, 3);
+  R(C.cloud, cx + 2, 26, 7, 2);
+  R(C.cloud, cx + 4, 25, 3, 1);
+  ctx.restore();
+  R(C.trim, 37, 10, 2, 31);
+  R(C.trim, 22, 24, 31, 2);
+  R(C.ink, 17, 44, 41, 1);
+  R(C.trim, 17, 43, 41, 2);
+  R(C.trimShade, 17, 45, 41, 1);
+  // curtains
+  R(C.ink, 13, 4, 49, 1);
+  [14, 53].forEach((x) => {
+    R(C.rose, x, 5, 8, 42);
+    R(C.roseL, x + 1, 5, 1, 42);
+    R(C.roseD, x + 3, 5, 1, 42);
+    R(C.roseL, x + 5, 5, 1, 42);
+    R(C.roseD, x + 7, 5, 1, 42);
+    R(C.roseD, x, 47, 8, 1);
+  });
+
+  // Go Blue pennant
+  R(C.woodD, 69, 8, 2, 20);
+  for (let i = 0; i < 30; i++) {
+    const half = Math.round(9 - (i * 9) / 30);
+    R(C.navy, 71 + i, 18 - half, 1, half * 2);
+    R(C.maize, 71 + i, 18 - half - 1, 1, 1);
+    R(C.maize, 71 + i, 18 + half, 1, 1);
+  }
+  sprite(M_SPRITE, C.maize, 74, 15);
+
+  // shelf with books
+  R(C.woodD, 72, 44, 30, 1);
+  R(C.wood, 72, 42, 30, 2);
+  [[74, 11, C.rose], [77, 13, C.navy], [80, 10, C.leaf], [83, 13, C.guitar], [86, 11, C.blue]].forEach(([x, h, c]) => {
+    R(c, x, 42 - h, 3, h);
+    R(C.sheet, x + 1, 42 - h + 2, 1, 2);
+  });
+  blob(96, 33, [1, 3, 4, 4, 3], C.leaf, C.leafD);
+  R(C.pot, 93, 38, 6, 4);
+  R(C.potD, 93, 41, 6, 1);
+
+  // bed
+  const inBed = s.active === "bed";
+  R(C.ink, 5, 56, 8, 42);
+  R(C.wood, 6, 57, 6, 40);
+  R(C.woodL, 7, 58, 1, 38);
+  R(C.ink, 59, 70, 6, 28);
+  R(C.wood, 60, 71, 4, 26);
+  R(C.ink, 12, 85, 48, 8);
+  R(C.wood, 12, 86, 48, 6);
+  R(C.woodD, 12, 90, 48, 2);
+  R(C.ink, 12, 75, 48, 11);
+  R(C.sheet, 13, 76, 46, 9);
+  R(C.sheetD, 13, 83, 46, 2);
+  R(C.ink, 13, 67, 16, 11);
+  R(C.cloud, 14, 68, 14, 9);
+  R(C.sheetD, 14, 75, 14, 2);
+  R(C.ink, 28, 71, 32, 15);
+  R(C.blue, 29, 72, 30, 13);
+  R(C.blueL, 29, 72, 30, 2);
+  R(C.blueD, 29, 83, 30, 2);
+  for (let x = 34; x < 59; x += 8) R(C.blueL, x, 74, 2, 9);
+  R(C.sheet, 29, 72, 4, 13);
+  R(C.sheetD, 32, 72, 1, 13);
+  if (inBed) {
+    const p = frame % 30;
+    [[32, 0, 0], [40, 9, 2], [48, 18, 4]].forEach(([x, delay, drift]) => {
+      const f = (p - delay + 30) % 30;
+      if (f < 18) sprite(Z_SPRITE, C.navy, x + drift, 62 - Math.floor(f * 0.7) - delay / 2);
+    });
+  }
+
+  // cabinet and record player
+  R(C.ink, 71, 73, 32, 24);
+  R(C.wood, 72, 74, 30, 22);
+  R(C.woodL, 72, 74, 30, 1);
+  R(C.woodL, 74, 77, 12, 16);
+  R(C.wood, 75, 78, 10, 14);
+  R(C.woodL, 88, 77, 12, 16);
+  R(C.wood, 89, 78, 10, 14);
+  R(C.maize, 84, 84, 1, 2);
+  R(C.maize, 89, 84, 1, 2);
+  R(C.ink, 73, 97, 3, 2);
+  R(C.ink, 98, 97, 3, 2);
+  R(C.ink, 69, 71, 36, 3);
+  R(C.woodD, 70, 72, 34, 1);
+  R(C.ink, 72, 59, 30, 13);
+  R(C.navyL, 73, 60, 28, 6);
+  R(C.navy, 73, 66, 28, 5);
+  R(C.maize, 76, 68, 2, 1);
+  R(C.roseL, 80, 68, 2, 1);
+  const on = s.active === "music" || since("music") < 2;
+  const disc = [5, 8, 9, 9, 8, 5];
+  disc.forEach((hw, j) => R(C.plate, 84 - hw, 60 + j, hw * 2 + 1, 1));
+  R("#444b57", 77, 62, 2, 2);
+  R("#444b57", 89, 62, 2, 2);
+  R(C.rose, 81, 62, 6, 2);
+  R(C.sheet, 83, 62, 2, 1);
+  const spin = [[-6, 1], [-2, 0], [2, 0], [6, 1], [5, 4], [2, 5], [-2, 5], [-5, 4]][on ? frame % 8 : 0];
+  R(C.metal, 84 + spin[0], 60 + spin[1], 2, 1);
+  R(C.metalD, 98, 60, 2, 5);
+  R(C.metal, 97, 60, 1, 1);
+  R(C.metal, 95, 61, 2, 1);
+  R(C.metal, 93, 62, 2, 1);
+  if (on) {
+    const p = frame % 24;
+    [[74, 0], [92, 12]].forEach(([x, delay]) => {
+      const f = (p - delay + 24) % 24;
+      if (f < 16) sprite(NOTE_SPRITE, C.roseD, x + (f % 8 < 4 ? 0 : 1), 54 - Math.floor(f * 0.6));
+    });
+  }
+
+  // piano
+  R(C.ink, 109, 43, 47, 55);
+  R(C.navy, 110, 44, 45, 53);
+  R(C.navyL, 110, 44, 45, 2);
+  R(C.navyD, 110, 77, 45, 20);
+  R(C.navy, 113, 80, 39, 13);
+  R(C.navyD, 114, 81, 37, 11);
+  R(C.maize, 127, 94, 3, 1);
+  R(C.maize, 134, 94, 3, 1);
+  R(C.ink, 123, 49, 19, 14);
+  R(C.sheet, 124, 50, 17, 12);
+  [52, 55, 58].forEach((y, i) => R(C.sheetD, 126, y, i === 2 ? 8 : 13, 1));
+  const metronome = since("piano") < 1.3 ? (frame % 4 < 2 ? -1 : 1) : 0;
+  blob(148, 36, [1, 1, 2, 2, 3, 3, 4], C.woodL, C.ink);
+  R(C.ink, 148 + metronome, 38, 1, 4);
+  R(C.ink, 106, 64, 53, 5);
+  R(C.navyD, 107, 65, 51, 3);
+  R(C.ink, 107, 69, 51, 9);
+  const pressed = since("piano") < 1 ? Math.floor(since("piano") * 12) : -1;
+  for (let k = 0; k < 16; k++) {
+    const x = 108 + k * 3 + (k > 7 ? 1 : 0);
+    const down = pressed >= 0 && (pressed === k || pressed === 15 - k);
+    R(down ? C.roseL : C.sheet, x, down ? 71 : 70, 2, down ? 7 : 7);
+  }
+  [1, 2, 4, 5, 6, 9, 10, 12, 13, 14].forEach((k) => R(C.ink, 110 + k * 3 - 1 + (k > 7 ? 1 : 0), 70, 2, 4));
+
+  // guitar, leaning on the wall
+  const sway = since("guitar") < 0.8 ? (frame % 4 < 2 ? 1 : 0) : 0;
+  const gx = 172 + sway;
+  R(C.ink, gx - 3, 22, 7, 10);
+  R(C.woodD, gx - 2, 23, 5, 8);
+  [24, 27].forEach((y) => {
+    R(C.metal, gx - 5, y, 2, 1);
+    R(C.metal, gx + 4, y, 2, 1);
+  });
+  R(C.ink, gx - 2, 32, 5, 30);
+  R(C.woodD, gx - 1, 32, 3, 30);
+  for (let y = 36; y < 62; y += 6) R(C.woodL, gx - 1, y, 3, 1);
+  const body = [5, 7, 8, 9, 9, 9, 8, 7, 6, 6, 7, 9, 10, 11, 11, 12, 12, 12, 12, 12, 12, 11, 11, 10, 9, 7, 5];
+  blob(gx, 62, body, C.guitar, C.ink);
+  R(C.guitarL, gx - 7, 66, 2, 5);
+  R(C.guitarL, gx - 10, 76, 2, 7);
+  R(C.guitarD, gx + 8, 76, 2, 9);
+  blob(gx, 67, [2, 3, 3, 3, 3, 3, 2], C.hole, C.ink);
+  R(C.woodD, gx - 4, 81, 9, 2);
+  const buzz = since("guitar") < 0.8;
+  [-1, 1].forEach((d, i) => {
+    const xo = buzz && (frame + i) % 2 ? (d < 0 ? -1 : 1) : 0;
+    R(buzz ? C.cloud : C.sheetD, gx + d, 32, 1, 30);
+    R(buzz ? C.cloud : C.sheetD, gx + d + xo, 62, 1, 20);
+  });
+  R(C.floorLine, gx - 12, 89, 25, 1);
+
+  // plant
+  blob(190, 66, [1, 3, 5, 6, 7, 7, 7, 6, 5], C.leaf, C.leafD);
+  R(C.leafL, 186, 69, 2, 2);
+  R(C.leafL, 191, 72, 2, 2);
+  R(C.leafL, 193, 68, 1, 2);
+  R(C.ink, 184, 74, 13, 15);
+  R(C.pot, 185, 75, 11, 13);
+  R(C.potD, 192, 75, 4, 13);
+  R(C.ink, 183, 74, 15, 3);
+  R(C.pot, 184, 75, 13, 1);
+
+  // rug
+  R(C.sheet, 54, 101, 2, 17);
+  R(C.sheet, 126, 101, 2, 17);
+  R(C.rose, 56, 101, 70, 17);
+  R(C.roseD, 56, 101, 70, 1);
+  R(C.roseD, 56, 117, 70, 1);
+  R(C.roseL, 58, 103, 66, 13);
+  R(C.rose, 59, 104, 64, 11);
+  R(C.sheet, 61, 106, 60, 7);
+  R(C.roseL, 62, 107, 58, 5);
+
+  // bench
+  R(C.ink, 121, 91, 26, 5);
+  R(C.rose, 122, 92, 24, 2);
+  R(C.woodD, 122, 94, 24, 1);
+  R(C.ink, 124, 96, 3, 7);
+  R(C.ink, 141, 96, 3, 7);
+
+  // barbell, with a little shadow when it's up
+  const t = since("barbell");
+  let lift = 0;
+  if (t < 1.2) {
+    const f = Math.floor(t * FPS);
+    lift = [0, -3, -7, -11, -13, -14, -14, -14, -11, -6, -2, 0][f] ?? 0;
+  }
+  if (lift < 0) {
+    R(C.roseD, 67, 114, 10, 1);
+    R(C.roseD, 105, 114, 10, 1);
+  }
+  const by = 104 + lift;
+  R(C.ink, 63, by + 4, 56, 3);
+  R(C.metal, 64, by + 5, 54, 1);
+  [[68, 0, 4, 13, C.plate], [72, 2, 3, 9, C.rose], [75, 3, 2, 7, C.navyL]].forEach(([x, top, w, h, c]) => {
+    R(C.ink, x - 1, by - 1 + top - 1, w + 2, h + 3);
+    R(c, x, by + top - 1, w, h + 1);
+    const mx = 182 - x - w;
+    R(C.ink, mx - 1, by - 1 + top - 1, w + 2, h + 3);
+    R(c, mx, by + top - 1, w, h + 1);
+  });
+
+  // a bobbing arrow over whatever you've picked
+  const spot = s.active && ROOM_SPOTS[s.active];
+  if (spot) {
+    const bob = frame % 8 < 4 ? 0 : 1;
+    const ax = spot.arrow[0];
+    const ay = spot.arrow[1] + bob + (s.active === "barbell" ? lift : 0);
+    R(C.ink, ax - 4, ay, 9, 1);
+    R(C.ink, ax - 3, ay + 1, 7, 1);
+    R(C.maize, ax - 3, ay + 1, 7, 1);
+    R(C.ink, ax - 4, ay + 1, 1, 1);
+    R(C.ink, ax + 4, ay + 1, 1, 1);
+    R(C.ink, ax - 3, ay + 2, 1, 1);
+    R(C.maize, ax - 2, ay + 2, 5, 1);
+    R(C.ink, ax + 3, ay + 2, 1, 1);
+    R(C.ink, ax - 2, ay + 3, 1, 1);
+    R(C.maize, ax - 1, ay + 3, 3, 1);
+    R(C.ink, ax + 2, ay + 3, 1, 1);
+    R(C.ink, ax - 1, ay + 4, 1, 1);
+    R(C.maize, ax, ay + 4, 1, 1);
+    R(C.ink, ax + 1, ay + 4, 1, 1);
+    R(C.ink, ax, ay + 5, 1, 1);
+  }
+};
+
+// Where each item can be clicked, and where its arrow sits, on the 200 × 120 grid.
+const ROOM_SPOTS = {
+  bed: { box: [4, 54, 62, 46], arrow: [21, 60] },
+  music: { box: [68, 52, 38, 47], arrow: [87, 50] },
+  piano: { box: [106, 38, 54, 62], arrow: [132, 31] },
+  guitar: { box: [159, 20, 26, 72], arrow: [172, 13] },
+  barbell: { box: [56, 100, 70, 20], arrow: [91, 96] },
 };
 
 export default function Room() {
   const [active, setActive] = useState(null);
-  const [plays, setPlays] = useState({});
+  const canvasRef = useRef(null);
+  const state = useRef({ active: null, plays: {}, time: 0 });
+  const wasActive = useRef(false);
   const current = room.items.find((item) => item.id === active);
+
+  useEffect(() => {
+    state.current.active = active;
+  }, [active]);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext("2d");
+    const reduced = reducedMotion();
+    let timer;
+    let visible = true;
+    const began = performance.now();
+
+    const draw = () => {
+      state.current.time = reduced ? 0 : (performance.now() - began) / 1000;
+      ctx.setTransform(canvas.width / W, 0, 0, canvas.height / H, 0, 0);
+      drawRoom(ctx, state.current);
+    };
+    // every pixel of the art stays the same size at any screen width
+    const size = () => {
+      const scale = Math.max(2, Math.ceil((canvas.clientWidth * Math.min(window.devicePixelRatio || 1, 2)) / W));
+      canvas.width = W * scale;
+      canvas.height = H * scale;
+      draw();
+    };
+    const start = () => {
+      clearInterval(timer);
+      if (!reduced && visible) timer = setInterval(draw, 1000 / FPS);
+    };
+    const observer = new IntersectionObserver(([entry]) => {
+      visible = entry.isIntersecting;
+      start();
+    });
+    observer.observe(canvas);
+    const resize = new ResizeObserver(size);
+    resize.observe(canvas);
+    size();
+    start();
+    state.current.redraw = draw;
+    return () => {
+      clearInterval(timer);
+      observer.disconnect();
+      resize.disconnect();
+    };
+  }, []);
+
+  useEffect(() => {
+    state.current.redraw?.();
+  }, [active]);
 
   const play = (id) => {
     setActive(id);
     if (reducedMotion()) return;
-    setPlays((p) => ({ ...p, [id]: (p[id] || 0) + 1 }));
+    state.current.plays[id] = state.current.time;
     SOUNDS[id]?.();
-  };
-
-  const onKey = (e, id) => {
-    if (e.key === "Enter" || e.key === " ") {
-      e.preventDefault();
-      play(id);
-    }
   };
 
   return (
@@ -163,73 +457,49 @@ export default function Room() {
       </div>
 
       <div className="room">
-        <svg viewBox="0 0 1000 560" role="group" aria-label="An illustration of my room">
-          <rect width="1000" height="430" fill="#e4e8ec" />
-          <rect y="430" width="1000" height="130" fill="#c8b69f" />
-          <path d="M0 462 H1000 M0 498 H1000 M0 532 H1000 M170 430 L120 560 M420 430 L400 560 M660 430 L680 560 M880 430 L950 560" stroke="#b7a48c" strokeWidth="2" />
-          <rect y="418" width="1000" height="14" fill="#f4f2ed" />
-
-          {/* window */}
-          <rect x="130" y="42" width="170" height="150" rx="4" fill="#f4f2ed" />
-          <rect x="140" y="52" width="150" height="130" fill="#bfd2e2" />
-          <circle cx="252" cy="88" r="17" fill="#e9c982" />
-          <path d="M150 145 q18 -22 38 -8 q20 -14 36 6 q10 0 18 10 h-92 z" fill="#f4f2ed" opacity="0.85" />
-          <path d="M215 52 V182 M140 117 H290" stroke="#f4f2ed" strokeWidth="6" />
-
-          {/* pennant */}
-          <rect x="365" y="60" width="6" height="74" rx="2" fill="#8a7158" />
-          <path d="M371 64 L515 97 L371 130 Z" fill="#26405f" />
-          <text x="384" y="104" fontFamily="Figtree, sans-serif" fontSize="20" fontWeight="700" fill="#e7cf85">GO BLUE</text>
-
-          {/* rug */}
-          <ellipse cx="502" cy="505" rx="210" ry="44" fill="#a9b7c4" />
-          <ellipse cx="502" cy="505" rx="184" ry="35" fill="none" stroke="#c6d0d9" strokeWidth="4" />
-
+        <div className="room-scene">
+          <canvas ref={canvasRef} width={W} height={H} role="img" aria-label="A pixel art drawing of my room, with a bed, a record player, a piano, a guitar, and a barbell" />
           {room.items.map((item) => {
-            const Drawing = Art[item.id];
-            const isOn = active === item.id;
-            const hit = HIT_AREAS[item.id];
+            const [x, y, w, h] = ROOM_SPOTS[item.id].box;
+            const place = {
+              left: `${(x / W) * 100}%`,
+              top: `${(y / H) * 100}%`,
+              width: `${(w / W) * 100}%`,
+              height: `${(h / H) * 100}%`,
+            };
             const shared = {
-              className: `room-item item-${item.id}${isOn ? " on" : ""}`,
+              className: "room-hit",
+              style: place,
+              "aria-label": `${item.name}. ${item.text}`,
               onPointerEnter: (e) => e.pointerType === "mouse" && setActive(item.id),
               onFocus: () => setActive(item.id),
             };
-            const inner = (
-              <>
-                <rect {...hit} fill="transparent" />
-                <g key={plays[item.id] || 0} className={plays[item.id] ? "played" : ""}>
-                  <Drawing />
-                </g>
-              </>
-            );
             return item.url ? (
               <a
                 key={item.id}
                 href={item.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                aria-label={`${item.name}. ${item.text}`}
                 {...shared}
+                onPointerDown={() => {
+                  wasActive.current = active === item.id;
+                }}
                 onClick={(e) => {
-                  // on a phone, the first tap explains it; the link below the room opens it
-                  if (isTouch() && active !== item.id) e.preventDefault();
+                  // on a phone, the first tap explains it; a second tap or the caption link opens it
+                  if (isTouch() && !wasActive.current) e.preventDefault();
                   setActive(item.id);
                 }}
-              >
-                {inner}
-              </a>
+              />
             ) : (
-              <g key={item.id} role="button" tabIndex={0} aria-label={`${item.name}. ${item.text}`} {...shared} onClick={() => play(item.id)} onKeyDown={(e) => onKey(e, item.id)}>
-                {inner}
-              </g>
+              <button key={item.id} type="button" {...shared} onClick={() => play(item.id)} />
             );
           })}
-        </svg>
+        </div>
 
         <div className="room-caption" aria-live="polite">
           {current ? (
             <p key={current.id}>
-              <strong>{current.name}</strong> {current.text}
+              <strong>{current.name}:</strong> {current.text}
               {current.url && (
                 <a href={current.url} target="_blank" rel="noopener noreferrer">
                   {current.link}
@@ -237,7 +507,7 @@ export default function Room() {
               )}
             </p>
           ) : (
-            <p className="muted">{room.hint}</p>
+            <p>{room.hint}</p>
           )}
         </div>
       </div>

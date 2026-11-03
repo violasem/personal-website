@@ -1420,163 +1420,60 @@ button:focus-visible {
   color: var(--ink-soft);
 }
 
-/* my room */
+/* my room: pixel art on a low-resolution canvas */
 .room {
   overflow: hidden;
-  border: 1px solid var(--rule);
-  border-radius: 12px;
-  background: var(--surface);
+  border: 3px solid var(--ink);
+  border-radius: 4px;
+  background: var(--ink);
 }
 
-.room svg {
+.room-scene {
+  position: relative;
+}
+
+.room-scene canvas {
   display: block;
   width: 100%;
   height: auto;
+  aspect-ratio: 200 / 120;
 }
 
-.room-item {
-  outline: none;
+.room-hit {
+  position: absolute;
+  display: block;
+  padding: 0;
+  border: 0;
+  background: transparent;
   cursor: pointer;
 }
 
-.room-item > g {
-  transition: translate 0.2s cubic-bezier(0.3, 0.8, 0.3, 1), filter 0.2s ease;
-}
-
-.room-item:hover > g,
-.room-item.on > g {
-  filter: drop-shadow(0 5px 6px rgba(39, 48, 59, 0.28));
-  translate: 0 -4px;
-}
-
-.room-item:focus-visible > rect {
-  stroke: var(--rose);
-  stroke-width: 3;
-  stroke-dasharray: 8 6;
-}
-
-.record,
-.guitar,
-.barbell,
-.key {
-  transform-box: fill-box;
-}
-
-.record {
-  transform-origin: center;
-}
-
-.item-music:hover .record,
-.item-music.on .record {
-  animation: recordSpin 2.4s linear infinite;
-}
-
-@keyframes recordSpin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-.notes,
-.zzz {
-  opacity: 0;
-}
-
-.item-music.on .notes {
-  animation: floatUp 2.2s ease-in-out infinite;
-}
-
-.item-bed.on .zzz {
-  animation: floatUp 2.6s ease-in-out infinite;
-}
-
-@keyframes floatUp {
-  0% {
-    opacity: 0;
-    transform: translateY(12px);
-  }
-  30%,
-  70% {
-    opacity: 1;
-  }
-  100% {
-    opacity: 0;
-    transform: translateY(-14px);
-  }
-}
-
-.played .key {
-  animation: keyPress 0.28s ease both;
-  animation-delay: calc(var(--i) * 45ms);
-}
-
-@keyframes keyPress {
-  50% {
-    transform: translateY(4px);
-  }
-}
-
-.guitar {
-  transform-origin: 50% 100%;
-}
-
-.played .guitar {
-  animation: guitarSway 0.7s ease;
-}
-
-@keyframes guitarSway {
-  25% {
-    transform: rotate(-2.5deg);
-  }
-  65% {
-    transform: rotate(1.5deg);
-  }
-}
-
-.played .strings {
-  animation: strum 0.09s linear 9 alternate;
-}
-
-@keyframes strum {
-  to {
-    transform: translateX(1.5px);
-  }
-}
-
-.played .barbell {
-  animation: lift 1.1s cubic-bezier(0.4, 0, 0.3, 1);
-}
-
-@keyframes lift {
-  45%,
-  60% {
-    transform: translateY(-58px);
-  }
+.room-hit:focus-visible {
+  outline: 3px dashed var(--maize, #f0c84a);
+  outline-offset: -3px;
 }
 
 .room-caption {
   display: flex;
   align-items: center;
-  min-height: 62px;
-  padding: 12px 18px;
-  border-top: 1px solid var(--rule);
-}
-
-.room-caption p {
-  animation: riseIn 0.25s ease both;
+  min-height: 64px;
+  padding: 10px 16px;
+  background: var(--ink);
+  color: #f5f1e6;
+  font-family: "Pixelify Sans", "Figtree", sans-serif;
+  font-size: 20px;
+  line-height: 1.3;
 }
 
 .room-caption strong {
-  margin-right: 6px;
-  font-family: "Fraunces", Georgia, serif;
-  font-size: 19px;
-  font-weight: 500;
+  color: #f0c84a;
+  font-weight: 600;
 }
 
 .room-caption a {
-  margin-left: 10px;
-  font-weight: 500;
-  text-decoration-color: var(--rose);
+  margin-left: 12px;
+  color: #f0c84a;
+  text-decoration: underline;
   text-underline-offset: 4px;
   white-space: nowrap;
 }

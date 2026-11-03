@@ -324,7 +324,7 @@ export const room = {
     { id: "music", name: "Music", text: "What I’m listening to right now.", url: "https://open.spotify.com/playlist/1vHnZpoh3TbeXlvnFfp7Uf", link: "Open my Spotify" },
     { id: "guitar", name: "Guitar", text: "I learned guitar." },
     { id: "piano", name: "Piano", text: "I learned piano, too." },
-    { id: "bed", name: "Bed", text: "Constantly running on 5 hours of sleep." },
+    { id: "bed", name: "Bed", text: "Constantly running on five hours of sleep." },
     { id: "barbell", name: "Barbell", text: "I go to the gym and try to lift weights." },
   ],
 };
