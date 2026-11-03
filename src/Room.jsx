@@ -862,7 +862,7 @@ export default function Room() {
                   </button>
                 )}
                 {node.actions.includes("links") &&
-                  profile.links.map((l) => (
+                  profile.links.filter((l) => l.name !== "GitHub").map((l) => (
                     <a key={l.name} href={l.url} target="_blank" rel="noopener noreferrer">
                       {l.name}
                     </a>
