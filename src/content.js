@@ -319,7 +319,7 @@ export const nextUp = "Working with a startup and doing research at Michigan, th
 export const room = {
   title: "My room",
   intro: "The part of me that isn’t on my resume.",
-  hint: "Click on anything in the room, or a sign to reach me.",
+  hint: "Click on anything in the room. I’m here too if you want to talk.",
   items: [
     { id: "music", name: "Music", text: "What I’m listening to right now.", url: "https://open.spotify.com/playlist/1vHnZpoh3TbeXlvnFfp7Uf", link: "Open my Spotify" },
     { id: "guitar", name: "Guitar", text: "I learned guitar." },

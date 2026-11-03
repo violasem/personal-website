@@ -1532,6 +1532,29 @@ button:focus-visible {
 /* contact: a little game conversation */
 .puppy.away {
   visibility: hidden;
+  transition: visibility 0s 0.35s;
+}
+
+.puppy.away > * {
+  animation: dog-poof 0.35s steps(4) both;
+}
+
+@keyframes dog-poof {
+  to {
+    opacity: 0;
+    filter: brightness(2.2);
+    transform: scale(1.35);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .puppy.away {
+    transition: none;
+  }
+
+  .puppy.away > * {
+    animation: none;
+  }
 }
 
 .game-box {

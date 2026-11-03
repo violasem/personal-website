@@ -1,77 +1,94 @@
-// The pixel me in the room. Every row is 21 pixels wide; each letter is a color.
+// The pixel me in the room. Each letter in a row is a color; the outline is added for you.
 export const AVATAR_COLORS = {
+  O: "#141216", // outline, and the eyes
+  W: "#fffaf2", // sparkle
   s: "#c58e62", // tan skin
-  d: "#ad7850", // skin shadow
   r: "#d9806a", // blush
-  g: "#2a1c17", // lashes
-  e: "#17120f", // pupil
-  W: "#fffaf2", // white of the eye
-  b: "#20232b", // black shirt
-  B: "#3a3f4a", // shirt highlight
-  p: "#8f949e", // grey pants
-  P: "#6f747e", // pants shadow
-  f: "#3b3128", // shoes
-  k: "#5f4232", // hair
-  K: "#8a6548", // hair highlight
+  b: "#2a2e38", // black shirt
+  p: "#9398a2", // grey pants
+  f: "#4a3a2e", // shoes
+  k: "#6b4a36", // hair
+  K: "#93704f", // hair highlight
 };
 
-const pad = (row) => {
-  const left = Math.floor((21 - row.length) / 2);
-  return ".".repeat(left) + row + ".".repeat(21 - row.length - left);
-};
-const face = (middle) => `.kk${middle}kk.`;
+const eyeRow = (eye) => `kkksss${eye}sss${eye}ssskkk`;
+const EYES_OPEN = ["sOs", "OWO", "OOO", "OOO", "OOO", "sOs"].map(eyeRow);
+const EYES_SHUT = ["sss", "sss", "sss", "sss", "OOO", "sss"].map(eyeRow);
 
-const LEFT_EYE = ["sgggs", "WeWeW", "WeeeW", "WeeeW", "sWWWs"];
-const RIGHT_EYE = LEFT_EYE;
-
-const HEAD = [
-  ".......kkkkkkk.......",
-  ".....kkKKKkkkkkk.....",
-  "...kkkKKkkkkkkkkkk...",
-  "..kkKKkkkkkkkkkkkkk..",
-  "..kKKkkkkkkkkkkkkkk..",
-  ".kkKkkkkkkkkkkkkkkkk.",
-  face("kkkkkkkkkssssss"),
-  face("kkkkkssssssssss"),
-  face("sssssssssssssss"),
-  ...LEFT_EYE.map((eye, i) => face(`s${eye}sss${RIGHT_EYE[i]}s`)),
-  face("srrrsssssssrrrs"),
-  face("sssssssssssssss"),
-  ".kkkdsssssssssssdkkk.",
-  ".kkkkkkdsssssdkkkkkk.",
-  ".kKkkkkkksssskkkkkKk.",
+const head = (eyes) => [
+  "......kkkkkkkkk......",
+  "....kkkkKKKkkkkkk....",
+  "..kkkkKKKkkkkkkkkkk..",
+  ".kkkKKKkkkkkkkkkkkkk.",
+  ".kkKKkkkkkkkkkkkkkkk.",
+  "kkKKkkkkkkskkkkkkkkkk",
+  "kkKkkkkkksssKkkkkkkkk".replace("K", "k").replace("K", "k"),
+  "kkkkkkkksssssKkkkkkkk".replace("K", "k"),
+  "kkkkkksssssssssKkkkkk".replace("K", "k"),
+  "kkkkssssssssssssskkkk",
+  "kkksssssssssssssssskk".slice(0, 18) + "kkk",
+  ...eyes,
+  "kkkrrrsssssssssrrrkkk",
+  ".kkkssssssssssssskkk.",
+  "...kkssssssssssskk...",
+  "......ksssssssk......",
 ];
 
-const BODY = [
-  "kKkkbbsssssbbkkKk",
-  "kKkbbbsssssbbbkKk",
-  "KkkbBbbbbbbbbbkkK",
-  "kKssbbbbbbbbbssKk",
-  ".kssbbbbbbbbbssk.",
-  "..ssbbbbbbbbbss..",
-].map(pad);
+const HAIR_BACK = ["kkkk", "kKkk", "kkkk", "kKkk", "kkKk", "kkkk", "kKkk", ".kkk", ".kk."];
+const mirror = (rows) => rows.map((row) => [...row].reverse().join(""));
 
-const SITTING_LEGS = ["ppppppppppppppppp", "ffPpppPPPPPpppPff"].map(pad);
-const STANDING_LEGS = [
-  "bbbbbbbbb",
-  "ppppppppp",
-  "ppppPpppp",
-  "pppp.Pppp",
-  "pppp.Pppp",
-  "pppp.Pppp",
-  "ffff.ffff",
-].map(pad);
+const NECK = ["...bbsssssbb...", "...bbsssssbb..."];
+const ARMS_DOWN = [".ssbbbbbbbbbss.", "ss.bbbbbbbbb.ss", "ss.bbbbbbbbb.ss"];
+const ARM_UP = ["...bbbbbbbbbss.", "...bbbbbbbbb.ss", "...bbbbbbbbb.ss"];
+const LEGS_SITTING = [".ppppppppppppp.", "ffpppppppppppff"];
+const LEGS_STANDING = ["....ppppppp....", "....ppp.ppp....", "....ppp.ppp....", "....ppp.ppp....", "....fff.fff...."];
 
-// where things are on the sprite, so the room can blink the eyes and raise a hand
-export const AVATAR_EYES = { top: 9, height: 5, width: 5, left: 4, right: 12 };
-export const AVATAR_SHOULDER = HEAD.length + 2;
+const WIDTH = 35;
+const HEAD_X = 7;
+const HEAD_ROWS = 21;
+const put = (grid, rows, x, y) =>
+  rows.forEach((row, j) =>
+    [...row].forEach((c, i) => {
+      if (c !== ".") grid[y + j][x + i] = c;
+    }),
+  );
 
-export const avatarPose = (pose) => {
-  if (pose === "sit") return [...HEAD, ...BODY, ...SITTING_LEGS];
-  if (pose === "wave") {
-    // the arm is drawn raised by the room, so take it off her side
-    const arm = BODY.map((row, i) => (i >= 3 ? row.replace("ss", i === 5 ? ".." : "kk") : row));
-    return [...HEAD, ...arm, ...STANDING_LEGS];
+const compose = (legs, armUp, wiggle, blink) => {
+  const body = [...NECK, ...(armUp ? ARM_UP : ARMS_DOWN), ...legs];
+  const grid = Array.from({ length: HEAD_ROWS + body.length }, () => Array(WIDTH).fill("."));
+  put(grid, HAIR_BACK, HEAD_X, 15);
+  put(grid, mirror(HAIR_BACK), HEAD_X + 17, 15);
+  put(grid, body, HEAD_X + 3, HEAD_ROWS);
+  put(grid, head(blink ? EYES_SHUT : EYES_OPEN), HEAD_X, 0);
+  if (armUp) {
+    put(grid, ["ssssss", "sss"], HEAD_X - 3, HEAD_ROWS + 2);
+    put(grid, Array(8).fill("sss"), HEAD_X - 3, HEAD_ROWS - 6);
+    put(grid, Array(4).fill("sssss"), HEAD_X - (wiggle ? 5 : 4), HEAD_ROWS - 10);
   }
-  return [...HEAD, ...BODY, ...STANDING_LEGS];
+  // draw the outline around every filled pixel, with one spare pixel on each side
+  const pad = [Array(WIDTH + 2).fill("."), ...grid.map((row) => [".", ...row, "."]), Array(WIDTH + 2).fill(".")];
+  return pad.map((row, j) =>
+    row
+      .map((c, i) => {
+        if (c !== ".") return c;
+        const near = [pad[j - 1]?.[i], pad[j + 1]?.[i], row[i - 1], row[i + 1]];
+        return near.some((n) => n && n !== ".") ? "O" : ".";
+      })
+      .join(""),
+  );
+};
+
+const POSES = {
+  sit: [LEGS_SITTING, false],
+  sitwave: [LEGS_SITTING, true],
+  stand: [LEGS_STANDING, false],
+  wave: [LEGS_STANDING, true],
+};
+
+const cache = {};
+// One picture of me: pose is "sit", "sitwave", "stand" or "wave".
+export const avatarPose = (pose, wiggle = false, blink = false) => {
+  const key = `${pose}-${wiggle}-${blink}`;
+  cache[key] ??= compose(...POSES[pose], wiggle, blink);
+  return cache[key];
 };

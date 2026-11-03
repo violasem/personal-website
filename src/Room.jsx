@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { AVATAR_COLORS, AVATAR_EYES, AVATAR_SHOULDER, avatarPose } from "./avatars.js";
+import { AVATAR_COLORS, avatarPose } from "./avatars.js";
 import { dogBus } from "./dogBus.js";
 import { contact, profile, room } from "./content.js";
 
@@ -85,15 +85,6 @@ const C = {
 
 const Z_SPRITE = ["#####", "   # ", "  #  ", " #   ", "#####"];
 const NOTE_SPRITE = ["  ##", "  # ", "  # ", "### ", "### "];
-const GLYPHS = {
-  A: [" # ", "# #", "###", "# #", "# #"],
-  C: [" ##", "#  ", "#  ", "#  ", " ##"],
-  E: ["###", "#  ", "## ", "#  ", "###"],
-  M: ["# #", "###", "###", "# #", "# #"],
-  N: ["## ", "# #", "# #", "# #", "# #"],
-  O: [" # ", "# #", "# #", "# #", " # "],
-  T: ["###", " # ", " # ", " # ", " # "],
-};
 const DOG = [
   "..........DDDD..",
   ".........DddddD.",
@@ -106,6 +97,11 @@ const DOG = [
   "...dd.dd..dd.dd.",
   "...dd.dd..dd.dd.",
   "...nn.nn..nn.nn.",
+];
+const DOG_RUN = [
+  "...dd.dd..dd.dd.",
+  "..dd...dd.dd..dd",
+  "..nn...nn.nn..nn",
 ];
 const DOG_COLORS = { d: "#d9bd9b", D: "#755a42", T: "#c6a988", n: "#2a2f3a", s: "#f1e6d8" };
 const M_SPRITE = ["##   ##", "### ###", "#######", "## # ##", "##   ##", "##   ##"];
@@ -472,73 +468,104 @@ const drawRoom = (ctx, s) => {
     R(c, mx, by + top - 1, w, h + 1);
   });
 
-  // the signs and letters that lead to me
-  const glow = !s.dialogue && frame % 20 < 10;
-  [[211, 104], [221, 112], [134, 113]].forEach(([x, y], i) => {
-    if (s.dogHere && i === 2) return;
-    R(C.ink, x - 1, y - 1, 11, 9);
-    R(C.cloud, x, y, 9, 7);
-    R(C.sheetD, x + 1, y + 1, 1, 1);
-    R(C.sheetD, x + 7, y + 1, 1, 1);
-    R(C.sheetD, x + 2, y + 2, 1, 1);
-    R(C.sheetD, x + 6, y + 2, 1, 1);
-    R(C.sheetD, x + 3, y + 3, 3, 1);
-    R(C.rose, x + 4, y + 4, 1, 1);
-  });
-  R(C.ink, 186, 106, 5, 13);
-  R(C.woodD, 187, 106, 3, 12);
-  R(C.ink, 172, 92, 33, 17);
-  R(glow ? C.woodL : "#c79a6d", 173, 93, 31, 15);
-  R(C.woodD, 173, 107, 31, 1);
-  [["CONTACT", 175, 95], ["ME", 185, 101]].forEach(([word, x0, y0]) => {
-    [...word].forEach((ch, i) => sprite(GLYPHS[ch], C.ink, x0 + i * 4, y0));
-  });
-
-  // me, sitting on the floor until someone wants to talk
-  const waving = s.stand && s.time < s.waveUntil;
-  const pose = s.stand ? (waving ? "wave" : "stand") : "sit";
-  const rows = avatarPose(pose);
-  const px = 149;
-  const py = 119 - rows.length;
-  R(C.floorLine, px + 1, 118, 19, 1);
+  // me, sitting on the floor until someone wants to talk. Every 10 seconds I wiggle.
+  const dogTime = s.dogHere ? Math.floor((s.time - s.dogAt) * FPS) : 0;
+  const PLAY_START = 22;
+  const play = s.dogHere && !s.reduced && dogTime >= PLAY_START ? (dogTime - PLAY_START) % 60 : -1;
+  const throwing = play >= 0 && play < 5;
+  const petting = play >= 40 && frame % 6 < 3;
+  const waving = s.stand && !s.dogHere && s.time < s.waveUntil;
+  let pose = s.stand ? (waving ? "wave" : "stand") : "sit";
+  if (s.dogHere) pose = throwing || petting ? "sitwave" : "sit";
+  const rows = avatarPose(pose, frame % 6 < 3, frame % 50 < 2);
+  const wiggling = !s.reduced && !s.dialogue && frame % 100 < 12;
+  const px = 143 + (wiggling ? [0, 1, 0, -1][frame % 4] : 0);
+  const py = 120 - rows.length;
+  R(C.floorLine, 151, 118, 23, 1);
   rows.forEach((row, j) => {
     for (let i = 0; i < row.length; i++) {
       const c = AVATAR_COLORS[row[i]];
       if (c) R(c, px + i, py + j, 1, 1);
     }
   });
-  // a blink now and then, and a wave
-  if (frame % 50 < 2) {
-    const { top, height, width, left, right } = AVATAR_EYES;
-    [left, right].forEach((x) => {
-      R(AVATAR_COLORS.s, px + x, py + top, width, height);
-      R(AVATAR_COLORS.g, px + x, py + top + 3, width, 1);
-    });
+  // a little "..." over my head, so you know I'm up for a chat
+  if (!s.dialogue) {
+    const bx = px + 27;
+    const by = py - 5;
+    R(C.ink, bx + 1, by, 15, 1);
+    R(C.ink, bx, by + 1, 17, 7);
+    R(C.ink, bx + 1, by + 8, 15, 1);
+    R(C.ink, bx + 2, by + 9, 3, 1);
+    R(C.ink, bx + 1, by + 10, 2, 1);
+    R(C.cloud, bx + 1, by + 1, 15, 7);
+    const dots = s.reduced ? 3 : (Math.floor(frame / 6) % 3) + 1;
+    for (let i = 0; i < dots; i++) R(C.ink, bx + 4 + i * 4, by + 4, 2, 2);
   }
-  if (waving) {
-    const lean = frame % 6 < 3 ? 0 : 1;
-    const y = py + AVATAR_SHOULDER;
-    R(C.ink, px - 2, y - 7, 4, 10); // outline, so the arm stands out from the floor
-    R(C.ink, px - 2, y - 1, 7, 4);
-    R(C.ink, px - 4 - lean, y - 11, 6, 6);
-    R(AVATAR_COLORS.s, px + 1, y, 4, 2); // upper arm, out from the shoulder
-    R(AVATAR_COLORS.s, px - 1, y - 6, 2, 8); // forearm, up
-    R(AVATAR_COLORS.s, px - 3 - lean, y - 10, 4, 4); // hand
-    R(AVATAR_COLORS.d, px - 3 - lean, y - 7, 4, 1);
-  }
-  // the dog, when it's been invited in
+
+  // the dog: shadow clones appear in a puff of smoke, then the real one stays to play
   if (s.dogHere) {
-    const dx = 132;
-    const dy = 107;
-    R(C.floorLine, dx + 2, 118, 14, 1);
-    DOG.forEach((row, j) => {
-      for (let i = 0; i < row.length; i++) {
-        const c = DOG_COLORS[row[i]];
-        if (!c) continue;
-        const wag = row[i] === "T" && frame % 4 < 2 ? 1 : 0;
-        R(c, dx + i, dy + j - wag, 1, 1);
+    const drawDog = (x, y, { left = false, run = false } = {}) => {
+      const body = run && frame % 4 < 2 ? [...DOG.slice(0, 8), ...DOG_RUN] : DOG;
+      R(C.floorLine, x + 2, 118, 14, 1);
+      body.forEach((row, j) => {
+        for (let i = 0; i < row.length; i++) {
+          const c = DOG_COLORS[row[i]];
+          if (!c) continue;
+          const wag = row[i] === "T" && frame % 4 < 2 ? 1 : 0;
+          R(c, left ? x + 15 - i : x + i, y + j - wag, 1, 1);
+        }
+      });
+    };
+    const puff = (x, age) => {
+      const size = [3, 6, 8, 8, 5, 2][age];
+      if (!size) return;
+      [[8, 112], [2, 113], [14, 113], [5, 108], [11, 108], [8, 105]].forEach(([ox, oy], i) => {
+        const part = size - (i % 3);
+        if (part <= 0) return;
+        R(C.floorLine, x + ox - part / 2, oy - part / 2 + 1, part, part);
+        R(C.cloud, x + ox - part / 2, oy - part / 2, part, part);
+      });
+    };
+    const home = 128;
+    const clones = [100, 176];
+    if (s.reduced) {
+      drawDog(home, 108);
+    } else if (dogTime < PLAY_START) {
+      if (dogTime >= 2) drawDog(home, 108);
+      if (dogTime >= 3 && dogTime < 15) clones.forEach((x) => drawDog(x, 108));
+      puff(home, dogTime);
+      clones.forEach((x) => {
+        puff(x, dogTime - 1);
+        puff(x, dogTime - 13);
+      });
+    } else {
+      // fetch: I throw the ball, the dog runs for it and brings it back
+      const far = 88;
+      if (play < 14) {
+        const t = play / 13;
+        const dogX = home + (far - home) * t;
+        const bx = 144 + (far - 144) * t;
+        R("#e0b23f", bx, 110 - Math.sin(t * Math.PI) * 18, 3, 3);
+        drawDog(dogX, 108, { left: true, run: true });
+      } else if (play < 18) {
+        drawDog(far, play % 2 ? 106 : 108, { left: true });
+        R("#e0b23f", far - 1, 113, 3, 3);
+      } else if (play < 34) {
+        const x = far + ((home - far) * (play - 18)) / 15;
+        drawDog(x, 108, { run: true });
+        R("#e0b23f", x + 15, 112, 3, 3);
+      } else {
+        const hop = play < 40 && play % 2 ? 2 : 0;
+        drawDog(home, 108 - hop);
+        if (play < 40) R("#e0b23f", home + 15, 112 - hop, 3, 3);
+        if (play >= 42 && play % 8 < 5) {
+          R("#d3433a", home + 7, 100, 2, 2);
+          R("#d3433a", home + 10, 100, 2, 2);
+          R("#d3433a", home + 8, 102, 3, 1);
+          R("#d3433a", home + 9, 103, 1, 1);
+        }
       }
-    });
+    }
   }
 
   // night: dim the room, then light the sky and the lamp
@@ -630,15 +657,11 @@ const ROOM_SPOTS = {
   photos: { box: [106, 6, 50, 20], arrow: [131, 1] },
   lamp: { box: [108, 26, 20, 18], arrow: [118, 20] },
   flag: { box: [204, 4, 26, 26], arrow: [218, 2] },
-  contact: { arrow: [188, 86] },
 };
 
-// the things that start the conversation: the sign, me, and the letters
+// clicking me starts the conversation
 const CONTACT_BOXES = [
-  [170, 90, 37, 30],
-  [149, 86, 21, 34],
-  [208, 101, 26, 19],
-  [131, 110, 15, 10],
+  [148, 82, 46, 38],
 ];
 
 const box = ([x, y, w, h]) => ({
@@ -651,7 +674,7 @@ const box = ([x, y, w, h]) => ({
 export default function Room() {
   const [active, setActive] = useState(null);
   const canvasRef = useRef(null);
-  const state = useRef({ active: null, plays: {}, time: 0, activeAt: 0, night: false, reduced: false, stand: false, waveUntil: 0, dogHere: false, dialogue: false });
+  const state = useRef({ active: null, plays: {}, time: 0, activeAt: 0, night: false, reduced: false, stand: false, waveUntil: 0, dogHere: false, dogAt: 0, dialogue: false });
   const wasActive = useRef(false);
   const current = room.items.find((item) => item.id === active);
 
@@ -683,6 +706,7 @@ export default function Room() {
   // the dog leaves the bottom of the screen and sits next to me, then goes back
   useEffect(() => {
     const here = dialog === "dog";
+    if (here && !state.current.dogHere) state.current.dogAt = state.current.time;
     state.current.dogHere = here;
     state.current.dialogue = Boolean(dialog);
     state.current.redraw?.();
