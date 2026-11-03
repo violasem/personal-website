@@ -1478,42 +1478,6 @@ button:focus-visible {
   white-space: nowrap;
 }
 
-.room-chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-top: 12px;
-}
-
-.room-chips button {
-  min-height: 38px;
-  padding: 5px 13px;
-  border: 1px solid var(--rule-strong);
-  border-radius: 999px;
-  background: transparent;
-  color: var(--ink-soft);
-  font: inherit;
-  font-size: 15px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: background-color 0.2s ease, color 0.2s ease;
-}
-
-.room-chips button:hover {
-  color: var(--ink);
-}
-
-.room-chips button[aria-pressed="true"] {
-  border-color: var(--slate);
-  background: var(--slate);
-  color: #fff;
-}
-
-.room-chips button:focus-visible {
-  outline: 2px solid var(--rose);
-  outline-offset: 2px;
-}
-
 /* education, skills, about */
 .two-col {
   display: grid;

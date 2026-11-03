@@ -512,13 +512,6 @@ export default function Room() {
         </div>
       </div>
 
-      <div className="room-chips" role="group" aria-label="Things in my room">
-        {room.items.map((item) => (
-          <button key={item.id} type="button" aria-pressed={active === item.id} onClick={() => (item.url ? setActive(item.id) : play(item.id))}>
-            {item.name}
-          </button>
-        ))}
-      </div>
     </section>
   );
 }
