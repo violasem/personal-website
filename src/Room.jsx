@@ -178,7 +178,7 @@ const drawRoom = (ctx, s) => {
   R(C.potD, 93, 41, 6, 1);
 
   // polaroids on a string
-  R(C.ink, 106, 4, 50, 1);
+  R(C.ink, 106, 8, 50, 1);
   [
     [108, ["#9fcdea", "#7596b5", "#4f8a5c"]],
     [120, ["#f0c84a", "#b25a68", "#74503a"]],
@@ -186,7 +186,7 @@ const drawRoom = (ctx, s) => {
     [144, ["#d98a96", "#f5f1e6", "#6fa877"]],
   ].forEach(([x, colors], i) => {
     const wiggle = s.active === "photos" && (frame + i) % 6 < 3 ? 1 : 0;
-    const y = 5 + (i % 2) + wiggle;
+    const y = 9 + (i % 2) + wiggle;
     R(C.ink, x - 1, y, 11, 14);
     R(C.cloud, x, y + 1, 9, 12);
     colors.forEach((c, j) => R(c, x + 1, y + 2 + j * 2 + (j ? 1 : 0), 7, j ? 2 : 3));
@@ -493,9 +493,9 @@ const ROOM_SPOTS = {
   guitar: { box: [159, 20, 26, 72], arrow: [172, 13] },
   barbell: { box: [56, 100, 70, 20], arrow: [91, 96] },
   tv: { box: [200, 40, 36, 60], arrow: [218, 36] },
-  photos: { box: [106, 2, 50, 20], arrow: [131, 21] },
-  lamp: { box: [108, 24, 20, 20], arrow: [118, 18] },
-  flag: { box: [204, 4, 26, 26], arrow: [218, 29] },
+  photos: { box: [106, 6, 50, 20], arrow: [131, 1] },
+  lamp: { box: [108, 26, 20, 18], arrow: [118, 20] },
+  flag: { box: [204, 4, 26, 26], arrow: [218, 2] },
 };
 
 export default function Room() {
