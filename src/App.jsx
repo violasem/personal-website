@@ -2,6 +2,7 @@ import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { contact, deskItems, education, log, logTypes, nextUp, profile, skills, timeline } from "./content.js";
 import Room from "./Room.jsx";
+import Contact from "./Contact.jsx";
 
 
 const navItems = [
@@ -1198,46 +1199,6 @@ const EducationSkills = () => (
     </div>
   </section>
 );
-
-const Contact = () => {
-  const [copied, setCopied] = useState(false);
-  const timer = useRef(null);
-  useEffect(() => () => clearTimeout(timer.current), []);
-
-  const copy = async () => {
-    try {
-      await navigator.clipboard.writeText(contact.email);
-      setCopied(true);
-      clearTimeout(timer.current);
-      timer.current = setTimeout(() => setCopied(false), 1800);
-    } catch {
-      window.location.href = `mailto:${contact.email}`;
-    }
-  };
-
-  return (
-    <section id="contact" className="block reveal">
-      <div className="contact-card">
-        <div>
-          <h2>Contact</h2>
-          <p className="contact-lead">{contact.lead}</p>
-          <a className="contact-email" href={`mailto:${contact.email}`}>
-            {contact.email}
-          </a>
-        </div>
-        <div className="contact-actions">
-          <a className="contact-button primary" href={`mailto:${contact.email}`}>
-            Send an email
-          </a>
-          <button type="button" className="contact-button" onClick={copy} aria-live="polite">
-            {copied ? "Copied" : "Copy email"}
-          </button>
-          <ExternalLinks links={profile.links} />
-        </div>
-      </div>
-    </section>
-  );
-};
 
 const Home = () => (
   <>

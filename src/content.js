@@ -366,7 +366,24 @@ export const skills = [
 
 export const contact = {
   email: "violasem@umich.edu",
-  lead: "Email is the best way to reach me.",
+  defaultSubject: "Hi Viola",
+  // The conversation in the Contact section.
+  dialogue: {
+    copiedText: "You got: Viola’s email! It’s copied to your clipboard. Talk soon!",
+    start: {
+      text: "Oh hi! You made it to the bottom. What brings you here?",
+      choices: [
+        { label: "I have an opportunity for you", next: "opportunity", subject: "An opportunity for you" },
+        { label: "I want to talk about your research", next: "research", subject: "Your solar wind research" },
+        { label: "I saw your site and wanted to say hi", next: "hi", subject: "Saw your website" },
+        { label: "I’m just here for the dog", next: "dog", subject: "About your dog" },
+      ],
+    },
+    opportunity: { text: "Ooh, tell me more! Email is the best way to reach me.", actions: true },
+    research: { text: "I could talk about solar wind all day. Send me a message!", actions: true },
+    hi: { text: "Hi! That made my day. Send me a note anytime.", actions: true },
+    dog: { text: "Fair. Try dropping a treat on my desk. You can also tell me how great the dog is.", actions: true },
+  },
   // To update your resume, replace public/resume.pdf and public/resume.jpg (a picture of the page).
   resumePdf: "/resume.pdf",
   resumeImage: "/resume.jpg",
