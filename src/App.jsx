@@ -1,13 +1,14 @@
 import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { contact, deskItems, education, log, logTypes, nextSteps, profile, skills, timeline } from "./content.js";
+import { contact, deskItems, education, log, logTypes, nextUp, profile, skills, timeline } from "./content.js";
+import Room from "./Room.jsx";
 
 
 const navItems = [
   { href: "#/log", label: "Project log" },
   { href: "#/experience", label: "Experience" },
-  { href: "#/next", label: "Next" },
   { href: "#/education", label: "Education" },
+  { href: "#/room", label: "My room" },
   { href: "#/contact", label: "Contact" },
 ];
 
@@ -58,7 +59,7 @@ const useCurrentSection = (enabled) => {
       setCurrent(null);
       return;
     }
-    const ids = ["log", "experience", "next", "education", "contact"];
+    const ids = ["log", "experience", "education", "room", "contact"];
     const onScroll = () => {
       let found = null;
       for (const id of ids) {
@@ -1153,18 +1154,9 @@ const Experience = () => {
 };
 
 const NextSteps = () => (
-  <section id="next" className="block reveal">
-    <div className="block-head">
-      <h2>What’s next</h2>
-    </div>
-    <ul className="next-list">
-      {nextSteps.map((step) => (
-        <li key={step.title}>
-          <h3>{step.title}</h3>
-          <p>{step.text}</p>
-        </li>
-      ))}
-    </ul>
+  <section id="next" className="block next-strip reveal">
+    <h2>What’s next</h2>
+    <p>{nextUp}</p>
   </section>
 );
 
@@ -1256,6 +1248,7 @@ const Home = () => (
       <Experience />
       <NextSteps />
       <EducationSkills />
+      <Room />
       <Contact />
     </main>
   </>

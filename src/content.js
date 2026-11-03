@@ -312,12 +312,22 @@ export const timeline = [
   { role: "Study Group Facilitator", org: "U-M Mathematics", from: "2025-08", dates: "Aug 2025 – present", log: "math-tutoring" },
 ];
 
-// The "What's next" section.
-export const nextSteps = [
-  { title: "Perot Jain TechLab", text: "Working on electrification with Wheelhouse, a startup." },
-  { title: "MDP research", text: "Doing research through the Multidisciplinary Design Program." },
-  { title: "After graduation", text: "Planning a master’s focused on embedded systems." },
-];
+// The short "What's next" line.
+export const nextUp = "Working with a startup and doing research at Michigan, then planning a master’s focused on embedded systems after I graduate.";
+
+// The room at the bottom of the home page. The drawings live in Room.jsx.
+export const room = {
+  title: "My room",
+  intro: "The part of me that isn’t on my resume.",
+  hint: "Click on anything in the room.",
+  items: [
+    { id: "music", name: "Music", text: "What I’m listening to right now.", url: "https://open.spotify.com/playlist/1vHnZpoh3TbeXlvnFfp7Uf", link: "Open my Spotify" },
+    { id: "guitar", name: "Guitar", text: "I learned guitar." },
+    { id: "piano", name: "Piano", text: "I learned piano, too." },
+    { id: "bed", name: "Bed", text: "Constantly running on 5 hours of sleep." },
+    { id: "barbell", name: "Barbell", text: "I go to the gym and try to lift weights." },
+  ],
+};
 
 export const education = {
   school: "University of Michigan College of Engineering",
