@@ -326,6 +326,11 @@ export const room = {
     { id: "piano", name: "Piano", text: "I learned piano, too." },
     { id: "bed", name: "Bed", text: "Constantly running on five hours of sleep." },
     { id: "barbell", name: "Barbell", text: "I go to the gym and try to lift weights." },
+    // Paste a link in url to make the TV or the polaroids open it.
+    { id: "tv", name: "TV", text: "What I’ve been watching.", url: "", link: "Open my Letterboxd" },
+    { id: "photos", name: "Polaroids", text: "A few little moments.", url: "", link: "Open my Instagram" },
+    { id: "lamp", name: "Lamp", text: "Click it to switch the room between day and night." },
+    { id: "flag", name: "Indonesia", text: "Born and raised in Medan." },
   ],
 };
 

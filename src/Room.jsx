@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { room } from "./content.js";
 
-const W = 200;
+const W = 236;
 const H = 120;
 const FPS = 10;
 
@@ -36,6 +36,7 @@ const playNotes = (frequencies, gap, type, length) => {
 const SOUNDS = {
   piano: () => playNotes([261.6, 329.6, 392, 523.3], 0.14, "square", 0.3),
   guitar: () => playNotes([164.8, 246.9, 329.6, 392, 493.9], 0.05, "triangle", 0.7),
+  lamp: () => playNotes([1400], 0.01, "square", 0.04),
 };
 
 const C = {
@@ -176,6 +177,32 @@ const drawRoom = (ctx, s) => {
   R(C.pot, 93, 38, 6, 4);
   R(C.potD, 93, 41, 6, 1);
 
+  // polaroids on a string
+  R(C.ink, 106, 4, 50, 1);
+  [
+    [108, ["#9fcdea", "#7596b5", "#4f8a5c"]],
+    [120, ["#f0c84a", "#b25a68", "#74503a"]],
+    [132, ["#2b3f5c", "#f0c84a", "#2b3f5c"]],
+    [144, ["#d98a96", "#f5f1e6", "#6fa877"]],
+  ].forEach(([x, colors], i) => {
+    const wiggle = s.active === "photos" && (frame + i) % 6 < 3 ? 1 : 0;
+    const y = 5 + (i % 2) + wiggle;
+    R(C.ink, x - 1, y, 11, 14);
+    R(C.cloud, x, y + 1, 9, 12);
+    colors.forEach((c, j) => R(c, x + 1, y + 2 + j * 2 + (j ? 1 : 0), 7, j ? 2 : 3));
+    R(C.rose, x + 4, y - 1, 1, 2);
+  });
+
+  // Indonesian flag, which waves when you pick it
+  R(C.ink, 206, 7, 2, 32);
+  R(C.maize, 206, 6, 2, 1);
+  for (let i = 0; i < 20; i++) {
+    const wave = s.active === "flag" && (i + frame) % 8 < 4 ? 1 : 0;
+    R(C.ink, 208 + i, 9 + wave, 1, 18);
+    R("#c8423a", 208 + i, 10 + wave, 1, 8);
+    R(C.cloud, 208 + i, 18 + wave, 1, 8);
+  }
+
   // bed
   const inBed = s.active === "bed";
   R(C.ink, 5, 56, 8, 42);
@@ -273,6 +300,12 @@ const drawRoom = (ctx, s) => {
   }
   [1, 2, 4, 5, 6, 9, 10, 12, 13, 14].forEach((k) => R(C.ink, 110 + k * 3 - 1 + (k > 7 ? 1 : 0), 70, 2, 4));
 
+  // piano lamp
+  R(C.ink, 114, 41, 9, 3);
+  R(C.maize, 115, 42, 7, 1);
+  R(C.ink, 118, 33, 2, 8);
+  blob(118, 26, [3, 4, 4, 5, 5, 6, 6, 7], s.night ? "#ffe9a8" : "#e6cf9a", C.ink);
+
   // guitar, leaning on the wall
   const sway = since("guitar") < 0.8 ? (frame % 4 < 2 ? 1 : 0) : 0;
   const gx = 172 + sway;
@@ -310,6 +343,29 @@ const drawRoom = (ctx, s) => {
   R(C.potD, 192, 75, 4, 13);
   R(C.ink, 183, 74, 15, 3);
   R(C.pot, 184, 75, 13, 1);
+
+  // TV on a stand; the screen is drawn last so it glows at night
+  R(C.ink, 205, 80, 26, 18);
+  R(C.wood, 206, 81, 24, 16);
+  R(C.woodL, 206, 81, 24, 1);
+  R(C.woodD, 208, 85, 20, 5);
+  R(C.ink, 211, 87, 14, 1);
+  R(C.ink, 207, 98, 3, 2);
+  R(C.ink, 226, 98, 3, 2);
+  R(C.ink, 210, 44, 1, 1);
+  R(C.ink, 209, 42, 1, 2);
+  R(C.ink, 208, 40, 1, 2);
+  R(C.ink, 225, 44, 1, 1);
+  R(C.ink, 226, 42, 1, 2);
+  R(C.ink, 227, 40, 1, 2);
+  R(C.ink, 201, 45, 34, 35);
+  R("#4d5563", 202, 46, 32, 33);
+  R("#646d7c", 202, 46, 32, 1);
+  R(C.metal, 229, 52, 3, 3);
+  R(C.metal, 229, 58, 3, 3);
+  R(C.metalD, 229, 66, 3, 1);
+  R(C.metalD, 229, 68, 3, 1);
+  R(C.metalD, 229, 70, 3, 1);
 
   // rug
   R(C.sheet, 54, 101, 2, 17);
@@ -351,6 +407,60 @@ const drawRoom = (ctx, s) => {
     R(c, mx, by + top - 1, w, h + 1);
   });
 
+  // night: dim the room, then light the sky and the lamp
+  if (s.night) {
+    ctx.globalCompositeOperation = "multiply";
+    R("#4a5488", 0, 0, W, H);
+    ctx.globalCompositeOperation = "lighter";
+    [[46, "rgba(44,30,12,0.3)"], [36, "rgba(48,33,13,0.35)"], [26, "rgba(56,39,15,0.4)"], [16, "rgba(70,50,20,0.45)"]].forEach(([r, c]) => {
+      for (let dy = -r; dy <= r; dy += 1) {
+        const hw = Math.round(Math.sqrt(r * r - dy * dy) * 1.25);
+        R(c, 118 - hw, 40 + dy, hw * 2, 1);
+      }
+    });
+    ctx.globalCompositeOperation = "source-over";
+    R("#121a3a", 22, 10, 31, 31);
+    R("#1c2750", 22, 26, 31, 15);
+    [[25, 13], [30, 19], [34, 12], [41, 21], [47, 30], [26, 33], [50, 16], [35, 36], [44, 35]].forEach(([x, y], i) => {
+      if (s.reduced || (frame + i * 3) % 12 > 1) R("#fff6cf", x, y, 1, 1);
+    });
+    blob(44, 13, [2, 3, 4, 4, 4, 3, 2], "#f2eedc", "#f2eedc");
+    R("#121a3a", 46, 13, 3, 6);
+    R("#7d8197", 37, 10, 2, 31);
+    R("#7d8197", 22, 24, 31, 2);
+    blob(118, 26, [3, 4, 4, 5, 5, 6, 6, 7], "#ffe9a8", "#6b5a35");
+  }
+
+  // the TV screen, with letterbox bars around a little film when it's on
+  R(C.ink, 204, 49, 24, 26);
+  R("#1b2029", 205, 50, 22, 24);
+  if (s.active === "tv") {
+    const on = s.reduced ? 1 : s.time - s.activeAt;
+    if (on < 0.5) {
+      for (let y = 50; y < 74; y += 2) {
+        for (let x = 205; x < 227; x += 2) {
+          R((x * 7 + y * 13 + frame * 31) % 5 < 2 ? "#e8e8e8" : "#59606c", x, y, 2, 2);
+        }
+      }
+    } else {
+      ["#f0c84a", "#ec9f53", "#d9705c", "#a4506e"].forEach((c, i) => R(c, 205, 54 + i * 4, 22, 4));
+      blob(217, 60, [2, 3, 3, 3, 2], "#fff0b8", "#fff0b8");
+      R("#3a2240", 205, 68, 22, 2);
+      const walker = 205 + (frame % 44) / 2;
+      const wx = Math.floor(walker);
+      if (wx < 225) {
+        R("#3a2240", wx, 62, 2, 2);
+        R("#3a2240", wx, 64, 2, 3);
+        R("#3a2240", wx + (frame % 4 < 2 ? 0 : 1), 67, 1, 1);
+      }
+      R(C.ink, 205, 50, 22, 4);
+      R(C.ink, 205, 70, 22, 4);
+    }
+  } else {
+    R("#39414e", 207, 52, 5, 1);
+    R("#39414e", 207, 53, 2, 2);
+  }
+
   // a bobbing arrow over whatever you've picked
   const spot = s.active && ROOM_SPOTS[s.active];
   if (spot) {
@@ -379,26 +489,32 @@ const drawRoom = (ctx, s) => {
 const ROOM_SPOTS = {
   bed: { box: [4, 54, 62, 46], arrow: [21, 60] },
   music: { box: [68, 52, 38, 47], arrow: [87, 50] },
-  piano: { box: [106, 38, 54, 62], arrow: [132, 31] },
+  piano: { box: [106, 44, 54, 56], arrow: [134, 37] },
   guitar: { box: [159, 20, 26, 72], arrow: [172, 13] },
   barbell: { box: [56, 100, 70, 20], arrow: [91, 96] },
+  tv: { box: [200, 40, 36, 60], arrow: [218, 36] },
+  photos: { box: [106, 2, 50, 20], arrow: [131, 21] },
+  lamp: { box: [108, 24, 20, 20], arrow: [118, 18] },
+  flag: { box: [204, 4, 26, 26], arrow: [218, 29] },
 };
 
 export default function Room() {
   const [active, setActive] = useState(null);
   const canvasRef = useRef(null);
-  const state = useRef({ active: null, plays: {}, time: 0 });
+  const state = useRef({ active: null, plays: {}, time: 0, activeAt: 0, night: false, reduced: false });
   const wasActive = useRef(false);
   const current = room.items.find((item) => item.id === active);
 
   useEffect(() => {
     state.current.active = active;
+    state.current.activeAt = state.current.time;
   }, [active]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
     const ctx = canvas.getContext("2d");
     const reduced = reducedMotion();
+    state.current.reduced = reduced;
     let timer;
     let visible = true;
     const began = performance.now();
@@ -442,6 +558,10 @@ export default function Room() {
 
   const play = (id) => {
     setActive(id);
+    if (id === "lamp") {
+      state.current.night = !state.current.night;
+      state.current.redraw?.();
+    }
     if (reducedMotion()) return;
     state.current.plays[id] = state.current.time;
     SOUNDS[id]?.();
@@ -458,7 +578,7 @@ export default function Room() {
 
       <div className="room">
         <div className="room-scene">
-          <canvas ref={canvasRef} width={W} height={H} role="img" aria-label="A pixel art drawing of my room, with a bed, a record player, a piano, a guitar, and a barbell" />
+          <canvas ref={canvasRef} width={W} height={H} role="img" aria-label="A pixel art drawing of my room, with a bed, a record player, a piano, a guitar, a barbell, a TV, polaroids, a lamp, and an Indonesian flag" />
           {room.items.map((item) => {
             const [x, y, w, h] = ROOM_SPOTS[item.id].box;
             const place = {
