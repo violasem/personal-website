@@ -11,41 +11,43 @@ export const AVATAR_COLORS = {
   K: "#93704f", // hair highlight
 };
 
-const eyeRow = (eye) => `kkksss${eye}sss${eye}ssskkk`;
-const EYES_OPEN = ["sOs", "OWO", "OOO", "OOO", "OOO", "sOs"].map(eyeRow);
-const EYES_SHUT = ["sss", "sss", "sss", "sss", "OOO", "sss"].map(eyeRow);
+const eyeRows = (left, right) => left.map((row, i) => `kksss${row}sss${right[i]}ssskk`);
+const mirrorRow = (row) => [...row].reverse().join("");
+const OPEN = ["OOW", "OOO", "OOO", "OOO", "OOO"];
+const SHUT = ["sss", "sss", "sss", "sss", "OOO"];
+const HAPPY = ["sssss", "ssOss", "sOsOs", "OsssO", "sssss"].map((row) => `kks${row}sss${row}skk`);
+const EYES = {
+  open: eyeRows(OPEN, OPEN.map(mirrorRow)),
+  shut: eyeRows(SHUT, SHUT),
+  happy: HAPPY,
+};
 
 const head = (eyes) => [
-  "......kkkkkkkkk......",
-  "....kkkkKKKkkkkkk....",
-  "..kkkkKKKkkkkkkkkkk..",
-  ".kkkKKKkkkkkkkkkkkkk.",
-  ".kkKKkkkkkkkkkkkkkkk.",
-  "kkKKkkkkkkskkkkkkkkkk",
-  "kkKkkkkkksssKkkkkkkkk".replace("K", "k").replace("K", "k"),
-  "kkkkkkkksssssKkkkkkkk".replace("K", "k"),
-  "kkkkkksssssssssKkkkkk".replace("K", "k"),
-  "kkkkssssssssssssskkkk",
-  "kkksssssssssssssssskk".slice(0, 18) + "kkk",
+  "......kkkkkkk......",
+  "....kkkKKKkkkkk....",
+  "..kkkKKKkkkkkkkkk..",
+  ".kkKKKkkkkkkkkkkkk.",
+  ".kKKkkkkkskkkkkkkk.",
+  "kkKkkkkksssskkkkkkk".replace("ssss", "sss") + "k",
+  "kkkkkksssssssskkkkk".replace("ssssssss", "sssssss") + "k",
+  "kkkksssssssssssskkk".replace("ssssssssssss", "sssssssssss") + "k",
   ...eyes,
-  "kkkrrrsssssssssrrrkkk",
-  ".kkkssssssssssssskkk.",
-  "...kkssssssssssskk...",
-  "......ksssssssk......",
+  "kkrrrsssssssssrrrkk",
+  ".kksssssssssssssKk.".replace("Kk", "kk"),
+  "...kksssssssssskk..".replace("ssssssssss", "sssssssss") + ".",
 ];
 
-const HAIR_BACK = ["kkkk", "kKkk", "kkkk", "kKkk", "kkKk", "kkkk", "kKkk", ".kkk", ".kk."];
-const mirror = (rows) => rows.map((row) => [...row].reverse().join(""));
+const HAIR_BACK = ["kkk", "kKk", "kkk", "kKk", "kkk", "kKk", ".kk", ".k."];
+const mirror = (rows) => rows.map(mirrorRow);
 
-const NECK = ["...bbsssssbb...", "...bbsssssbb..."];
-const ARMS_DOWN = [".ssbbbbbbbbbss.", "ss.bbbbbbbbb.ss", "ss.bbbbbbbbb.ss"];
-const ARM_UP = ["...bbbbbbbbbss.", "...bbbbbbbbb.ss", "...bbbbbbbbb.ss"];
-const LEGS_SITTING = [".ppppppppppppp.", "ffpppppppppppff"];
-const LEGS_STANDING = ["....ppppppp....", "....ppp.ppp....", "....ppp.ppp....", "....ppp.ppp....", "....fff.fff...."];
+const TOP = ["..bbsssssbb..", "..bbsssssbb..", ".sbbbbbbbbbs.", "ss.bbbbbbb.ss", "ss.bbbbbbb.ss"];
+const LEGS = {
+  sit: [".ppppppppppp.", "ffpppppppppff"],
+  stand: ["...ppppppp...", "...ppp.ppp...", "...ppp.ppp...", "...fff.fff..."],
+};
 
-const WIDTH = 35;
-const HEAD_X = 7;
-const HEAD_ROWS = 21;
+const WIDTH = 19;
+const HEAD_ROWS = 16;
 const put = (grid, rows, x, y) =>
   rows.forEach((row, j) =>
     [...row].forEach((c, i) => {
@@ -53,18 +55,13 @@ const put = (grid, rows, x, y) =>
     }),
   );
 
-const compose = (legs, armUp, wiggle, blink) => {
-  const body = [...NECK, ...(armUp ? ARM_UP : ARMS_DOWN), ...legs];
+const compose = (pose, eyes) => {
+  const body = [...TOP, ...LEGS[pose]];
   const grid = Array.from({ length: HEAD_ROWS + body.length }, () => Array(WIDTH).fill("."));
-  put(grid, HAIR_BACK, HEAD_X, 15);
-  put(grid, mirror(HAIR_BACK), HEAD_X + 17, 15);
-  put(grid, body, HEAD_X + 3, HEAD_ROWS);
-  put(grid, head(blink ? EYES_SHUT : EYES_OPEN), HEAD_X, 0);
-  if (armUp) {
-    put(grid, ["ssssss", "sss"], HEAD_X - 3, HEAD_ROWS + 2);
-    put(grid, Array(8).fill("sss"), HEAD_X - 3, HEAD_ROWS - 6);
-    put(grid, Array(4).fill("sssss"), HEAD_X - (wiggle ? 5 : 4), HEAD_ROWS - 10);
-  }
+  put(grid, HAIR_BACK, 0, 12);
+  put(grid, mirror(HAIR_BACK), 16, 12);
+  put(grid, body, 3, HEAD_ROWS);
+  put(grid, head(EYES[eyes]), 0, 0);
   // draw the outline around every filled pixel, with one spare pixel on each side
   const pad = [Array(WIDTH + 2).fill("."), ...grid.map((row) => [".", ...row, "."]), Array(WIDTH + 2).fill(".")];
   return pad.map((row, j) =>
@@ -78,17 +75,10 @@ const compose = (legs, armUp, wiggle, blink) => {
   );
 };
 
-const POSES = {
-  sit: [LEGS_SITTING, false],
-  sitwave: [LEGS_SITTING, true],
-  stand: [LEGS_STANDING, false],
-  wave: [LEGS_STANDING, true],
-};
-
 const cache = {};
-// One picture of me: pose is "sit", "sitwave", "stand" or "wave".
-export const avatarPose = (pose, wiggle = false, blink = false) => {
-  const key = `${pose}-${wiggle}-${blink}`;
-  cache[key] ??= compose(...POSES[pose], wiggle, blink);
+// One picture of me: pose is "sit" or "stand"; eyes are "open", "shut" or "happy".
+export const avatarPose = (pose, eyes = "open") => {
+  const key = `${pose}-${eyes}`;
+  cache[key] ??= compose(pose, eyes);
   return cache[key];
 };

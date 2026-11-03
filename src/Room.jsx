@@ -472,16 +472,18 @@ const drawRoom = (ctx, s) => {
   const dogTime = s.dogHere ? Math.floor((s.time - s.dogAt) * FPS) : 0;
   const PLAY_START = 22;
   const play = s.dogHere && !s.reduced && dogTime >= PLAY_START ? (dogTime - PLAY_START) % 60 : -1;
-  const throwing = play >= 0 && play < 5;
-  const petting = play >= 40 && frame % 6 < 3;
-  const waving = s.stand && !s.dogHere && s.time < s.waveUntil;
-  let pose = s.stand ? (waving ? "wave" : "stand") : "sit";
-  if (s.dogHere) pose = throwing || petting ? "sitwave" : "sit";
-  const rows = avatarPose(pose, frame % 6 < 3, frame % 50 < 2);
+  // I'm happy when someone says hi, and when the dog brings the ball back
+  const happy = s.happyNow || (play >= 34 && play < 56);
+  const eyes = happy ? "happy" : frame % 50 < 2 ? "shut" : "open";
+  const rows = avatarPose(s.stand && !s.dogHere ? "stand" : "sit", eyes);
   const wiggling = !s.reduced && !s.dialogue && frame % 100 < 12;
-  const px = 143 + (wiggling ? [0, 1, 0, -1][frame % 4] : 0);
-  const py = 120 - rows.length;
-  R(C.floorLine, 151, 118, 23, 1);
+  const hops = [0, 2, 4, 5, 4, 2, 0, 0];
+  const jumping = !s.reduced && s.happyNow && s.time - s.happyAt < 3.2;
+  const dogHop = !s.reduced && play >= 34 && play < 42;
+  const jump = jumping || dogHop ? hops[frame % hops.length] : 0;
+  const px = 152 + (wiggling ? [0, 1, 0, -1][frame % 4] : 0);
+  const py = 120 - rows.length - jump;
+  R(C.floorLine, 155, 118, 17, 1);
   rows.forEach((row, j) => {
     for (let i = 0; i < row.length; i++) {
       const c = AVATAR_COLORS[row[i]];
@@ -490,8 +492,8 @@ const drawRoom = (ctx, s) => {
   });
   // a little "..." over my head, so you know I'm up for a chat
   if (!s.dialogue) {
-    const bx = px + 27;
-    const by = py - 5;
+    const bx = px + 19;
+    const by = py - 7;
     R(C.ink, bx + 1, by, 15, 1);
     R(C.ink, bx, by + 1, 17, 7);
     R(C.ink, bx + 1, by + 8, 15, 1);
@@ -526,8 +528,8 @@ const drawRoom = (ctx, s) => {
         R(C.cloud, x + ox - part / 2, oy - part / 2, part, part);
       });
     };
-    const home = 128;
-    const clones = [100, 176];
+    const home = 135;
+    const clones = [108, 178];
     if (s.reduced) {
       drawDog(home, 108);
     } else if (dogTime < PLAY_START) {
@@ -544,7 +546,7 @@ const drawRoom = (ctx, s) => {
       if (play < 14) {
         const t = play / 13;
         const dogX = home + (far - home) * t;
-        const bx = 144 + (far - 144) * t;
+        const bx = 152 + (far - 152) * t;
         R("#e0b23f", bx, 110 - Math.sin(t * Math.PI) * 18, 3, 3);
         drawDog(dogX, 108, { left: true, run: true });
       } else if (play < 18) {
@@ -661,7 +663,7 @@ const ROOM_SPOTS = {
 
 // clicking me starts the conversation
 const CONTACT_BOXES = [
-  [148, 82, 46, 38],
+  [150, 84, 38, 36],
 ];
 
 const box = ([x, y, w, h]) => ({
@@ -674,7 +676,7 @@ const box = ([x, y, w, h]) => ({
 export default function Room() {
   const [active, setActive] = useState(null);
   const canvasRef = useRef(null);
-  const state = useRef({ active: null, plays: {}, time: 0, activeAt: 0, night: false, reduced: false, stand: false, waveUntil: 0, dogHere: false, dogAt: 0, dialogue: false });
+  const state = useRef({ active: null, plays: {}, time: 0, activeAt: 0, night: false, reduced: false, stand: false, happyNow: false, happyAt: 0, dogHere: false, dogAt: 0, dialogue: false });
   const wasActive = useRef(false);
   const current = room.items.find((item) => item.id === active);
 
@@ -693,13 +695,15 @@ export default function Room() {
     setTyped(reducedMotion() ? Infinity : 0);
     const s = state.current;
     s.stand = true;
-    s.waveUntil = dialogue[next].wave ? s.time + 5 : 0;
+    s.happyNow = Boolean(dialogue[next].happy);
+    s.happyAt = s.time;
     s.redraw?.();
   };
   const closeDialog = () => {
     setDialog(null);
     setCopied(false);
     state.current.stand = false;
+    state.current.happyNow = false;
     state.current.redraw?.();
   };
 

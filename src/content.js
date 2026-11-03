@@ -399,7 +399,7 @@ export const contact = {
     },
     hi: {
       text: "Hi!",
-      wave: true,
+      happy: true,
       email: {
         label: "Send me a hi to my email",
         subject: "Hi Viola!",
