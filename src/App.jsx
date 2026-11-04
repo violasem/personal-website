@@ -1833,7 +1833,7 @@ export default function App() {
 
   useEffect(() => {
     const entry = isDetail ? log.find((e) => e.slug === route.slice(4) && e.fullPage) : null;
-    document.title = entry ? `${entry.title} | ${profile.name}` : profile.name;
+    document.title = entry ? `${entry.title} | ${profile.name}` : profile.pageTitle;
 
     const target = !isDetail && route ? document.getElementById(route) : null;
     // smooth when moving around the home page, instant when arriving from another page
@@ -1848,7 +1848,7 @@ export default function App() {
       {isDetail ? <LogDetail slug={route.slice(4)} /> : <Home />}
       <footer className="footer">
         <div className="wrap footer-inner">
-          <span>{profile.name}</span>
+          <span>{profile.fullName}</span>
           <ExternalLinks links={profile.links} />
         </div>
       </footer>

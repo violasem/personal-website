@@ -2,6 +2,8 @@
 
 export const profile = {
   name: "Viola Sembiring",
+  fullName: "Viola Charissa Diana Sembiring",
+  pageTitle: "Viola Sembiring | Computer Engineering, University of Michigan",
   greeting: "Hi, I’m Viola.",
   statement:
     "Computer engineering student growing into embedded and control systems, with a background in data and machine learning.",
