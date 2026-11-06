@@ -10,29 +10,61 @@ export const ReactiveTitle = ({ text, onSwitch, switchLabel }) => {
   const ref = useRef(null);
   useEffect(() => {
     if (!hasMouse() || reducedMotion()) return;
+    const hero = ref.current.closest(".hero") || ref.current;
     const letters = [...ref.current.querySelectorAll(".title-letter")];
-    const reach = 190;
+    const reach = 170;
+    let centers = [];
+    let lit = new Set();
     let frame = 0;
-    const onMove = (e) => {
-      cancelAnimationFrame(frame);
-      frame = requestAnimationFrame(() => {
-        letters.forEach((letter) => {
-          const box = letter.getBoundingClientRect();
-          const dx = e.clientX - (box.left + box.width / 2);
-          const dy = e.clientY - (box.top + box.height / 2);
-          const near = Math.max(0, 1 - Math.hypot(dx, dy) / reach);
-          letter.style.fontVariationSettings = `"wght" ${Math.round(450 + near * 230)}, "SOFT" 100, "WONK" 1`;
-          letter.style.translate = `${(dx * near * 0.05).toFixed(1)}px ${(dy * near * 0.09 - near * 6).toFixed(1)}px`;
-          // the letters closest to the lamp catch its light
-          letter.style.color = near > 0 ? `color-mix(in srgb, #f8d568 ${Math.round(near * 100)}%, #f4f1e8)` : "";
-          letter.style.textShadow = near > 0 ? `0 0 ${Math.round(near * 26)}px rgba(245, 200, 66, ${(near * 0.55).toFixed(2)})` : "";
-        });
+    let x = 0;
+    let y = 0;
+    // measure once when the cursor arrives, not on every move
+    const measure = () => {
+      centers = letters.map((l) => {
+        const b = l.getBoundingClientRect();
+        return [b.left + b.width / 2 + window.scrollX, b.top + b.height / 2 + window.scrollY];
       });
     };
-    window.addEventListener("pointermove", onMove, { passive: true });
+    const draw = () => {
+      frame = 0;
+      const next = new Set();
+      letters.forEach((letter, i) => {
+        const dx = x + window.scrollX - centers[i][0];
+        const dy = y + window.scrollY - centers[i][1];
+        const near = Math.max(0, 1 - Math.hypot(dx, dy) / reach);
+        if (near > 0) {
+          next.add(i);
+          letter.style.translate = `0 ${(-near * 7).toFixed(1)}px`;
+          letter.style.color = `color-mix(in srgb, #f8d568 ${Math.round(near * 100)}%, #f4f1e8)`;
+        } else if (lit.has(i)) {
+          letter.style.translate = "";
+          letter.style.color = "";
+        }
+      });
+      lit = next;
+    };
+    const onMove = (e) => {
+      x = e.clientX;
+      y = e.clientY;
+      if (!frame) frame = requestAnimationFrame(draw);
+    };
+    const onEnter = () => measure();
+    const onLeave = () => {
+      x = -9999;
+      y = -9999;
+      if (!frame) frame = requestAnimationFrame(draw);
+    };
+    measure();
+    hero.addEventListener("pointerenter", onEnter);
+    hero.addEventListener("pointermove", onMove, { passive: true });
+    hero.addEventListener("pointerleave", onLeave);
+    window.addEventListener("resize", measure);
     return () => {
       cancelAnimationFrame(frame);
-      window.removeEventListener("pointermove", onMove);
+      hero.removeEventListener("pointerenter", onEnter);
+      hero.removeEventListener("pointermove", onMove);
+      hero.removeEventListener("pointerleave", onLeave);
+      window.removeEventListener("resize", measure);
     };
   }, []);
 
@@ -438,100 +470,54 @@ const cursorLabel = (el) => {
 };
 
 export const Cursor = () => {
-  const dotRef = useRef(null);
-  const ringRef = useRef(null);
-  const [state, setState] = useState({ kind: null, text: "" });
-  const [on, setOn] = useState(false);
+  const ref = useRef(null);
+  const [text, setText] = useState("");
 
   useEffect(() => {
-    const fine = window.matchMedia("(hover: hover) and (pointer: fine)");
-    if (!fine.matches) return;
-    setOn(true);
-    document.documentElement.classList.add("custom-cursor");
-    const still = reducedMotion();
-    let x = -100;
-    let y = -100;
-    let rx = -100;
-    let ry = -100;
+    if (!window.matchMedia("(hover: hover) and (pointer: fine)").matches) return;
     let frame = 0;
-    let shown = false;
-    let last = "";
-
-    const loop = () => {
-      rx += (x - rx) * (still ? 1 : 0.2);
-      ry += (y - ry) * (still ? 1 : 0.2);
-      dotRef.current.style.transform = `translate(${x}px, ${y}px)`;
-      ringRef.current.style.transform = `translate(${rx}px, ${ry}px)`;
-      frame = Math.abs(x - rx) + Math.abs(y - ry) > 0.2 ? requestAnimationFrame(loop) : 0;
-    };
-    const wake = () => {
-      if (!frame) frame = requestAnimationFrame(loop);
+    let x = 0;
+    let y = 0;
+    let showing = false;
+    const draw = () => {
+      frame = 0;
+      if (ref.current) ref.current.style.transform = `translate(${x + 16}px, ${y + 18}px)`;
     };
     const onMove = (e) => {
-      if (e.pointerType !== "mouse") return;
+      if (!showing) return;
       x = e.clientX;
       y = e.clientY;
-      if (!shown) {
-        shown = true;
-        rx = x;
-        ry = y;
-        document.documentElement.classList.add("cursor-in");
-      }
-      const next = cursorLabel(document.elementFromPoint(x, y)) ?? { kind: null };
-      const key = `${next.kind}:${next.text ?? ""}`;
-      if (key !== last) {
-        last = key;
-        setState({ kind: next.kind, text: next.text ?? "" });
-      }
-      wake();
+      if (!frame) frame = requestAnimationFrame(draw);
+    };
+    // only when the pointer moves onto a new element, not on every move
+    const onOver = (e) => {
+      if (e.pointerType !== "mouse") return;
+      const hint = cursorLabel(e.target);
+      const label = hint?.kind === "label" ? hint.text : "";
+      showing = Boolean(label);
+      x = e.clientX;
+      y = e.clientY;
+      draw();
+      setText(label);
     };
     const onLeave = () => {
-      shown = false;
-      document.documentElement.classList.remove("cursor-in");
+      showing = false;
+      setText("");
     };
-    const onDown = () => document.documentElement.classList.add("cursor-down");
-    const onUp = () => document.documentElement.classList.remove("cursor-down");
-
-    window.addEventListener("pointermove", onMove, { passive: true });
-    window.addEventListener("pointerdown", onDown);
-    window.addEventListener("pointerup", onUp);
+    document.addEventListener("pointerover", onOver, { passive: true });
+    document.addEventListener("pointermove", onMove, { passive: true });
     document.addEventListener("mouseleave", onLeave);
-    window.addEventListener("blur", onLeave);
     return () => {
       cancelAnimationFrame(frame);
-      window.removeEventListener("pointermove", onMove);
-      window.removeEventListener("pointerdown", onDown);
-      window.removeEventListener("pointerup", onUp);
+      document.removeEventListener("pointerover", onOver);
+      document.removeEventListener("pointermove", onMove);
       document.removeEventListener("mouseleave", onLeave);
-      window.removeEventListener("blur", onLeave);
-      document.documentElement.classList.remove("custom-cursor", "cursor-in", "cursor-down");
     };
   }, []);
 
-  // buttons lean toward the cursor a little as it comes close
-  useEffect(() => {
-    if (!window.matchMedia("(hover: hover) and (pointer: fine)").matches || reducedMotion()) return;
-    const onMove = (e) => {
-      document.querySelectorAll(".button, .qm-open, .hero-actions a").forEach((el) => {
-        const box = el.getBoundingClientRect();
-        const dx = e.clientX - (box.left + box.width / 2);
-        const dy = e.clientY - (box.top + box.height / 2);
-        const reach = Math.max(box.width, box.height) * 0.9 + 30;
-        const near = Math.max(0, 1 - Math.hypot(dx, dy) / reach);
-        el.style.translate = near ? `${(dx * near * 0.32).toFixed(1)}px ${(dy * near * 0.42).toFixed(1)}px` : "";
-      });
-    };
-    window.addEventListener("pointermove", onMove, { passive: true });
-    return () => window.removeEventListener("pointermove", onMove);
-  }, []);
-
-  if (!on) return null;
   return (
-    <>
-      <div ref={ringRef} className={`cursor-ring${state.kind ? ` is-${state.kind}` : ""}`} aria-hidden="true">
-        <span>{state.text}</span>
-      </div>
-      <div ref={dotRef} className={`cursor-dot${state.kind ? ` is-${state.kind}` : ""}`} aria-hidden="true" />
-    </>
+    <div ref={ref} className={`cursor-hint${text ? " on" : ""}`} aria-hidden="true">
+      {text}
+    </div>
   );
 };

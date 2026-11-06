@@ -864,21 +864,28 @@ const GREETINGS = [profile.greeting, "Halo, aku Viola."];
 
 const Hero = () => {
   const [greeting, setGreeting] = useState(0);
+  const lampAt = useRef([0, 0]);
+  const lampFrame = useRef(0);
   return (
     <section
       className="hero"
       onPointerMove={(e) => {
-        // the desk lamp follows your cursor
+        // the desk lamp follows your cursor, moved once per frame
         if (e.pointerType !== "mouse") return;
-        const box = e.currentTarget.getBoundingClientRect();
-        e.currentTarget.style.setProperty("--lx", `${e.clientX - box.left}px`);
-        e.currentTarget.style.setProperty("--ly", `${e.clientY - box.top}px`);
-        // the desk has depth: things drift with the cursor and their shadows fall away from the lamp
-        e.currentTarget.style.setProperty("--mx", (((e.clientX - box.left) / box.width) * 2 - 1).toFixed(3));
-        e.currentTarget.style.setProperty("--my", (((e.clientY - box.top) / box.height) * 2 - 1).toFixed(3));
+        const hero = e.currentTarget;
+        const box = hero.getBoundingClientRect();
+        lampAt.current = [e.clientX - box.left, e.clientY - box.top];
+        if (lampFrame.current) return;
+        lampFrame.current = requestAnimationFrame(() => {
+          lampFrame.current = 0;
+          const light = hero.querySelector(".lamp-light");
+          if (light) light.style.transform = `translate(${lampAt.current[0]}px, ${lampAt.current[1]}px)`;
+        });
       }}
     >
-      <div className="lamp" aria-hidden="true" />
+      <div className="lamp" aria-hidden="true">
+        <div className="lamp-light" />
+      </div>
       <div className="hero-inner">
         <div className="hero-main">
           <ReactiveTitle
