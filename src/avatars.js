@@ -15,11 +15,13 @@ const eyeRows = (left, right) => left.map((row, i) => `kksss${row}sss${right[i]}
 const mirrorRow = (row) => [...row].reverse().join("");
 const OPEN = ["OOW", "OOO", "OOO", "OOO", "OOO"];
 const SHUT = ["sss", "sss", "sss", "sss", "OOO"];
+const FOCUS = ["sss", "OOO", "OOO", "OOW", "sss"];
 const HAPPY = ["sssss", "ssOss", "sOsOs", "OsssO", "sssss"].map((row) => `kks${row}sss${row}skk`);
 const EYES = {
   open: eyeRows(OPEN, OPEN.map(mirrorRow)),
   shut: eyeRows(SHUT, SHUT),
   happy: HAPPY,
+  focus: eyeRows(FOCUS, FOCUS.map(mirrorRow)),
 };
 
 const head = (eyes) => [
@@ -76,7 +78,7 @@ const compose = (pose, eyes) => {
 };
 
 const cache = {};
-// One picture of me: pose is "sit" or "stand"; eyes are "open", "shut" or "happy".
+// One picture of me: pose is "sit" or "stand"; eyes are "open", "shut", "happy" or "focus".
 export const avatarPose = (pose, eyes = "open") => {
   const key = `${pose}-${eyes}`;
   cache[key] ??= compose(pose, eyes);

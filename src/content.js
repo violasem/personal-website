@@ -322,6 +322,8 @@ export const room = {
   title: "My room",
   intro: "The part of me that isn’t on my resume.",
   hint: "Click on anything in the room. I’m here too if you want to talk.",
+  lockedHint: "Lights off means I’m locked in. Click on anything, or interrupt me if it’s important.",
+  lockedHover: "Locked in. Click if it’s important.",
   items: [
     { id: "music", name: "Music", text: "What I’m listening to right now.", url: "https://open.spotify.com/playlist/1vHnZpoh3TbeXlvnFfp7Uf", link: "Open my Spotify" },
     { id: "guitar", name: "Guitar", text: "I learned guitar." },
@@ -330,7 +332,7 @@ export const room = {
     { id: "barbell", name: "Barbell", text: "I go to the gym and try to lift weights." },
     { id: "tv", name: "TV", text: "What I’ve been watching.", url: "https://letterboxd.com/violasem/", link: "Open my Letterboxd" },
     { id: "photos", name: "Polaroids", text: "A few little moments.", url: "https://www.instagram.com/vgiola/", link: "Open my Instagram" },
-    { id: "lamp", name: "Lamp", text: "Click it to switch the room between day and night." },
+    { id: "lamp", name: "Lamp", text: "Click it. Lights off means I lock in and study." },
     { id: "flag", name: "Indonesia", text: "Born and raised in Medan." },
   ],
 };

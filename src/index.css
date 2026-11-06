@@ -3554,7 +3554,6 @@ body,
 
 /* things that stay the same whether the lights are on or off */
 .desk-item,
-.desk-tip,
 .desk-drawer,
 .resume,
 .resume-actions {
@@ -3624,5 +3623,186 @@ body,
 
   .nav-pill {
     transition: none;
+  }
+}
+
+/* the description that shows when you pick something up */
+.desk-tip {
+  background: #111b30;
+  box-shadow: 0 10px 26px rgba(5, 10, 22, 0.45);
+  color: #fff;
+}
+
+/* the time machine above the timeline */
+.tl-machine {
+  margin-bottom: 26px;
+  padding: clamp(20px, 3vw, 30px);
+  border-radius: 24px;
+  background: var(--night);
+  color: var(--moon);
+}
+
+.tl-machine-top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 20px;
+}
+
+.tl-play {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--maize);
+  color: var(--night-deep);
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.2s ease;
+}
+
+.tl-play:hover {
+  box-shadow: 0 8px 22px rgba(245, 200, 66, 0.35);
+  transform: scale(1.06);
+}
+
+.tl-when {
+  font-family: "Fraunces", Georgia, serif;
+  font-size: clamp(32px, 4vw, 48px);
+  font-variation-settings: "SOFT" 100, "WONK" 1;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+
+.tl-count {
+  margin-left: auto;
+  color: var(--moon-soft);
+  font-size: 16px;
+}
+
+.tl-slider {
+  width: 100%;
+  height: 28px;
+  margin: 16px 0 10px;
+  background: none;
+  cursor: grab;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.tl-slider:active {
+  cursor: grabbing;
+}
+
+.tl-slider::-webkit-slider-runnable-track {
+  height: 6px;
+  border-radius: 99px;
+  background: linear-gradient(to right, var(--maize) var(--p), rgba(255, 255, 255, 0.18) var(--p));
+}
+
+.tl-slider::-moz-range-track {
+  height: 6px;
+  border-radius: 99px;
+  background: linear-gradient(to right, var(--maize) var(--p), rgba(255, 255, 255, 0.18) var(--p));
+}
+
+.tl-slider::-webkit-slider-thumb {
+  width: 24px;
+  height: 24px;
+  margin-top: -9px;
+  border: 4px solid var(--night);
+  border-radius: 50%;
+  background: var(--maize);
+  box-shadow: 0 0 0 2px var(--maize);
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.tl-slider::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border: 4px solid var(--night);
+  border-radius: 50%;
+  background: var(--maize);
+  box-shadow: 0 0 0 2px var(--maize);
+}
+
+.tl-slider:focus-visible {
+  outline: 2px solid var(--maize);
+  outline-offset: 2px;
+}
+
+.tl-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  min-height: 38px;
+}
+
+.tl-chips button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 14px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--chip);
+  color: #1b2537;
+  font: inherit;
+  font-size: 14.5px;
+  font-weight: 500;
+  cursor: pointer;
+  animation: chipIn 0.32s cubic-bezier(0.25, 1.4, 0.4, 1) both;
+  transition: transform 0.15s ease;
+}
+
+.tl-chips button:hover {
+  transform: translateY(-2px);
+}
+
+@keyframes chipIn {
+  from {
+    opacity: 0;
+    transform: scale(0.7) translateY(6px);
+  }
+}
+
+/* each role lights up while it's happening */
+.tl-item {
+  border-radius: 12px;
+  transition: background-color 0.2s ease, opacity 0.2s ease;
+}
+
+.tl-item.active,
+.tl-item.open,
+.tl-item:hover {
+  background: var(--tint);
+}
+
+.tl-plot path {
+  stroke-width: 2.5;
+}
+
+.tl-row:hover .tl-plot path,
+.tl-item.active .tl-plot path,
+.tl-item.open .tl-plot path {
+  stroke-width: 4;
+}
+
+.tl-item.active .tl-role {
+  color: var(--ink);
+}
+
+:root[data-theme="dark"] .tl-machine {
+  background: #1b2b4a;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tl-chips button {
+    animation: none;
   }
 }

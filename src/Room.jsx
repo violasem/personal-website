@@ -474,9 +474,11 @@ const drawRoom = (ctx, s) => {
   const play = s.dogHere && !s.reduced && dogTime >= PLAY_START ? (dogTime - PLAY_START) % 60 : -1;
   // I'm happy when someone says hi, and when the dog brings the ball back
   const happy = s.happyNow || (play >= 34 && play < 56);
+  // lights off: I lock in and study (drawn after the room dims, lit by the laptop)
+  const lockedIn = s.night && !s.dialogue && !s.dogHere;
   const eyes = happy ? "happy" : frame % 50 < 2 ? "shut" : "open";
   const rows = avatarPose(s.stand && !s.dogHere ? "stand" : "sit", eyes);
-  const wiggling = !s.reduced && !s.dialogue && frame % 100 < 12;
+  const wiggling = !s.reduced && !s.dialogue && !lockedIn && frame % 100 < 12;
   const hops = [0, 2, 4, 5, 4, 2, 0, 0];
   const jumping = !s.reduced && s.happyNow && s.time - s.happyAt < 3.2;
   const dogHop = !s.reduced && play >= 34 && play < 42;
@@ -484,14 +486,16 @@ const drawRoom = (ctx, s) => {
   const px = 152 + (wiggling ? [0, 1, 0, -1][frame % 4] : 0);
   const py = 120 - rows.length - jump;
   R(C.floorLine, 155, 118, 17, 1);
-  rows.forEach((row, j) => {
-    for (let i = 0; i < row.length; i++) {
-      const c = AVATAR_COLORS[row[i]];
-      if (c) R(c, px + i, py + j, 1, 1);
-    }
-  });
+  if (!lockedIn) {
+    rows.forEach((row, j) => {
+      for (let i = 0; i < row.length; i++) {
+        const c = AVATAR_COLORS[row[i]];
+        if (c) R(c, px + i, py + j, 1, 1);
+      }
+    });
+  }
   // a little "..." over my head, so you know I'm up for a chat
-  if (!s.dialogue) {
+  if (!s.dialogue && !lockedIn) {
     const bx = px + 19;
     const by = py - 7;
     R(C.ink, bx + 1, by, 15, 1);
@@ -594,6 +598,51 @@ const drawRoom = (ctx, s) => {
     blob(118, 26, [3, 4, 4, 5, 5, 6, 6, 7], "#ffe9a8", "#6b5a35");
   }
 
+  if (lockedIn) {
+    // a soft pool of light from the laptop
+    const nod = !s.reduced && frame % 30 < 4 ? 1 : 0;
+    const studyRows = avatarPose("sit", frame % 50 < 2 ? "shut" : "focus");
+    const sx = 152;
+    const sy = 120 - studyRows.length;
+    R("rgba(190, 220, 255, 0.07)", sx - 6, 97, 33, 23);
+    R("rgba(190, 220, 255, 0.07)", sx - 1, 93, 23, 27);
+    studyRows.forEach((row, j) => {
+      for (let i = 0; i < row.length; i++) {
+        const c = AVATAR_COLORS[row[i]];
+        if (c) R(c, sx + i, sy + j + (j < 18 ? nod : 0), 1, 1);
+      }
+    });
+    // laptop on my lap, seen from behind
+    R(C.ink, sx + 3, 111, 15, 8);
+    R("#b9c0cc", sx + 4, 112, 13, 6);
+    R("#d6dbe3", sx + 4, 112, 13, 1);
+    R("#eaf3ff", sx + 9, 114, 3, 2);
+    // hands on the keys
+    if (!s.reduced) {
+      R(AVATAR_COLORS.s, sx + 2 + (frame % 4 < 2 ? 0 : 1), 116, 2, 2);
+      R(AVATAR_COLORS.s, sx + 17 - (frame % 4 < 2 ? 1 : 0), 116, 2, 2);
+    }
+    // a stack of textbooks
+    [["#a34f60", 137, 114, 13], ["#3f5f8a", 139, 110, 11], ["#d9a92c", 138, 106, 12]].forEach(([color, x, y, w]) => {
+      R(C.ink, x - 1, y - 1, w + 2, 5);
+      R(color, x, y, w, 3);
+      R(C.sheet, x + w - 2, y + 1, 2, 1);
+    });
+    // coffee, still hot
+    R(C.ink, 174, 110, 9, 9);
+    R(C.cloud, 175, 111, 7, 7);
+    R("#7a4f33", 175, 111, 7, 2);
+    R(C.ink, 183, 112, 2, 1);
+    R(C.ink, 184, 113, 1, 3);
+    R(C.ink, 183, 116, 2, 1);
+    if (!s.reduced) {
+      [0, 10].forEach((delay, n) => {
+        const f = (frame + delay) % 20;
+        R("rgba(255, 255, 255, 0.65)", 177 + n * 3 + (f % 8 < 4 ? 0 : 1), 108 - Math.floor(f / 3), 1, 2);
+      });
+    }
+  }
+
   // the TV screen, with letterbox bars around a little film when it's on
   R(C.ink, 204, 49, 24, 26);
   R("#1b2029", 205, 50, 22, 24);
@@ -681,6 +730,7 @@ export default function Room() {
   const current = room.items.find((item) => item.id === active);
 
   const [dialog, setDialog] = useState(null);
+  const [lockedIn, setLockedIn] = useState(false);
   const [typed, setTyped] = useState(0);
   const [copied, setCopied] = useState(false);
   const dialogue = contact.dialogue;
@@ -722,9 +772,11 @@ export default function Room() {
   useEffect(() => {
     const onLights = (e) => {
       state.current.night = e.detail.off;
+      setLockedIn(e.detail.off);
       state.current.redraw?.();
     };
     state.current.night = document.documentElement.dataset.theme === "dark";
+    setLockedIn(state.current.night);
     dogBus.addEventListener("lights", onLights);
     return () => dogBus.removeEventListener("lights", onLights);
   }, []);
@@ -815,6 +867,7 @@ export default function Room() {
     setActive(id);
     if (id === "lamp") {
       state.current.night = !state.current.night;
+      setLockedIn(state.current.night);
       state.current.redraw?.();
     }
     if (reducedMotion()) return;
@@ -922,7 +975,7 @@ export default function Room() {
         ) : (
           <div className="room-caption" aria-live="polite">
             {active === "contact" ? (
-              <p>Click to say hi.</p>
+              <p>{lockedIn ? room.lockedHover : "Click to say hi."}</p>
             ) : current ? (
               <p key={current.id}>
                 <strong>{current.name}:</strong> {current.text}
@@ -933,7 +986,7 @@ export default function Room() {
                 )}
               </p>
             ) : (
-              <p>{room.hint}</p>
+              <p>{lockedIn ? room.lockedHint : room.hint}</p>
             )}
           </div>
         )}
