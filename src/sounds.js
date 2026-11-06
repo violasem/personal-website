@@ -56,6 +56,11 @@ const noise = (ctx, out, { at, length, peak, attack = 0.003, type = "bandpass", 
   return gain;
 };
 
+// a little 8-bit note
+const beep = (ctx, out, pitch, at, length, peak) => {
+  tone(ctx, out, { type: "square", from: pitch, at, length, peak, attack: 0.006, filter: { type: "lowpass", frequency: 2600 } });
+};
+
 export const SOUND_BUILDERS = {
   quack: (ctx, out, t) => {
     // a nasal buzz through a narrow filter, falling in pitch, with a rattle in it
@@ -117,13 +122,22 @@ export const SOUND_BUILDERS = {
     });
   },
   music: (ctx, out, t) => {
-    // the needle drops, a bit of crackle, then a short tune
+    // the needle drops, then a beepy take on the chords of Weezer's "Island in the Sun"
     noise(ctx, out, { at: t, length: 0.05, peak: 0.25, type: "highpass", frequency: 1800 });
-    for (let i = 0; i < 14; i++) {
-      noise(ctx, out, { at: t + 0.05 + Math.random() * 1.3, length: 0.012, peak: 0.08 + Math.random() * 0.08, attack: 0.001, type: "highpass", frequency: 2600 });
-    }
-    [[329.6, 0.2], [392, 0.45], [440, 0.7], [392, 0.95], [329.6, 1.2]].forEach(([pitch, at]) => {
-      tone(ctx, out, { type: "triangle", from: pitch, at: t + at, length: 0.4, peak: 0.16, attack: 0.02, filter: { type: "lowpass", frequency: 1300 } });
+    const chords = [
+      [164.8, 196, 246.9, 329.6], // Em
+      [220, 261.6, 329.6, 440], // Am
+      [146.8, 220, 293.7, 370], // D
+      [196, 246.9, 293.7, 392], // G
+    ];
+    const step = 0.27;
+    const pattern = [0, 2, 1, 3, 2, 1, 3, 2];
+    chords.forEach((notes, c) => {
+      pattern.forEach((n, i) => {
+        const at = t + 0.12 + (c * pattern.length + i) * step * 0.5;
+        beep(ctx, out, notes[n], at, step * 0.46, 0.09);
+      });
+      tone(ctx, out, { type: "triangle", from: notes[0] / 2, at: t + 0.12 + c * pattern.length * step * 0.5, length: step * 3.6, peak: 0.2, attack: 0.01 });
     });
   },
   bed: (ctx, out, t) => {
@@ -155,9 +169,17 @@ export const SOUND_BUILDERS = {
     tone(ctx, out, { from: 1500, to: 900, at: t, length: 0.035, peak: 0.06, attack: 0.001 });
   },
   flag: (ctx, out, t) => {
-    // cloth flapping in the wind
-    [0, 0.13, 0.25, 0.4, 0.52].forEach((delay, i) => {
-      noise(ctx, out, { at: t + delay, length: 0.11, peak: 0.55 - i * 0.05, attack: 0.012, frequency: 560 + i * 45, q: 0.8 });
+    // the opening of "Indonesia Raya", in beeps
+    const beat = 0.24;
+    const line = [
+      [370, 1.5], [392, 0.5], [440, 1], [370, 2], [370, 1], [329.6, 1], [329.6, 1], [293.7, 1], [220, 2],
+      [220, 1], [220, 1], [246.9, 1], [220, 1], [196, 1], [185, 1], [164.8, 3],
+    ];
+    let at = t;
+    line.forEach(([pitch, beats]) => {
+      const length = beats * beat;
+      beep(ctx, out, pitch, at, length * 0.88, 0.17);
+      at += length;
     });
   },
   me: (ctx, out, t) => {
@@ -167,12 +189,51 @@ export const SOUND_BUILDERS = {
   },
 };
 
+// A longer sound stops when something else starts, so tunes don't pile up.
+let playing = null;
 export const playSound = (name) => {
   try {
     const ctx = context();
     if (!ctx) return;
-    SOUND_BUILDERS[name]?.(ctx, ctx.destination, ctx.currentTime + 0.005);
+    if (playing) {
+      playing.gain.setTargetAtTime(0, ctx.currentTime, 0.015);
+      const old = playing;
+      setTimeout(() => old.disconnect(), 150);
+    }
+    playing = ctx.createGain();
+    playing.connect(ctx.destination);
+    SOUND_BUILDERS[name]?.(ctx, playing, ctx.currentTime + 0.005);
   } catch {
     // no sound available, and everything else still works
+  }
+};
+
+// Talking: every letter is a tiny animal-style syllable, pitched by the letter.
+const VOWEL_TONE = { a: 1150, e: 1750, i: 2300, o: 780, u: 620, y: 2000 };
+export const buildTalk = (ctx, out, t, letter) => {
+  const ch = letter.toLowerCase();
+  const code = ch.charCodeAt(0) - 97;
+  const pitch = 460 + ((code * 37) % 170) + Math.random() * 18;
+  const f = ctx.createBiquadFilter();
+  f.type = "bandpass";
+  f.frequency.value = VOWEL_TONE[ch] ?? 1000 + ((code * 53) % 800);
+  f.Q.value = 2.2;
+  const gain = shape(ctx, t, 0.62, 0.006, 0.06);
+  const osc = ctx.createOscillator();
+  osc.type = "sawtooth";
+  osc.frequency.setValueAtTime(pitch * 1.1, t);
+  osc.frequency.exponentialRampToValueAtTime(pitch * 0.92, t + 0.055);
+  osc.connect(f).connect(gain).connect(out);
+  osc.start(t);
+  osc.stop(t + 0.07);
+};
+
+export const playTalk = (letter) => {
+  try {
+    const ctx = context();
+    if (!ctx || ctx.state !== "running") return;
+    buildTalk(ctx, ctx.destination, ctx.currentTime + 0.002, letter);
+  } catch {
+    // the words still appear without the voice
   }
 };

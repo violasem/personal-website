@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { AVATAR_COLORS, avatarPose } from "./avatars.js";
 import { dogBus } from "./dogBus.js";
-import { playSound } from "./sounds.js";
+import { playSound, playTalk } from "./sounds.js";
 import { contact, profile, room } from "./content.js";
 
 const W = 236;
@@ -754,7 +754,10 @@ export default function Room() {
   // the words type out
   useEffect(() => {
     if (!dialog || done) return;
-    const t = setTimeout(() => setTyped((n) => n + 1), 24);
+    // I "talk" as the words appear, like in Animal Crossing
+    const letter = text[typed];
+    if (typed % 2 === 0 && /[a-z]/i.test(letter ?? "")) playTalk(letter);
+    const t = setTimeout(() => setTyped((n) => n + 1), 30);
     return () => clearTimeout(t);
   }, [dialog, done, typed]);
 
