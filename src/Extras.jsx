@@ -238,3 +238,169 @@ export const useCardTilt = () => {
     onPointerLeave: clear,
   };
 };
+
+// The time where I am, in the footer.
+export const LocalTime = () => {
+  const format = () =>
+    new Intl.DateTimeFormat("en-US", { timeZone: "America/Detroit", hour: "numeric", minute: "2-digit" }).format(new Date()).toLowerCase();
+  const [time, setTime] = useState(format);
+  useEffect(() => {
+    const id = setInterval(() => setTime(format()), 15000);
+    return () => clearInterval(id);
+  }, []);
+  return (
+    <span className="local-time">
+      <i aria-hidden="true" />
+      It’s {time} in Ann Arbor
+    </span>
+  );
+};
+
+// A quick menu: press Ctrl K (or ⌘K on a Mac) or "/" to jump anywhere.
+export const QuickMenu = ({ commands }) => {
+  const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState("");
+  const [index, setIndex] = useState(0);
+  const [note, setNote] = useState("");
+  const inputRef = useRef(null);
+  const lastFocus = useRef(null);
+  const mac = typeof navigator !== "undefined" && /Mac|iPhone|iPad/.test(navigator.platform);
+
+  const show = () => {
+    lastFocus.current = document.activeElement;
+    setQuery("");
+    setIndex(0);
+    setNote("");
+    setOpen(true);
+  };
+  const hide = () => {
+    setOpen(false);
+    lastFocus.current?.focus?.();
+  };
+
+  useEffect(() => {
+    const onKey = (e) => {
+      const typing = /input|textarea|select/i.test(e.target.tagName) || e.target.isContentEditable;
+      if ((e.key === "k" && (e.metaKey || e.ctrlKey)) || (e.key === "/" && !typing && !open)) {
+        e.preventDefault();
+        if (open) hide();
+        else show();
+      }
+    };
+    const onOpen = () => show();
+    window.addEventListener("keydown", onKey);
+    window.addEventListener("open-quick-menu", onOpen);
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      window.removeEventListener("open-quick-menu", onOpen);
+    };
+  });
+
+  useEffect(() => {
+    if (open) inputRef.current?.focus();
+    document.documentElement.classList.toggle("menu-open", open);
+  }, [open]);
+
+  const words = query.trim().toLowerCase().split(/\s+/).filter(Boolean);
+  const shown = commands.filter((c) => words.every((w) => `${c.label} ${c.group} ${c.keywords ?? ""}`.toLowerCase().includes(w)));
+  const groups = [...new Set(shown.map((c) => c.group))];
+
+  const run = (command) => {
+    const result = command.run();
+    if (typeof result === "string") {
+      setNote(result);
+      setTimeout(hide, 900);
+    } else {
+      hide();
+    }
+  };
+
+  if (!open) return null;
+  let n = -1;
+  return (
+    <div className="qm-backdrop" onMouseDown={(e) => e.target === e.currentTarget && hide()}>
+      <div className="qm" role="dialog" aria-modal="true" aria-label="Quick menu">
+        <div className="qm-search">
+          <svg viewBox="0 0 20 20" width="18" height="18" aria-hidden="true">
+            <circle cx="8.5" cy="8.5" r="5.5" fill="none" stroke="currentColor" strokeWidth="2" />
+            <path d="M13 13l4 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+          </svg>
+          <input
+            ref={inputRef}
+            value={query}
+            placeholder="Where to?"
+            aria-label="Search the site"
+            aria-controls="qm-list"
+            aria-activedescendant={shown[index] ? `qm-${index}` : undefined}
+            onChange={(e) => {
+              setQuery(e.target.value);
+              setIndex(0);
+            }}
+            onKeyDown={(e) => {
+              if (e.key === "ArrowDown") {
+                e.preventDefault();
+                setIndex((i) => Math.min(i + 1, shown.length - 1));
+              } else if (e.key === "ArrowUp") {
+                e.preventDefault();
+                setIndex((i) => Math.max(i - 1, 0));
+              } else if (e.key === "Enter" && shown[index]) {
+                e.preventDefault();
+                run(shown[index]);
+              } else if (e.key === "Escape") {
+                e.preventDefault();
+                hide();
+              }
+            }}
+          />
+          <kbd>esc</kbd>
+        </div>
+        {note ? (
+          <p className="qm-note" role="status">
+            {note}
+          </p>
+        ) : (
+          <ul className="qm-list" id="qm-list" role="listbox">
+            {groups.map((group) => (
+              <li key={group} role="presentation">
+                <p className="qm-group">{group}</p>
+                <ul role="presentation">
+                  {shown
+                    .filter((c) => c.group === group)
+                    .map((c) => {
+                      n += 1;
+                      const i = shown.indexOf(c);
+                      return (
+                        <li
+                          key={c.label}
+                          id={`qm-${i}`}
+                          role="option"
+                          aria-selected={i === index}
+                          className={i === index ? "on" : undefined}
+                          onMouseMove={() => i !== index && setIndex(i)}
+                          onClick={() => run(c)}
+                        >
+                          <span>{c.label}</span>
+                          {c.hint && <small>{c.hint}</small>}
+                        </li>
+                      );
+                    })}
+                </ul>
+              </li>
+            ))}
+            {shown.length === 0 && <li className="qm-empty">Nothing matches “{query}”. Try “research” or “email”.</li>}
+          </ul>
+        )}
+        <p className="qm-foot">
+          <span>
+            <kbd>↑</kbd>
+            <kbd>↓</kbd> to move, <kbd>enter</kbd> to go
+          </span>
+          <span>
+            <kbd>{mac ? "⌘" : "Ctrl"}</kbd>
+            <kbd>K</kbd> any time
+          </span>
+        </p>
+      </div>
+    </div>
+  );
+};

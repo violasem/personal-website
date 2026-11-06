@@ -4,7 +4,8 @@ import { contact, deskItems, education, log, logTypes, nextUp, profile, skills, 
 import Room from "./Room.jsx";
 import { dogBus } from "./dogBus.js";
 import { playSound } from "./sounds.js";
-import { CircuitTrace, LightSwitch, ReactiveTitle, useCardTilt } from "./Extras.jsx";
+import { flushSync } from "react-dom";
+import { CircuitTrace, LightSwitch, LocalTime, QuickMenu, ReactiveTitle, useCardTilt } from "./Extras.jsx";
 
 
 const navItems = [
@@ -22,7 +23,16 @@ const parseRoute = () => window.location.hash.replace(/^#\/?/, "");
 const useRoute = () => {
   const [route, setRoute] = useState(parseRoute);
   useEffect(() => {
-    const onChange = () => setRoute(parseRoute());
+    const onChange = () => {
+      const next = parseRoute();
+      const pageChange = next.startsWith("log/") || document.querySelector(".detail");
+      // moving between pages slides smoothly, and a project's title glides into place
+      if (pageChange && document.startViewTransition && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+        document.startViewTransition(() => flushSync(() => setRoute(next)));
+      } else {
+        setRoute(next);
+      }
+    };
     window.addEventListener("hashchange", onChange);
     return () => window.removeEventListener("hashchange", onChange);
   }, []);
@@ -319,6 +329,13 @@ const TopBar = ({ route, current }) => {
             );
           })}
         </nav>
+        <button type="button" className="qm-open" aria-label="Open the quick menu" onClick={() => window.dispatchEvent(new Event("open-quick-menu"))}>
+          <svg viewBox="0 0 20 20" width="15" height="15" aria-hidden="true">
+            <circle cx="8.5" cy="8.5" r="5.5" fill="none" stroke="currentColor" strokeWidth="2" />
+            <path d="M13 13l4 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+          </svg>
+          <kbd>{/Mac|iPhone|iPad/.test(navigator.platform) ? "⌘K" : "Ctrl K"}</kbd>
+        </button>
       </div>
       <ScrollProgress />
     </header>
@@ -998,7 +1015,14 @@ const ProjectLog = () => {
                         </>
                       )}
                       {e.fullPage && (
-                        <a className="card-open" href={`#/log/${e.slug}`}>
+                        <a
+                          className="card-open"
+                          href={`#/log/${e.slug}`}
+                          onClick={(ev) => {
+                            const title = ev.currentTarget.closest(".log-card")?.querySelector(".card-title");
+                            if (title) title.style.viewTransitionName = "project-title";
+                          }}
+                        >
                           See the full page
                           <Chevron />
                         </a>
@@ -1846,6 +1870,49 @@ const LogDetail = ({ slug }) => {
   );
 };
 
+const go = (hash) => () => {
+  if (window.location.hash === hash) window.dispatchEvent(new HashChangeEvent("hashchange"));
+  else window.location.hash = hash;
+};
+const toRoom = () => {
+  const scroll = () => document.getElementById("contact")?.scrollIntoView({ behavior: "smooth" });
+  if (document.getElementById("contact")) scroll();
+  else {
+    window.location.hash = "#/";
+    setTimeout(scroll, 450);
+  }
+};
+const quickCommands = [
+  { group: "Go to", label: "Project log", hint: "Section", run: go("#/log"), keywords: "projects work" },
+  { group: "Go to", label: "Experience", hint: "Section", run: go("#/experience"), keywords: "timeline jobs roles" },
+  { group: "Go to", label: "Education", hint: "Section", run: go("#/education"), keywords: "school courses skills" },
+  { group: "Go to", label: "My room", hint: "Section", run: toRoom, keywords: "contact hobbies music guitar" },
+  ...log
+    .filter((e) => e.fullPage)
+    .map((e) => ({ group: "Research", label: e.title, hint: "Full page", run: go(`#/log/${e.slug}`), keywords: "research paper" })),
+  {
+    group: "Do",
+    label: "Copy my email",
+    hint: contact.email,
+    keywords: "contact mail",
+    run: () => {
+      navigator.clipboard?.writeText(contact.email).catch(() => {});
+      return `Copied ${contact.email}`;
+    },
+  },
+  { group: "Do", label: "Say hi to me in the room", hint: "Contact", run: go("#/contact"), keywords: "contact talk message" },
+  { group: "Do", label: "Open my resume", hint: "PDF", run: () => window.open(contact.resumePdf, "_blank", "noopener"), keywords: "cv" },
+  {
+    group: "Do",
+    label: "Turn the lights on or off",
+    hint: "Theme",
+    keywords: "dark light mode night",
+    run: () => document.querySelector(".light-switch")?.click(),
+  },
+  ...profile.links.map((l) => ({ group: "Elsewhere", label: l.name, hint: "Opens in a new tab", run: () => window.open(l.url, "_blank", "noopener") })),
+  { group: "Elsewhere", label: "Letterboxd", hint: "Opens in a new tab", run: () => window.open("https://letterboxd.com/violasem/", "_blank", "noopener"), keywords: "movies films" },
+];
+
 export default function App() {
   const route = useRoute();
   const isDetail = route.startsWith("log/");
@@ -1871,11 +1938,13 @@ export default function App() {
       <footer className="footer">
         <div className="wrap footer-inner">
           <span>{profile.fullName}</span>
+          <LocalTime />
           <ExternalLinks links={profile.links} />
         </div>
       </footer>
       <LightSwitch />
       <Puppy />
+      <QuickMenu commands={quickCommands} />
     </div>
   );
 }
