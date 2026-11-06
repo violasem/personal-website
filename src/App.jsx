@@ -1034,7 +1034,6 @@ const ProjectLog = () => {
 };
 
 const TYPE_COLORS = { Research: "#4f7ea6", Engineering: "#b08a2e", Teaching: "#55885f", Leadership: "#ab5f70" };
-const TYPE_CHIPS = { Research: "#d8e6f3", Engineering: "#f6e8bb", Teaching: "#d9e8d6", Leadership: "#f4d9dc" };
 
 // Each role is a line that steps up while I held it.
 const toMonths = (ym) => {
@@ -1063,35 +1062,14 @@ const Experience = () => {
   const ticks = [];
   for (let m = start; m <= nowMonths; m++) if ((m - start) % 3 === 0) ticks.push(m);
 
-  const [playing, setPlaying] = useState(false);
   const shownTime = cursor ?? nowMonths - 0.01;
-  const activeRoles = timeline.filter((t) => {
+  const activeCount = timeline.filter((t) => {
     const to = t.to ? toMonths(t.to) + 1 : nowMonths;
     return shownTime >= toMonths(t.from) && shownTime < to;
-  });
-
-  // press play to watch the year go by
-  useEffect(() => {
-    if (!playing) return;
-    userTookOver.current = true;
-    const began = performance.now();
-    let frame;
-    const step = (time) => {
-      const p = Math.min((time - began) / 7000, 1);
-      setCursor(start + p * (span - 0.01));
-      if (p < 1) {
-        frame = requestAnimationFrame(step);
-      } else {
-        setPlaying(false);
-        setCursor(null);
-      }
-    };
-    frame = requestAnimationFrame(step);
-    return () => cancelAnimationFrame(frame);
-  }, [playing, start, span]);
+  }).length;
+  const countWords = ["No roles", "One role", "Two roles", "Three roles", "Four roles", "Five roles", "Six roles", "Seven roles", "Eight roles"];
 
   const onMove = (e) => {
-    if (playing) return;
     userTookOver.current = true;
     const r = axisRef.current?.getBoundingClientRect();
     if (!r) return;
@@ -1135,7 +1113,7 @@ const Experience = () => {
       <div className="block-head">
         <div>
           <h2>Experience</h2>
-          <p className="block-intro">Press play or drag the slider to travel through time. Tap a role to read about it.</p>
+          <p className="block-intro">Slide across the timeline to travel through time. Tap a role to read about it.</p>
         </div>
       </div>
       <div className="tl-legend" role="group" aria-label="Highlight one kind of role">
@@ -1145,50 +1123,15 @@ const Experience = () => {
           </button>
         ))}
       </div>
-      <div className="tl-machine">
-        <div className="tl-machine-top">
-          <button type="button" className="tl-play" aria-label={playing ? "Pause" : "Play through time"} onClick={() => setPlaying(!playing)}>
-            <svg viewBox="0 0 20 20" width="20" height="20" aria-hidden="true">
-              {playing ? <path fill="currentColor" d="M5 3h4v14H5zM11 3h4v14h-4z" /> : <path fill="currentColor" d="M6 3l11 7-11 7z" />}
-            </svg>
-          </button>
-          <div className="tl-when" aria-live="off">{monthLabel(shownTime)}</div>
-          <p className="tl-count">
-            {activeRoles.length === 1 ? "One role" : `${activeRoles.length} roles`} at once
-          </p>
-        </div>
-        <input
-          className="tl-slider"
-          type="range"
-          aria-label="Move through time"
-          aria-valuetext={monthLabel(shownTime)}
-          min={start}
-          max={nowMonths - 0.01}
-          step="0.05"
-          value={shownTime}
-          style={{ "--p": `${xOf(shownTime)}%` }}
-          onChange={(e) => {
-            userTookOver.current = true;
-            setPlaying(false);
-            setCursor(Number(e.target.value));
-          }}
-        />
-        <div className="tl-chips">
-          {activeRoles.map((t) => {
-            const type = log.find((e) => e.slug === t.log)?.type;
-            return (
-              <button key={t.role} type="button" style={{ "--chip": TYPE_CHIPS[type] || "#e6e9f2" }} aria-expanded={open === t.role} onClick={() => setOpen(open === t.role ? null : t.role)}>
-                {t.role}
-              </button>
-            );
-          })}
-        </div>
-      </div>
+      <p className="tl-readout">
+        {monthLabel(shownTime)}: {countWords[activeCount].toLowerCase()} at once
+      </p>
       <div
         className={cursor !== null ? "timeline scanning" : "timeline"}
         ref={timelineRef}
         onPointerMove={onMove}
-        onPointerLeave={() => !playing && setCursor(null)}
+        onPointerLeave={() => setCursor(null)}
+        onPointerCancel={() => setCursor(null)}
       >
         <div className="tl-axis">
           <div className="tl-axis-plot" ref={axisRef}>
