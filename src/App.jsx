@@ -5,7 +5,7 @@ import Room from "./Room.jsx";
 import { dogBus } from "./dogBus.js";
 import { playSound } from "./sounds.js";
 import { flushSync } from "react-dom";
-import { CircuitTrace, LightSwitch, LocalTime, QuickMenu, ReactiveTitle, useCardTilt } from "./Extras.jsx";
+import { CircuitTrace, Cursor, LightSwitch, LocalTime, QuickMenu, ReactiveTitle, useCardTilt } from "./Extras.jsx";
 
 
 const navItems = [
@@ -1215,10 +1215,27 @@ const NextSteps = () => (
   </section>
 );
 
+// "EECS 280: Programming and Data Structures" becomes a chip with the code in bold
+const Course = ({ text }) => {
+  const [code, name] = text.includes(":") ? text.split(/:\s*/) : [null, text];
+  return (
+    <li>
+      {code && <b>{code}</b>}
+      <span>{name}</span>
+    </li>
+  );
+};
+
 const EducationSkills = () => (
-  <section id="education" className="block two-col reveal">
+  <section id="education" className="block reveal">
+    <div className="block-head">
+      <div>
+        <h2>Education</h2>
+        <p className="block-intro">Where I study, and what I work with.</p>
+      </div>
+    </div>
+    <div className="two-col">
     <div>
-      <h2>Education</h2>
       <h3 className="edu-school">{education.school}</h3>
       <p>{education.degree}</p>
       <p className="muted">{education.dates}</p>
@@ -1230,26 +1247,36 @@ const EducationSkills = () => (
       <h4>Relevant coursework</h4>
       <ul className="course-list">
         {education.coursework.map((c) => (
-          <li key={c}>{c}</li>
+          <Course key={c} text={c} />
         ))}
       </ul>
-      <h4>Taking now</h4>
-      <ul className="course-list">
+      <h4 className="now-heading">
+        <i aria-hidden="true" />
+        Taking now
+      </h4>
+      <ul className="course-list now">
         {education.courseworkNow.map((c) => (
-          <li key={c}>{c}</li>
+          <Course key={c} text={c} />
         ))}
       </ul>
     </div>
     <div>
-      <h2>Skills</h2>
+      <h3 className="skills-title">Skills</h3>
       <dl className="skills">
         {skills.map((s) => (
           <div key={s.group}>
             <dt>{s.group}</dt>
-            <dd>{s.items}</dd>
+            <dd>
+              {s.items.split(/,\s*/).map((item) => (
+                <span key={item} className="skill-chip">
+                  {item}
+                </span>
+              ))}
+            </dd>
           </div>
         ))}
       </dl>
+    </div>
     </div>
   </section>
 );
@@ -1945,6 +1972,7 @@ export default function App() {
       <LightSwitch />
       <Puppy />
       <QuickMenu commands={quickCommands} />
+      <Cursor />
     </div>
   );
 }

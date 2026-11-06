@@ -404,3 +404,118 @@ export const QuickMenu = ({ commands }) => {
     </div>
   );
 };
+
+// A soft dot that follows the cursor and turns into a ring that says what a click will do.
+const cursorLabel = (el) => {
+  if (!el?.closest) return null;
+  if (el.closest("input:not([type=range]), textarea, [contenteditable=true]")) return { kind: "text" };
+  if (el.closest(".desk-item")) return { kind: "label", text: "Drag" };
+  const head = el.closest(".card-head");
+  if (head) return { kind: "label", text: head.getAttribute("aria-expanded") === "true" ? "Close" : "Open" };
+  const hit = el.closest(".room-hit");
+  if (hit) return { kind: "label", text: hit.getAttribute("aria-label") === "Contact me" ? "Say hi" : "Play" };
+  if (el.closest(".timeline")) return { kind: "label", text: "Slide" };
+  if (el.closest(".puppy")) return { kind: "label", text: "Pet" };
+  if (el.closest("a[target=_blank]")) return { kind: "label", text: "Visit" };
+  if (el.closest("a, button, [role=option], input[type=range], label, summary")) return { kind: "link" };
+  return null;
+};
+
+export const Cursor = () => {
+  const dotRef = useRef(null);
+  const ringRef = useRef(null);
+  const [state, setState] = useState({ kind: null, text: "" });
+  const [on, setOn] = useState(false);
+
+  useEffect(() => {
+    const fine = window.matchMedia("(hover: hover) and (pointer: fine)");
+    if (!fine.matches) return;
+    setOn(true);
+    document.documentElement.classList.add("custom-cursor");
+    const still = reducedMotion();
+    let x = -100;
+    let y = -100;
+    let rx = -100;
+    let ry = -100;
+    let frame = 0;
+    let shown = false;
+    let last = "";
+
+    const loop = () => {
+      rx += (x - rx) * (still ? 1 : 0.2);
+      ry += (y - ry) * (still ? 1 : 0.2);
+      dotRef.current.style.transform = `translate(${x}px, ${y}px)`;
+      ringRef.current.style.transform = `translate(${rx}px, ${ry}px)`;
+      frame = Math.abs(x - rx) + Math.abs(y - ry) > 0.2 ? requestAnimationFrame(loop) : 0;
+    };
+    const wake = () => {
+      if (!frame) frame = requestAnimationFrame(loop);
+    };
+    const onMove = (e) => {
+      if (e.pointerType !== "mouse") return;
+      x = e.clientX;
+      y = e.clientY;
+      if (!shown) {
+        shown = true;
+        rx = x;
+        ry = y;
+        document.documentElement.classList.add("cursor-in");
+      }
+      const next = cursorLabel(document.elementFromPoint(x, y)) ?? { kind: null };
+      const key = `${next.kind}:${next.text ?? ""}`;
+      if (key !== last) {
+        last = key;
+        setState({ kind: next.kind, text: next.text ?? "" });
+      }
+      wake();
+    };
+    const onLeave = () => {
+      shown = false;
+      document.documentElement.classList.remove("cursor-in");
+    };
+    const onDown = () => document.documentElement.classList.add("cursor-down");
+    const onUp = () => document.documentElement.classList.remove("cursor-down");
+
+    window.addEventListener("pointermove", onMove, { passive: true });
+    window.addEventListener("pointerdown", onDown);
+    window.addEventListener("pointerup", onUp);
+    document.addEventListener("mouseleave", onLeave);
+    window.addEventListener("blur", onLeave);
+    return () => {
+      cancelAnimationFrame(frame);
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerdown", onDown);
+      window.removeEventListener("pointerup", onUp);
+      document.removeEventListener("mouseleave", onLeave);
+      window.removeEventListener("blur", onLeave);
+      document.documentElement.classList.remove("custom-cursor", "cursor-in", "cursor-down");
+    };
+  }, []);
+
+  // buttons lean toward the cursor a little as it comes close
+  useEffect(() => {
+    if (!window.matchMedia("(hover: hover) and (pointer: fine)").matches || reducedMotion()) return;
+    const onMove = (e) => {
+      document.querySelectorAll(".button, .qm-open, .hero-actions a").forEach((el) => {
+        const box = el.getBoundingClientRect();
+        const dx = e.clientX - (box.left + box.width / 2);
+        const dy = e.clientY - (box.top + box.height / 2);
+        const reach = Math.max(box.width, box.height) * 0.9 + 30;
+        const near = Math.max(0, 1 - Math.hypot(dx, dy) / reach);
+        el.style.translate = near ? `${(dx * near * 0.32).toFixed(1)}px ${(dy * near * 0.42).toFixed(1)}px` : "";
+      });
+    };
+    window.addEventListener("pointermove", onMove, { passive: true });
+    return () => window.removeEventListener("pointermove", onMove);
+  }, []);
+
+  if (!on) return null;
+  return (
+    <>
+      <div ref={ringRef} className={`cursor-ring${state.kind ? ` is-${state.kind}` : ""}`} aria-hidden="true">
+        <span>{state.text}</span>
+      </div>
+      <div ref={dotRef} className={`cursor-dot${state.kind ? ` is-${state.kind}` : ""}`} aria-hidden="true" />
+    </>
+  );
+};

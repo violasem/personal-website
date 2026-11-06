@@ -4040,3 +4040,320 @@ kbd {
     animation: none;
   }
 }
+
+/* chapters: on wide screens each section's title stays on the left while its content scrolls past */
+.skills-title {
+  margin-bottom: 14px;
+  font-family: "Fraunces", Georgia, serif;
+  font-size: 26px;
+  font-weight: 500;
+  font-variation-settings: "SOFT" 100, "WONK" 1;
+  letter-spacing: -0.015em;
+}
+
+@media (min-width: 1100px) {
+  #log,
+  #experience,
+  #education,
+  #contact {
+    display: grid;
+    grid-template-columns: 270px minmax(0, 1fr);
+    column-gap: clamp(48px, 5vw, 80px);
+    align-items: start;
+  }
+
+  #log > :not(.block-head),
+  #experience > :not(.block-head),
+  #education > :not(.block-head),
+  #contact > :not(.block-head) {
+    grid-column: 2;
+  }
+
+  #log > .block-head,
+  #experience > .block-head,
+  #education > .block-head,
+  #contact > .block-head {
+    position: sticky;
+    top: 104px;
+    grid-row: 1 / span 6;
+    flex-direction: column;
+    align-items: flex-start;
+    margin: 0;
+  }
+
+  .block-head h2 {
+    font-size: clamp(44px, 4.2vw, 60px);
+  }
+
+  .block-head .filters {
+    flex-wrap: wrap;
+    justify-content: flex-start;
+  }
+
+  #experience .tl-legend {
+    margin-top: 0;
+  }
+
+  #education .two-col {
+    gap: 40px clamp(32px, 4vw, 56px);
+  }
+
+  #contact .game-plain {
+    margin-top: 16px;
+  }
+}
+
+/* the cursor */
+.cursor-dot,
+.cursor-ring {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 100;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.cursor-in .cursor-dot,
+.cursor-in .cursor-ring {
+  opacity: 1;
+}
+
+.cursor-dot {
+  width: 8px;
+  height: 8px;
+  margin: -4px 0 0 -4px;
+  border-radius: 50%;
+  background: #fff;
+  mix-blend-mode: difference;
+}
+
+.cursor-ring {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 0;
+  height: 0;
+}
+
+.cursor-ring::before {
+  content: "";
+  position: absolute;
+  width: 34px;
+  height: 34px;
+  border: 1.5px solid #fff;
+  border-radius: 50%;
+  mix-blend-mode: difference;
+  transition: width 0.28s cubic-bezier(0.3, 1.3, 0.5, 1), height 0.28s cubic-bezier(0.3, 1.3, 0.5, 1), background-color 0.2s ease, border-color 0.2s ease, opacity 0.2s ease;
+}
+
+.cursor-ring span {
+  position: relative;
+  color: var(--night-deep);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  opacity: 0;
+  transform: scale(0.6);
+  transition: opacity 0.2s ease, transform 0.25s cubic-bezier(0.3, 1.3, 0.5, 1);
+}
+
+.cursor-ring.is-link::before {
+  width: 52px;
+  height: 52px;
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.cursor-ring.is-label::before {
+  width: 66px;
+  height: 66px;
+  border-color: var(--maize);
+  background: var(--maize);
+  mix-blend-mode: normal;
+  box-shadow: 0 8px 24px rgba(19, 31, 55, 0.22);
+}
+
+.cursor-ring.is-label span {
+  opacity: 1;
+  transform: none;
+}
+
+.cursor-dot.is-label,
+.cursor-dot.is-link,
+.cursor-ring.is-text::before,
+.cursor-dot.is-text {
+  opacity: 0;
+}
+
+.cursor-down .cursor-ring::before {
+  width: 26px;
+  height: 26px;
+}
+
+.cursor-down .cursor-ring.is-label::before {
+  width: 56px;
+  height: 56px;
+}
+
+html.custom-cursor,
+html.custom-cursor * {
+  cursor: none !important;
+}
+
+html.custom-cursor input:not([type="range"]),
+html.custom-cursor textarea {
+  cursor: text !important;
+}
+
+.button,
+.qm-open,
+.hero-actions a {
+  transition: translate 0.3s cubic-bezier(0.3, 1.2, 0.5, 1), background-color 0.2s ease, box-shadow 0.2s ease, color 0.2s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cursor-ring::before,
+  .cursor-ring span {
+    transition: none;
+  }
+}
+
+/* the facts sit on a card that overlaps the bottom of the desk */
+.facts {
+  position: relative;
+  z-index: 3;
+  margin-top: -44px;
+  padding: 0;
+  gap: 0;
+  overflow: hidden;
+  border-radius: 22px;
+  background: var(--surface-card);
+  box-shadow: 0 24px 50px rgba(19, 31, 55, 0.14), 0 0 0 1px rgba(19, 31, 55, 0.05);
+}
+
+:root {
+  --surface-card: #ffffff;
+}
+
+:root[data-theme="dark"] {
+  --surface-card: #1a263d;
+}
+
+.fact {
+  padding: clamp(20px, 2.4vw, 28px) clamp(20px, 2.6vw, 32px);
+}
+
+.fact + .fact {
+  border-left: 1px solid var(--rule);
+}
+
+.facts dt {
+  margin-bottom: 8px;
+  font-size: 13.5px;
+}
+
+.facts dd {
+  font-size: 16.5px;
+  line-height: 1.45;
+}
+
+.facts dd + dd {
+  margin-top: 2px;
+}
+
+@media (max-width: 760px) {
+  .facts {
+    grid-template-columns: 1fr;
+    margin-top: -28px;
+  }
+
+  .fact + .fact {
+    border-top: 1px solid var(--rule);
+    border-left: 0;
+  }
+}
+
+.hero-inner {
+  padding-bottom: clamp(72px, 7vw, 96px);
+}
+
+/* coursework and skills as chips */
+.course-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+  list-style: none;
+  padding: 0;
+}
+
+.course-list li {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 7px;
+  padding: 6px 12px;
+  border: 1px solid var(--rule);
+  border-radius: 10px;
+  background: var(--surface-card);
+  color: var(--ink-soft);
+  font-size: 14.5px;
+  line-height: 1.35;
+  transition: border-color 0.2s ease, transform 0.2s ease;
+}
+
+.course-list li:hover {
+  border-color: var(--ink-soft);
+  transform: translateY(-1px);
+}
+
+.course-list b {
+  color: var(--ink);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.course-list.now li {
+  border-color: color-mix(in srgb, var(--maize) 70%, transparent);
+  background: color-mix(in srgb, var(--maize) 16%, var(--surface-card));
+}
+
+.now-heading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.now-heading i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #6fcf8e;
+  animation: livePulse 2.4s ease-out infinite;
+}
+
+.skills dd {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.skill-chip {
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--pill);
+  color: var(--ink);
+  font-size: 14.5px;
+}
+
+.skills > div {
+  align-items: baseline;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .now-heading i {
+    animation: none;
+  }
+}
