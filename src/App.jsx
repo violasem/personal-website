@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import { contact, deskItems, education, log, logTypes, nextUp, profile, skills, timeline } from "./content.js";
 import Room from "./Room.jsx";
 import { dogBus } from "./dogBus.js";
+import { CircuitTrace, LightSwitch, ReactiveTitle, useCardTilt } from "./Extras.jsx";
 
 
 const navItems = [
@@ -305,6 +306,19 @@ const TopBar = ({ route, current }) => {
     }
   });
 
+  // a highlight slides to the link you're on, or the one you're pointing at
+  const pillRef = useRef(null);
+  const placePill = (link) => {
+    const pill = pillRef.current;
+    if (!pill) return;
+    pill.style.opacity = link ? 1 : 0;
+    if (!link) return;
+    pill.style.width = `${link.offsetWidth}px`;
+    pill.style.transform = `translateX(${link.offsetLeft}px)`;
+  };
+  const restPill = () => placePill(navRef.current?.querySelector('[aria-current="page"]'));
+  useLayoutEffect(restPill);
+
   return (
     <header className="topbar">
       <div className="topbar-inner">
@@ -314,12 +328,13 @@ const TopBar = ({ route, current }) => {
             VS
           </span>
         </a>
-        <nav aria-label="Main" ref={navRef}>
+        <nav aria-label="Main" ref={navRef} onPointerLeave={restPill}>
+          <span className="nav-pill" ref={pillRef} aria-hidden="true" />
           {navItems.map((n) => {
             const id = n.href.slice(2);
             const active = current ? current === id : route === id || (id === "log" && route.startsWith("log/"));
             return (
-              <a key={n.href} href={n.href} aria-current={active ? "page" : undefined}>
+              <a key={n.href} href={n.href} aria-current={active ? "page" : undefined} onPointerEnter={(e) => e.pointerType === "mouse" && placePill(e.currentTarget)}>
                 {n.label}
               </a>
             );
@@ -829,10 +844,20 @@ const ResumeDrawer = () => {
 
 const Hero = () => {
   return (
-    <section className="hero">
+    <section
+      className="hero"
+      onPointerMove={(e) => {
+        // the desk lamp follows your cursor
+        if (e.pointerType !== "mouse") return;
+        const box = e.currentTarget.getBoundingClientRect();
+        e.currentTarget.style.setProperty("--lx", `${e.clientX - box.left}px`);
+        e.currentTarget.style.setProperty("--ly", `${e.clientY - box.top}px`);
+      }}
+    >
+      <div className="lamp" aria-hidden="true" />
       <div className="hero-inner">
         <div className="hero-main">
-          <h1>{profile.greeting}</h1>
+          <ReactiveTitle text={profile.greeting} />
           <p className="hero-statement">{profile.statement}</p>
           <div className="hero-actions">
             <a className="button" href="#/log">
@@ -916,6 +941,8 @@ const ProjectLog = () => {
     }
   };
 
+  const tilt = useCardTilt();
+
   return (
     <section id="log" className="block reveal">
       <div className="block-head">
@@ -941,7 +968,7 @@ const ProjectLog = () => {
         </div>
       </div>
 
-      <ul className="log-grid" ref={gridRef}>
+      <ul className="log-grid" ref={gridRef} {...tilt}>
         {entries.map((e, i) => {
           const isOpen = open === e.slug;
           return (
@@ -1212,7 +1239,8 @@ const EducationSkills = () => (
 const Home = () => (
   <>
     <Hero />
-    <main className="wrap">
+    <main className="wrap has-trace">
+      <CircuitTrace selectors={["#log h2", "#experience h2", "#next", "#education h2", "#contact h2"]} />
       <Facts />
       <ProjectLog />
       <Experience />
@@ -1852,6 +1880,7 @@ export default function App() {
           <ExternalLinks links={profile.links} />
         </div>
       </footer>
+      <LightSwitch />
       <Puppy />
     </div>
   );

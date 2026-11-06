@@ -2943,3 +2943,686 @@ button:focus-visible {
     transform: translateY(13px) scale(1.09);
   }
 }
+
+/* ------------------------------------------------------------------
+   The desk at night: a deep blue desk under a lamp that follows you,
+   soft wonky headlines, and cards in the same colors as the sticky notes.
+   ------------------------------------------------------------------ */
+:root {
+  --page: #f6f6fa;
+  --ink: #1b2537;
+  --ink-soft: #4f5a6d;
+  --night: #1a2a47;
+  --night-deep: #131f37;
+  --moon: #f4f1e8;
+  --moon-soft: #c6d0e2;
+  --maize: #f5c842;
+  --rose: #a34f60;
+  --note-sky: #d8e6f3;
+  --note-butter: #f6e8bb;
+  --note-sage: #d9e8d6;
+  --note-blush: #f4d9dc;
+}
+
+h1,
+h2,
+.brand,
+.card-title {
+  font-family: "Fraunces", Georgia, serif;
+  font-variation-settings: "SOFT" 100, "WONK" 1;
+}
+
+/* the menu floats over the page */
+.topbar {
+  top: 12px;
+  width: calc(100% - 24px);
+  max-width: calc(var(--wrap) + var(--gutter) * 2);
+  margin: 12px auto 0;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.93);
+  box-shadow: 0 10px 30px rgba(19, 31, 55, 0.18);
+  -webkit-backdrop-filter: blur(14px) saturate(1.3);
+  backdrop-filter: blur(14px) saturate(1.3);
+}
+
+.topbar-inner {
+  min-height: 56px;
+  padding: 0 clamp(18px, 3vw, 28px);
+}
+
+.topbar nav a {
+  color: var(--ink);
+}
+
+/* the desk */
+.hero {
+  margin-top: -68px;
+  padding-top: 68px;
+  background-color: var(--night);
+  background-image: radial-gradient(rgba(255, 255, 255, 0.09) 1px, transparent 1.4px);
+}
+
+.hero-inner {
+  padding-top: clamp(36px, 4vw, 56px);
+  padding-bottom: 56px;
+}
+
+.hero-main {
+  color: var(--moon);
+}
+
+.lamp {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background:
+    radial-gradient(circle 460px at var(--lx, 72%) var(--ly, 48%), rgba(255, 224, 170, 0.14), transparent 70%),
+    radial-gradient(circle 620px at var(--lx, 72%) var(--ly, 48%), transparent 35%, rgba(10, 17, 32, 0.46) 100%);
+  pointer-events: none;
+}
+
+.hero h1 {
+  font-size: clamp(58px, 7.6vw, 112px);
+  font-weight: 450;
+  line-height: 0.96;
+  letter-spacing: -0.03em;
+}
+
+.hero-statement {
+  margin-top: 22px;
+  color: var(--moon-soft);
+}
+
+.hero-actions a:not(.button) {
+  color: var(--moon);
+  text-decoration-color: var(--maize);
+}
+
+.button {
+  padding: 13px 24px;
+  border-radius: 999px;
+  background: var(--maize);
+  color: var(--night-deep);
+  font-weight: 600;
+}
+
+.button:hover {
+  background: #ffd95e;
+  box-shadow: 0 10px 26px rgba(245, 200, 66, 0.32);
+}
+
+.desk-hint {
+  color: var(--moon-soft);
+}
+
+.tidy {
+  color: var(--moon);
+}
+
+.tidy:hover {
+  color: var(--maize);
+}
+
+/* sections */
+.block {
+  padding: clamp(64px, 8vw, 104px) 0;
+}
+
+.block + .block {
+  border-top: 0;
+}
+
+.block h2 {
+  font-size: clamp(40px, 5.4vw, 68px);
+  font-weight: 450;
+  line-height: 1;
+  letter-spacing: -0.028em;
+}
+
+.block-intro {
+  margin-top: 12px;
+  font-size: 18px;
+}
+
+.block-head {
+  margin-bottom: 36px;
+}
+
+.facts dt {
+  color: var(--rose);
+}
+
+.facts {
+  padding: clamp(40px, 5vw, 60px) 0 0;
+}
+
+.filter-pill,
+.filters button {
+  border-radius: 999px;
+}
+
+.filter-pill {
+  background: var(--night);
+}
+
+/* project cards, in the colors of the sticky notes */
+/* rows of two, one wide and one narrow, that always fill the width */
+.log-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+
+.log-card {
+  flex: 1 1 100%;
+  border: 0;
+  border-radius: 20px;
+  background: var(--note);
+  transition: rotate 0.25s cubic-bezier(0.3, 0.8, 0.3, 1), box-shadow 0.25s ease, translate 0.25s cubic-bezier(0.3, 0.8, 0.3, 1);
+}
+
+.card-research {
+  --note: var(--note-sky);
+  --type: #2f648f;
+}
+
+.card-engineering {
+  --note: var(--note-butter);
+  --type: #8a6714;
+}
+
+.card-teaching {
+  --note: var(--note-sage);
+  --type: #3e7248;
+}
+
+.card-leadership {
+  --note: var(--note-blush);
+  --type: #a34f60;
+}
+
+@media (min-width: 761px) {
+  .log-card {
+    flex: 1 1 34%;
+  }
+
+  .log-card:nth-child(4n + 1),
+  .log-card:nth-child(4n) {
+    flex-grow: 5;
+  }
+
+  .log-card.open {
+    flex-basis: 100%;
+  }
+}
+
+.log-card:hover,
+.log-card.open {
+  box-shadow: 0 16px 34px rgba(19, 31, 55, 0.14);
+}
+
+.log-card:hover:not(.open) {
+  translate: 0 -4px;
+}
+
+/* cards tilt toward the cursor, with a shine that follows it */
+.reveal.in .log-card {
+  animation-fill-mode: backwards;
+}
+
+.log-card.tilting {
+  transform: perspective(900px) rotateX(var(--rx)) rotateY(var(--ry));
+  transition: transform 0.06s linear, box-shadow 0.25s ease, translate 0.25s ease;
+}
+
+.log-card::before {
+  display: block;
+  inset: 0;
+  z-index: 1;
+  width: auto;
+  height: auto;
+  background: radial-gradient(circle 240px at var(--sx, 50%) var(--sy, 50%), rgba(255, 255, 255, 0.26), transparent 70%);
+  opacity: 0;
+  pointer-events: none;
+  transform: none;
+  transition: opacity 0.25s ease;
+}
+
+.log-card:hover::before,
+.log-card.open::before {
+  transform: none;
+}
+
+.log-card.tilting::before {
+  opacity: 1;
+}
+
+.log-card {
+  --ink: #1b2537;
+  --ink-soft: #3a4558;
+  color: var(--ink);
+}
+
+.card-head {
+  padding: 24px 56px 26px 26px;
+}
+
+.card-title {
+  font-size: clamp(22px, 2.2vw, 28px);
+  font-weight: 500;
+  line-height: 1.12;
+  letter-spacing: -0.015em;
+}
+
+.card-summary,
+.card-dates,
+.card-overview,
+.card-side p {
+  color: #3a4558;
+}
+
+/* what's next */
+.block.next-strip {
+  display: block;
+  margin: 0 0 clamp(16px, 3vw, 32px);
+  padding: clamp(32px, 5vw, 56px);
+  border-radius: 28px;
+  background: var(--night);
+  color: var(--moon);
+}
+
+.block.next-strip h2 {
+  margin-bottom: 12px;
+  color: var(--maize);
+  font-size: clamp(20px, 1.8vw, 24px);
+  letter-spacing: -0.01em;
+}
+
+.next-strip p {
+  max-width: 34em;
+  color: var(--moon);
+  font-family: "Fraunces", Georgia, serif;
+  font-size: clamp(22px, 2.6vw, 32px);
+  font-variation-settings: "SOFT" 100, "WONK" 0;
+  line-height: 1.22;
+  letter-spacing: -0.012em;
+}
+
+/* the room sits on the same night as the desk, all the way across the page */
+#contact {
+  background-color: var(--night);
+  box-shadow: 0 0 0 100vmax var(--night);
+  clip-path: inset(0 -100vmax);
+  color: var(--moon);
+}
+
+#contact .block-intro,
+#contact .game-plain {
+  color: var(--moon-soft);
+}
+
+#contact .game-plain a {
+  color: var(--moon);
+  text-decoration-color: var(--maize);
+}
+
+.room {
+  overflow: hidden;
+  border: 0;
+  border-radius: 22px;
+  box-shadow: 0 30px 70px rgba(5, 10, 22, 0.5);
+}
+
+.footer {
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--night);
+  color: var(--moon-soft);
+}
+
+.footer a {
+  color: var(--moon);
+  text-decoration-color: var(--maize);
+}
+
+@media (max-width: 520px) {
+
+  .topbar-inner {
+    gap: 8px;
+    justify-content: center;
+    padding: 0 14px;
+  }
+
+  .topbar .brand {
+    display: none;
+  }
+}
+
+@media (hover: none) {
+  .lamp {
+    background: radial-gradient(circle at 50% 62%, rgba(255, 224, 170, 0.1), transparent 70%);
+  }
+}
+
+/* the headline's letters */
+.title-word {
+  display: inline-block;
+  margin-right: 0.22em;
+  white-space: nowrap;
+}
+
+.title-letter {
+  display: inline-block;
+  transition: translate 0.18s ease-out, font-variation-settings 0.18s ease-out;
+  animation: letterIn 0.7s cubic-bezier(0.2, 0.9, 0.25, 1.25) both;
+  animation-delay: calc(var(--n) * 28ms + 0.15s);
+}
+
+.hero-main > h1 {
+  animation: none;
+}
+
+@keyframes letterIn {
+  from {
+    opacity: 0;
+    transform: translateY(0.45em) rotate(6deg);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* the menu's sliding highlight */
+.topbar nav {
+  position: relative;
+  gap: 4px;
+}
+
+.topbar nav a {
+  z-index: 1;
+  padding: 6px 12px;
+  transition: color 0.2s ease;
+}
+
+.topbar nav a::after {
+  display: none;
+}
+
+.nav-pill {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 0;
+  border-radius: 999px;
+  background: var(--pill);
+  opacity: 0;
+  transition: transform 0.32s cubic-bezier(0.3, 1.1, 0.4, 1), width 0.32s ease, opacity 0.2s ease;
+}
+
+:root {
+  --pill: #e6e9f2;
+  --bar: rgba(255, 255, 255, 0.93);
+}
+
+.topbar {
+  background: var(--bar);
+}
+
+.brand,
+.topbar nav a {
+  color: var(--ink);
+}
+
+/* the circuit trace down the side of the page */
+.has-trace {
+  position: relative;
+}
+
+.trace {
+  display: none;
+  position: absolute;
+  top: 0;
+  left: calc(var(--gutter) - 62px);
+  z-index: 2;
+  overflow: visible;
+  pointer-events: none;
+}
+
+@media (min-width: 1340px) {
+  .trace {
+    display: block;
+  }
+}
+
+.trace path {
+  fill: none;
+  stroke-width: 2;
+  stroke-linejoin: round;
+}
+
+.trace-base {
+  stroke: rgba(112, 130, 160, 0.28);
+}
+
+.trace-lit {
+  stroke: #e3ac17;
+}
+
+.trace-pad {
+  fill: var(--page);
+  stroke: rgba(112, 130, 160, 0.5);
+  stroke-width: 2;
+  transition: fill 0.25s ease, stroke 0.25s ease;
+}
+
+.trace-pad.on {
+  fill: var(--maize);
+  stroke: #e3ac17;
+}
+
+.trace-dot {
+  fill: #fff4c9;
+  stroke: #e3ac17;
+  stroke-width: 2;
+  filter: drop-shadow(0 0 5px rgba(245, 200, 66, 0.9));
+}
+
+@media (max-width: 520px) {
+  .topbar nav {
+    gap: 0;
+  }
+
+  .topbar nav a {
+    padding: 6px 8px;
+    font-size: 13.5px;
+  }
+}
+
+/* the pull cord */
+.light-switch {
+  position: fixed;
+  top: 0;
+  right: clamp(14px, 3vw, 40px);
+  z-index: 19;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 44px;
+  height: 128px;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: grab;
+  transform-origin: top center;
+}
+
+.light-cord {
+  flex: 1;
+  width: 2px;
+  background: #aab4c6;
+}
+
+.light-knob {
+  width: 18px;
+  height: 22px;
+  border: 2px solid #8b6a12;
+  border-radius: 50% 50% 45% 45%;
+  background: var(--maize);
+  box-shadow: 0 0 14px rgba(245, 200, 66, 0.55);
+  transition: background-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.light-switch:hover .light-knob {
+  transform: translateY(3px);
+}
+
+.light-switch[aria-pressed="true"] .light-knob {
+  background: #5a6880;
+  border-color: #33405a;
+  box-shadow: none;
+}
+
+.light-switch.pulled {
+  animation: cordPull 0.5s cubic-bezier(0.3, 1.4, 0.5, 1);
+}
+
+@keyframes cordPull {
+  30% {
+    transform: translateY(14px);
+  }
+  65% {
+    transform: translateY(-4px) rotate(3deg);
+  }
+}
+
+@media (max-width: 760px) {
+  .light-switch {
+    top: 70px;
+    height: 60px;
+  }
+}
+
+/* lights off */
+html,
+body,
+.footer,
+.block,
+.log-card,
+.topbar {
+  transition: background-color 0.4s ease, color 0.4s ease;
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --page: #0f1829;
+  --surface: #182338;
+  --banner: #1a2a47;
+  --ink: #edf0f6;
+  --ink-soft: #aeb9cd;
+  --rule: #2a3853;
+  --rule-strong: #43536f;
+  --rose: #e5a0ac;
+  --slate: #93a7c4;
+  --night: #16233d;
+  --pill: #2c3b59;
+  --bar: rgba(24, 35, 56, 0.9);
+}
+
+:root[data-theme="dark"] .topbar {
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+:root[data-theme="dark"] .filter-pill {
+  background: var(--maize);
+}
+
+:root[data-theme="dark"] .filters button[aria-pressed="true"] {
+  color: var(--night-deep);
+}
+
+:root[data-theme="dark"] .block.next-strip {
+  background: #1b2b4a;
+}
+
+:root[data-theme="dark"] .log-card:hover,
+:root[data-theme="dark"] .log-card.open {
+  box-shadow: 0 16px 34px rgba(0, 0, 0, 0.4);
+}
+
+/* things that stay the same whether the lights are on or off */
+.desk-item,
+.desk-tip,
+.desk-drawer,
+.resume,
+.resume-actions {
+  --ink: #1b2537;
+  --ink-soft: #4f5a6d;
+  --rule: #e0e2e2;
+  --slate: #3c4b5c;
+  color: var(--ink);
+}
+
+.room,
+.room-caption {
+  background: #27303b;
+}
+
+:root[data-theme="dark"] .tl-grid {
+  background: #24324c;
+}
+
+:root[data-theme="dark"] .tl-legend button[aria-pressed="true"],
+:root[data-theme="dark"] .next-project:hover,
+:root[data-theme="dark"] .fit-row.picked,
+:root[data-theme="dark"] .r-table tr.picked td,
+:root[data-theme="dark"] .r-table tr.picked th,
+:root[data-theme="dark"] .cluster-names button[aria-pressed="true"] {
+  background: #24324c;
+}
+
+:root[data-theme="dark"] .segments,
+:root[data-theme="dark"] .pipe-num,
+:root[data-theme="dark"] .meter-track {
+  background: #24324c;
+}
+
+:root[data-theme="dark"] .segments button[aria-pressed="true"] {
+  background: #3a4c6d;
+  color: var(--ink);
+}
+
+:root[data-theme="dark"] .pipe-steps button[aria-pressed="true"] {
+  background: var(--maize);
+  color: var(--night-deep);
+}
+
+:root[data-theme="dark"] .log-card:hover .card-toggle {
+  background: rgba(255, 255, 255, 0.6);
+}
+
+:root[data-theme="dark"] .log-card.open .card-toggle {
+  background: #3c4b5c;
+}
+
+:root[data-theme="dark"] .r-zoom,
+:root[data-theme="dark"] .zoom {
+  background: #f6f6fa;
+  color: #1b2537;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .title-letter {
+    animation: none;
+  }
+
+  .light-switch.pulled {
+    animation: none;
+  }
+
+  .nav-pill {
+    transition: none;
+  }
+}

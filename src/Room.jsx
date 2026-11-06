@@ -718,6 +718,17 @@ export default function Room() {
   }, [dialog]);
   useEffect(() => () => dogBus.dispatchEvent(new Event("show")), []);
 
+  // the lamp switch for the whole site turns the room's lights off too
+  useEffect(() => {
+    const onLights = (e) => {
+      state.current.night = e.detail.off;
+      state.current.redraw?.();
+    };
+    state.current.night = document.documentElement.dataset.theme === "dark";
+    dogBus.addEventListener("lights", onLights);
+    return () => dogBus.removeEventListener("lights", onLights);
+  }, []);
+
   // the words type out
   useEffect(() => {
     if (!dialog || done) return;
