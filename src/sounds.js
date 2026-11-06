@@ -182,6 +182,11 @@ export const SOUND_BUILDERS = {
       at += length;
     });
   },
+  meter: (ctx, out, t) => {
+    // the multimeter's double beep
+    beep(ctx, out, 2093, t, 0.07, 0.07);
+    beep(ctx, out, 2093, t + 0.11, 0.07, 0.07);
+  },
   me: (ctx, out, t) => {
     // a friendly little pop when you say hi
     tone(ctx, out, { from: 480, to: 840, at: t, length: 0.09, peak: 0.2, attack: 0.006 });

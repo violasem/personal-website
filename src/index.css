@@ -4357,3 +4357,83 @@ html.custom-cursor textarea {
     animation: none;
   }
 }
+
+/* the headline switches language when you click it */
+h1.switchable {
+  cursor: pointer;
+  outline-offset: 8px;
+  border-radius: 8px;
+}
+
+/* the multimeter while it's measuring */
+.desk-item.measuring svg .mm-read {
+  fill: #1c5a32;
+}
+
+.desk-item.measuring svg rect:nth-of-type(3) {
+  fill: #c9f0b8;
+}
+
+.desk-item .mm-dial {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  transition: transform 0.35s cubic-bezier(0.3, 1.4, 0.5, 1);
+}
+
+.desk-item.measuring .mm-dial {
+  transform: rotate(70deg);
+}
+
+.desk-item.measuring {
+  filter: drop-shadow(0 0 14px rgba(201, 240, 184, 0.55)) drop-shadow(0 10px 10px rgba(5, 10, 22, 0.3));
+}
+
+/* skill tags that point at projects */
+.skill-chip.linked {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 0;
+  font: inherit;
+  font-size: 14.5px;
+  cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease, transform 0.15s ease;
+}
+
+.skill-chip.linked small {
+  display: inline-grid;
+  place-items: center;
+  min-width: 18px;
+  height: 18px;
+  border-radius: 9px;
+  background: var(--surface-card);
+  color: var(--ink-soft);
+  font-size: 11.5px;
+  font-weight: 600;
+}
+
+.skill-chip.linked:hover {
+  background: var(--night);
+  color: var(--moon);
+  transform: translateY(-1px);
+}
+
+:root[data-theme="dark"] .skill-chip.linked:hover {
+  background: var(--maize);
+  color: var(--night-deep);
+}
+
+/* the projects a skill points at light up, and the rest step back */
+.log-card.dim {
+  opacity: 0.32;
+  filter: saturate(0.4);
+}
+
+.log-card.lit {
+  box-shadow: 0 0 0 3px var(--maize), 0 18px 36px rgba(19, 31, 55, 0.18);
+}
+
+.log-card.dim,
+.log-card.lit {
+  transition: opacity 0.4s ease, filter 0.4s ease, box-shadow 0.4s ease;
+}

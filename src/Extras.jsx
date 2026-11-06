@@ -6,7 +6,7 @@ const reducedMotion = () => window.matchMedia("(prefers-reduced-motion: reduce)"
 const hasMouse = () => window.matchMedia("(hover: hover) and (pointer: fine)").matches;
 
 // The headline: letters lean toward your cursor and get bolder as it comes near.
-export const ReactiveTitle = ({ text }) => {
+export const ReactiveTitle = ({ text, onSwitch, switchLabel }) => {
   const ref = useRef(null);
   useEffect(() => {
     if (!hasMouse() || reducedMotion()) return;
@@ -38,7 +38,21 @@ export const ReactiveTitle = ({ text }) => {
 
   let index = 0;
   return (
-    <h1 ref={ref} aria-label={text}>
+    <h1
+      ref={ref}
+      aria-label={text}
+      className="switchable"
+      role="button"
+      tabIndex={0}
+      title={switchLabel}
+      onClick={onSwitch}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onSwitch?.();
+        }
+      }}
+    >
       {text.split(" ").map((word) => (
         <span className="title-word" aria-hidden="true" key={word}>
           {[...word].map((ch, i) => (
@@ -410,6 +424,8 @@ const cursorLabel = (el) => {
   if (!el?.closest) return null;
   if (el.closest("input:not([type=range]), textarea, [contenteditable=true]")) return { kind: "text" };
   if (el.closest(".desk-item")) return { kind: "label", text: "Drag" };
+  const title = el.closest("h1.switchable");
+  if (title) return { kind: "label", text: title.getAttribute("aria-label").startsWith("Halo") ? "Hi!" : "Halo!" };
   const head = el.closest(".card-head");
   if (head) return { kind: "label", text: head.getAttribute("aria-expanded") === "true" ? "Close" : "Open" };
   const hit = el.closest(".room-hit");

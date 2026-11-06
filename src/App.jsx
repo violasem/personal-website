@@ -390,10 +390,10 @@ const DeskObject = ({ art }) => {
         <rect x="3" y="3" width="90" height="144" rx="12" fill="#d8a94f" />
         <rect x="12" y="12" width="72" height="126" rx="7" fill="#2f3741" />
         <rect x="20" y="20" width="56" height="30" rx="3" fill="#bfcdb6" />
-        <text x="72" y="42" textAnchor="end" fontFamily="ui-monospace, Menlo, monospace" fontSize="19" fontWeight="600" fill="#2f3741">215</text>
+        <text className="mm-read" x="72" y="42" textAnchor="end" fontFamily="ui-monospace, Menlo, monospace" fontSize="19" fontWeight="600" fill="#2f3741">215</text>
         <circle cx="48" cy="86" r="20" fill="#c9ced3" />
         <circle cx="48" cy="86" r="14" fill="#4b5560" />
-        <rect x="46" y="72" width="4" height="15" rx="2" fill="#e8ebee" />
+        <rect className="mm-dial" x="46" y="72" width="4" height="15" rx="2" fill="#e8ebee" />
         <circle cx="30" cy="124" r="5" fill="#b4545a" />
         <circle cx="48" cy="124" r="5" fill="#111518" />
         <circle cx="66" cy="124" r="5" fill="#b4545a" />
@@ -441,6 +441,28 @@ const Desk = () => {
     const el = itemRefs.current[id];
     if (el) el.style.transform = `translate(${p.x}px, ${p.y}px) rotate(${p.rot}deg)`;
     if (tipOwner.current === id) positionTip();
+    if (id === "multimeter" || id === "resistor") measure();
+  };
+
+  // bring the multimeter and the resistor together and it measures it
+  const measuring = useRef(false);
+  const measure = () => {
+    const meter = itemRefs.current.multimeter;
+    const part = itemRefs.current.resistor;
+    if (!meter || !part || !state.current.multimeter || !state.current.resistor) return;
+    const a = meter.getBoundingClientRect();
+    const b = part.getBoundingClientRect();
+    const gap = Math.hypot(a.left + a.width / 2 - (b.left + b.width / 2), a.top + a.height / 2 - (b.top + b.height / 2));
+    const touching = gap < (a.width + b.width) / 2 + 12;
+    if (touching === measuring.current) return;
+    measuring.current = touching;
+    meter.classList.toggle("measuring", touching);
+    const read = meter.querySelector(".mm-read");
+    if (read) read.textContent = touching ? "998Ω" : "215";
+    if (touching) {
+      playSound("meter");
+      showTip(deskItems.find((d) => d.id === "multimeter"), "It reads 998 Ω. Brown, black, red, gold means 1 kΩ ±5%, so this one’s in spec.", 4200);
+    }
   };
   const positionTip = () => {
     const el = itemRefs.current[tipOwner.current];
@@ -838,7 +860,10 @@ const ResumeDrawer = () => {
   );
 };
 
+const GREETINGS = [profile.greeting, "Halo, aku Viola."];
+
 const Hero = () => {
+  const [greeting, setGreeting] = useState(0);
   return (
     <section
       className="hero"
@@ -856,7 +881,12 @@ const Hero = () => {
       <div className="lamp" aria-hidden="true" />
       <div className="hero-inner">
         <div className="hero-main">
-          <ReactiveTitle text={profile.greeting} />
+          <ReactiveTitle
+            key={greeting}
+            text={GREETINGS[greeting]}
+            onSwitch={() => setGreeting((g) => (g + 1) % GREETINGS.length)}
+            switchLabel={greeting === 0 ? "Say it in Indonesian" : "Say it in English"}
+          />
           <p className="hero-statement">{profile.statement}</p>
           <div className="hero-actions">
             <a className="button" href="#/log">
@@ -888,6 +918,24 @@ const Facts = () => (
 const ProjectLog = () => {
   const [filter, setFilter] = useState("All");
   const [open, setOpen] = useState(null);
+  // a skill tag in Education can point at the projects that used it
+  const [spotlight, setSpotlight] = useState(null);
+  useEffect(() => {
+    let timer;
+    const onShow = (e) => {
+      setFilter("All");
+      setOpen(null);
+      setSpotlight(e.detail);
+      document.getElementById("log")?.scrollIntoView({ behavior: prefersReducedMotion() ? "auto" : "smooth" });
+      clearTimeout(timer);
+      timer = setTimeout(() => setSpotlight(null), 4500);
+    };
+    window.addEventListener("show-projects", onShow);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener("show-projects", onShow);
+    };
+  }, []);
   const entries = filter === "All" ? log : log.filter((e) => e.type === filter);
   const filtersRef = useRef(null);
   const gridRef = useRef(null);
@@ -971,7 +1019,7 @@ const ProjectLog = () => {
         {entries.map((e, i) => {
           const isOpen = open === e.slug;
           return (
-            <li key={e.slug} data-slug={e.slug} className={`log-card card-${e.type.toLowerCase()}${isOpen ? " open" : ""}`} style={{ "--i": i }}>
+            <li key={e.slug} data-slug={e.slug} className={`log-card card-${e.type.toLowerCase()}${isOpen ? " open" : ""}${spotlight ? (spotlight.includes(e.slug) ? " lit" : " dim") : ""}`} style={{ "--i": i }}>
               <button type="button" className="card-head" aria-expanded={isOpen} onClick={(ev) => toggle(e.slug, ev.currentTarget)}>
                 <span className="card-top">
                   <TypeLabel type={e.type} />
@@ -1226,6 +1274,15 @@ const Course = ({ text }) => {
   );
 };
 
+// which projects mention a skill anywhere in their write-up
+const projectsUsing = (skill) => {
+  const term = skill.toLowerCase().replace(/s$/, "");
+  return log.filter((e) => JSON.stringify(e).toLowerCase().includes(term)).map((e) => e.slug);
+};
+const showProjects = (slugs) => {
+  window.dispatchEvent(new CustomEvent("show-projects", { detail: slugs }));
+};
+
 const EducationSkills = () => (
   <section id="education" className="block reveal">
     <div className="block-head">
@@ -1267,11 +1324,19 @@ const EducationSkills = () => (
           <div key={s.group}>
             <dt>{s.group}</dt>
             <dd>
-              {s.items.split(/,\s*/).map((item) => (
-                <span key={item} className="skill-chip">
-                  {item}
-                </span>
-              ))}
+              {s.items.split(/,\s*/).map((item) => {
+                const slugs = projectsUsing(item);
+                return slugs.length ? (
+                  <button key={item} type="button" className="skill-chip linked" onClick={() => showProjects(slugs)} aria-label={`${item}: show the projects that used it`}>
+                    {item}
+                    <small>{slugs.length}</small>
+                  </button>
+                ) : (
+                  <span key={item} className="skill-chip">
+                    {item}
+                  </span>
+                );
+              })}
             </dd>
           </div>
         ))}
