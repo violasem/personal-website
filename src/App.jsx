@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import { contact, deskItems, education, log, logTypes, nextUp, profile, skills, timeline } from "./content.js";
 import Room from "./Room.jsx";
 import { dogBus } from "./dogBus.js";
+import { playSound } from "./sounds.js";
 import { CircuitTrace, LightSwitch, ReactiveTitle, useCardTilt } from "./Extras.jsx";
 
 
@@ -121,29 +122,6 @@ const Chevron = () => (
 const TypeLabel = ({ type }) => <span className={`type type-${type.toLowerCase()}`}>{type}</span>;
 
 
-const squeak = () => {
-  try {
-    const AudioCtx = window.AudioContext || window.webkitAudioContext;
-    const audio = new AudioCtx();
-    const now = audio.currentTime;
-    [0, 0.13].forEach((delay) => {
-      const osc = audio.createOscillator();
-      const gain = audio.createGain();
-      osc.type = "triangle";
-      osc.frequency.setValueAtTime(1050, now + delay);
-      osc.frequency.exponentialRampToValueAtTime(620, now + delay + 0.1);
-      gain.gain.setValueAtTime(0.0001, now + delay);
-      gain.gain.exponentialRampToValueAtTime(0.05, now + delay + 0.015);
-      gain.gain.exponentialRampToValueAtTime(0.0001, now + delay + 0.11);
-      osc.connect(gain).connect(audio.destination);
-      osc.start(now + delay);
-      osc.stop(now + delay + 0.12);
-    });
-    setTimeout(() => audio.close(), 500);
-  } catch {
-    // no sound available, and the quack bubble still shows
-  }
-};
 
 // The dog follows your cursor along the bottom of the screen. Click it to pet it, or give it a treat.
 const Puppy = () => {
@@ -241,6 +219,7 @@ const Puppy = () => {
   const pet = (e) => {
     setPets((n) => n + 1);
     setSaying("woof");
+    playSound("woof");
     burstHearts(e.clientX || 60, e.clientY || window.innerHeight - 50, 4);
   };
 
@@ -667,7 +646,7 @@ const Desk = () => {
 
   const tapItem = (item, el, ev) => {
     if (item.id === "duck") {
-      squeak();
+      playSound("quack");
       showTip(item, "quack!", 1200);
     }
     if (prefersReducedMotion()) return;

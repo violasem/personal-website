@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { AVATAR_COLORS, avatarPose } from "./avatars.js";
 import { dogBus } from "./dogBus.js";
+import { playSound } from "./sounds.js";
 import { contact, profile, room } from "./content.js";
 
 const W = 236;
@@ -9,37 +10,6 @@ const FPS = 10;
 
 const reducedMotion = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 const isTouch = () => window.matchMedia("(hover: none)").matches;
-
-// A short, quiet sound when you play the piano or the guitar.
-const playNotes = (frequencies, gap, type, length) => {
-  try {
-    const AudioCtx = window.AudioContext || window.webkitAudioContext;
-    const audio = new AudioCtx();
-    const now = audio.currentTime;
-    frequencies.forEach((frequency, i) => {
-      const osc = audio.createOscillator();
-      const gain = audio.createGain();
-      const at = now + i * gap;
-      osc.type = type;
-      osc.frequency.setValueAtTime(frequency, at);
-      gain.gain.setValueAtTime(0.0001, at);
-      gain.gain.exponentialRampToValueAtTime(0.04, at + 0.012);
-      gain.gain.exponentialRampToValueAtTime(0.0001, at + length);
-      osc.connect(gain).connect(audio.destination);
-      osc.start(at);
-      osc.stop(at + length + 0.02);
-    });
-    setTimeout(() => audio.close(), (frequencies.length * gap + length + 0.2) * 1000);
-  } catch {
-    // no sound available, and the animation still plays
-  }
-};
-
-const SOUNDS = {
-  piano: () => playNotes([261.6, 329.6, 392, 523.3], 0.14, "square", 0.3),
-  guitar: () => playNotes([82.4, 123.5, 164.8, 207.7], 0.03, "sawtooth", 0.6),
-  lamp: () => playNotes([1400], 0.01, "square", 0.04),
-};
 
 const C = {
   ink: "#2a2f3a",
@@ -870,9 +840,9 @@ export default function Room() {
       setLockedIn(state.current.night);
       state.current.redraw?.();
     }
+    playSound(id);
     if (reducedMotion()) return;
     state.current.plays[id] = state.current.time;
-    SOUNDS[id]?.();
   };
 
   return (
@@ -911,6 +881,7 @@ export default function Room() {
                   if (isTouch() && !wasActive.current) e.preventDefault();
                   if (dialog) closeDialog();
                   setActive(item.id);
+                  playSound(item.id);
                 }}
               />
             ) : (
@@ -925,7 +896,10 @@ export default function Room() {
               style={box(b)}
               aria-label="Contact me"
               onPointerEnter={(e) => e.pointerType === "mouse" && !dialog && setActive("contact")}
-              onClick={() => say("start")}
+              onClick={() => {
+                playSound("me");
+                say("start");
+              }}
             />
           ))}
         </div>
@@ -943,7 +917,15 @@ export default function Room() {
             {done && (
               <div className="game-choices">
                 {node.choices?.map((choice) => (
-                  <button key={choice.label} type="button" onClick={() => say(choice.next)}>
+                  <button
+                    key={choice.label}
+                    type="button"
+                    onClick={() => {
+                      if (choice.next === "dog") setTimeout(() => playSound("woof"), 700);
+                      if (choice.next === "hi") playSound("me");
+                      say(choice.next);
+                    }}
+                  >
                     {choice.label}
                   </button>
                 ))}
