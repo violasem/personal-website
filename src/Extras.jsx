@@ -1,4 +1,5 @@
 import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { flushSync } from "react-dom";
 import { dogBus } from "./dogBus.js";
 
 const reducedMotion = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -22,6 +23,9 @@ export const ReactiveTitle = ({ text }) => {
           const near = Math.max(0, 1 - Math.hypot(dx, dy) / reach);
           letter.style.fontVariationSettings = `"wght" ${Math.round(450 + near * 230)}, "SOFT" 100, "WONK" 1`;
           letter.style.translate = `${(dx * near * 0.05).toFixed(1)}px ${(dy * near * 0.09 - near * 6).toFixed(1)}px`;
+          // the letters closest to the lamp catch its light
+          letter.style.color = near > 0 ? `color-mix(in srgb, #f8d568 ${Math.round(near * 100)}%, #f4f1e8)` : "";
+          letter.style.textShadow = near > 0 ? `0 0 ${Math.round(near * 26)}px rgba(245, 200, 66, ${(near * 0.55).toFixed(2)})` : "";
         });
       });
     };
@@ -75,9 +79,31 @@ export const LightSwitch = () => {
       className={`light-switch${pulled ? " pulled" : ""}`}
       aria-pressed={dark}
       aria-label={dark ? "Turn the lights on" : "Turn the lights off"}
-      onClick={() => {
+      onClick={(e) => {
         setPulled(true);
-        setDark((d) => !d);
+        const next = !dark;
+        const change = () => {
+          document.documentElement.dataset.theme = next ? "dark" : "light";
+          flushSync(() => setDark(next));
+        };
+        if (!document.startViewTransition || reducedMotion()) {
+          change();
+          return;
+        }
+        // the new lighting spreads out from the cord in a circle
+        const box = e.currentTarget.getBoundingClientRect();
+        const x = box.left + box.width / 2;
+        const y = box.bottom;
+        const radius = Math.hypot(Math.max(x, window.innerWidth - x), Math.max(y, window.innerHeight - y));
+        const transition = document.startViewTransition(change);
+        transition.ready
+          .then(() => {
+            document.documentElement.animate(
+              { clipPath: [`circle(0px at ${x}px ${y}px)`, `circle(${radius}px at ${x}px ${y}px)`] },
+              { duration: 750, easing: "cubic-bezier(0.3, 0.7, 0.2, 1)", pseudoElement: "::view-transition-new(root)" },
+            );
+          })
+          .catch(() => {});
       }}
       onAnimationEnd={() => setPulled(false)}
     >
@@ -87,12 +113,15 @@ export const LightSwitch = () => {
   );
 };
 
+const point0 = (path, at) => path.getPointAtLength(at).y;
+
 // A circuit trace down the side of the page. It lights up as you scroll,
 // with a solder pad at each section.
 export const CircuitTrace = ({ selectors }) => {
   const svgRef = useRef(null);
   const litRef = useRef(null);
   const dotRef = useRef(null);
+  const clipRef = useRef(null);
   const [shape, setShape] = useState(null);
 
   useLayoutEffect(() => {
@@ -137,6 +166,7 @@ export const CircuitTrace = ({ selectors }) => {
         else high = mid;
       }
       lit.style.strokeDasharray = `${low} ${length}`;
+      clipRef.current.setAttribute("height", point0(lit, low));
       const point = lit.getPointAtLength(low);
       dotRef.current.setAttribute("cx", point.x);
       dotRef.current.setAttribute("cy", point.y);
@@ -163,7 +193,11 @@ export const CircuitTrace = ({ selectors }) => {
       {shape && (
         <>
           <path className="trace-base" d={shape.d} />
+          <clipPath id="trace-clip">
+            <rect ref={clipRef} x="-10" y="0" width="60" height="0" />
+          </clipPath>
           <path className="trace-lit" ref={litRef} d={shape.d} />
+          <path className="trace-current" d={shape.d} clipPath="url(#trace-clip)" />
           {shape.pads.map((y) => (
             <circle key={y} className="trace-pad" cx={shape.right} cy={y} r="5" />
           ))}

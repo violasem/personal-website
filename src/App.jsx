@@ -852,6 +852,9 @@ const Hero = () => {
         const box = e.currentTarget.getBoundingClientRect();
         e.currentTarget.style.setProperty("--lx", `${e.clientX - box.left}px`);
         e.currentTarget.style.setProperty("--ly", `${e.clientY - box.top}px`);
+        // the desk has depth: things drift with the cursor and their shadows fall away from the lamp
+        e.currentTarget.style.setProperty("--mx", (((e.clientX - box.left) / box.width) * 2 - 1).toFixed(3));
+        e.currentTarget.style.setProperty("--my", (((e.clientY - box.top) / box.height) * 2 - 1).toFixed(3));
       }}
     >
       <div className="lamp" aria-hidden="true" />
@@ -1174,6 +1177,7 @@ const Experience = () => {
                   </svg>
                   {!t.to && <i className="tl-now" />}
                   {cursor !== null && <i className="tl-cursor" style={{ left: `${xOf(cursor)}%` }} />}
+                  {isActive && <i className="tl-bead" style={{ left: `${xOf(cursor)}%` }} />}
                 </span>
                 <span className="tl-dates">
                   {t.dates}
